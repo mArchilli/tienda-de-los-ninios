@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        // Número del negocio en formato internacional (sin '+', sin espacios).
+        // Ej: 5491172397202 = 54 (Argentina) + 9 + 11 (área) + 72397202
+        'business_number' => env('WHATSAPP_BUSINESS_NUMBER', '5491172397202'),
+    ],
+
 ];

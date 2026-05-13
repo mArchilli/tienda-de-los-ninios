@@ -13,6 +13,14 @@ class Order extends Model
     const SHIPPING_STATUS_DISPATCHED = 'dispatched';
     const SHIPPING_STATUS_DELIVERED = 'delivered';
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_CANCELLED = 'cancelled';
+
+    protected $casts = [
+        'total' => 'decimal:2',
+    ];
+
     protected $fillable = [
         'user_id',
         'payment_id',

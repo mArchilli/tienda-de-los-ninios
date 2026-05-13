@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100)->unique();
-            $table->timestamps();
+        Schema::table('orders', function (Blueprint $table) {
+            $table->text('observations')->nullable()->after('email');
+            $table->string('courier_company')->nullable()->after('observations');
         });
     }
 
@@ -23,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn(['observations', 'courier_company']);
+        });
     }
 };

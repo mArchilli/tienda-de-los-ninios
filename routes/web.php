@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ComboController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\CartController;
@@ -38,6 +39,7 @@ Route::delete('/carrito/{key}', [CartController::class, 'remove'])->name('cart.r
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
 Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
+Route::get('/checkout/confirmacion', [CartController::class, 'confirmation'])->name('checkout.confirmation');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -75,6 +77,10 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
     Route::post('/combos/{combo}', [ComboController::class, 'update'])->name('combos.update');
     Route::delete('/combos/{combo}', [ComboController::class, 'destroy'])->name('combos.destroy');
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 });
 
 require __DIR__.'/auth.php';

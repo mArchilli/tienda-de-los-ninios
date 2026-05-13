@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Combo;
 use App\Models\Gender;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Size;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CartController extends Controller
@@ -253,14 +256,194 @@ class CartController extends Controller
             $rules['observations'] = ['nullable', 'string', 'max:500'];
         }
 
-        $request->validate($rules);
+        $data = $request->validate($rules);
 
-        // El procesamiento de la orden / pago todavía no está implementado.
-        // Por ahora limpiamos el carrito y volvemos al inicio con un flash.
+        $view = $this->buildView($this->getCart());
+        if (empty($view['items'])) {
+            return redirect()->route('cart.index')->withErrors([
+                'cart' => 'Tu carrito está vacío.',
+            ]);
+        }
+
+        $order = DB::transaction(function () use ($data, $view) {
+            $order = Order::create([
+                'user_id'         => auth()->id(),
+                'total'           => $view['subtotal'],
+                'status'          => Order::STATUS_PENDING,
+                'shipping_status' => Order::SHIPPING_STATUS_PENDING,
+                'first_name'      => $data['first_name'],
+                'last_name'       => $data['last_name'],
+                'email'           => $data['email'],
+                'dni'             => $data['dni'],
+                'phone'           => $data['phone'],
+                'shipping_method' => $data['shipping_method'],
+                'courier_company' => $data['courier'],
+                'province'        => $data['province'],
+                'city'            => $data['locality'],
+                'postal_code'     => $data['postal_code'],
+                'address'         => $data['address'] ?? null,
+                'observations'    => $data['observations'] ?? null,
+            ]);
+
+            foreach ($view['items'] as $item) {
+                if (($item['type'] ?? null) === 'combo') {
+                    OrderItem::create([
+                        'order_id'   => $order->id,
+                        'product_id' => null,
+                        'quantity'   => $item['quantity'],
+                        'price'      => $item['price'],
+                        'size'       => $item['size_name'] ?? null,
+                        'combo_data' => [
+                            'combo_id'    => $item['combo_id'] ?? null,
+                            'name'        => $item['name'],
+                            'gender_id'   => $item['gender_id'] ?? null,
+                            'gender_name' => $item['gender_name'] ?? null,
+                            'picks'       => $item['picks'] ?? [],
+                        ],
+                    ]);
+                } else {
+                    OrderItem::create([
+                        'order_id'   => $order->id,
+                        'product_id' => $item['product_id'] ?? null,
+                        'quantity'   => $item['quantity'],
+                        'price'      => $item['price'],
+                        'size'       => $item['size_name'] ?? null,
+                        'combo_data' => null,
+                    ]);
+                }
+            }
+
+            return $order;
+        });
+
+        // Vaciamos el carrito tras crear la orden.
         $this->saveCart(['products' => [], 'combos' => []]);
 
-        return redirect()->route('home')->with('flash', [
-            'order_placed' => 'Recibimos tu pedido. Te contactaremos a la brevedad.',
+        // Guardamos el id de orden en sesión para autorizar la vista de confirmación.
+        session(['confirmation_order_id' => $order->id]);
+
+        return redirect()->route('checkout.confirmation');
+    }
+
+    public function confirmation()
+    {
+        $orderId = session('confirmation_order_id');
+        if (! $orderId) {
+            return redirect()->route('home');
+        }
+
+        $order = Order::with('items.product')->find($orderId);
+        if (! $order) {
+            session()->forget('confirmation_order_id');
+            return redirect()->route('home');
+        }
+
+        $message     = $this->buildWhatsappMessage($order);
+        $number      = preg_replace('/\D+/', '', (string) config('services.whatsapp.business_number'));
+        $whatsappUrl = $number
+            ? 'https://wa.me/' . $number . '?text=' . rawurlencode($message)
+            : null;
+
+        return Inertia::render('Checkout/Confirmation', [
+            'order' => [
+                'id'              => $order->id,
+                'total'           => (float) $order->total,
+                'first_name'      => $order->first_name,
+                'last_name'       => $order->last_name,
+                'email'           => $order->email,
+                'phone'           => $order->phone,
+                'shipping_method' => $order->shipping_method,
+            ],
+            'whatsapp_url'     => $whatsappUrl,
+            'whatsapp_number'  => $number,
+            'whatsapp_message' => $message,
         ]);
+    }
+
+    protected function buildWhatsappMessage(Order $order): string
+    {
+        $shippingLabel = $order->shipping_method === 'home' ? 'A Domicilio' : 'A Sucursal';
+        $fmt = fn ($n) => '$' . number_format((float) $n, 2, ',', '.') . ' ARS';
+
+        $lines = [];
+        $lines[] = '*Nuevo Pedido #' . $order->id . '*';
+        $lines[] = '';
+        $lines[] = '*Cliente*';
+        $lines[] = 'Nombre: ' . $order->first_name . ' ' . $order->last_name;
+        $lines[] = 'DNI: ' . $order->dni;
+        $lines[] = 'Email: ' . $order->email;
+        $lines[] = 'Teléfono: ' . $order->phone;
+        $lines[] = '';
+        $lines[] = '*Envío*';
+        $lines[] = 'Método: ' . $shippingLabel;
+        if ($order->courier_company) {
+            $lines[] = 'Empresa: ' . $order->courier_company;
+        }
+        $lines[] = 'Provincia: ' . $order->province;
+        $lines[] = 'Localidad: ' . $order->city;
+        $lines[] = 'CP: ' . $order->postal_code;
+        if ($order->shipping_method === 'home' && $order->address) {
+            $lines[] = 'Dirección: ' . $order->address;
+        }
+        if ($order->observations) {
+            $lines[] = 'Observaciones: ' . $order->observations;
+        }
+        $lines[] = '';
+        $lines[] = '*Productos*';
+
+        // Pre-cargamos nombres de productos para los picks de combos.
+        $pickIds = [];
+        foreach ($order->items as $item) {
+            if ($item->combo_data && ! empty($item->combo_data['picks'])) {
+                foreach ($item->combo_data['picks'] as $ids) {
+                    foreach ((array) $ids as $id) {
+                        $pickIds[] = (int) $id;
+                    }
+                }
+            }
+        }
+        $pickNames = [];
+        if (! empty($pickIds)) {
+            $pickNames = Product::whereIn('id', array_unique($pickIds))->pluck('name', 'id')->toArray();
+        }
+
+        foreach ($order->items as $item) {
+            $isCombo = ! is_null($item->combo_data);
+            $name    = $isCombo
+                ? ($item->combo_data['name'] ?? 'Combo')
+                : ($item->product?->name ?? 'Producto');
+
+            $details = [];
+            if ($item->size) {
+                $details[] = 'Talle ' . $item->size;
+            }
+            if ($isCombo && ! empty($item->combo_data['gender_name'])) {
+                $details[] = $item->combo_data['gender_name'];
+            }
+            $detailsStr = $details ? ' (' . implode(' / ', $details) . ')' : '';
+
+            $subtotal = (float) $item->price * (int) $item->quantity;
+            $lines[]  = '• ' . $name . $detailsStr . ' x ' . $item->quantity . ' — ' . $fmt($subtotal);
+
+            if ($isCombo && ! empty($item->combo_data['picks'])) {
+                $picked = [];
+                foreach ($item->combo_data['picks'] as $ids) {
+                    foreach ((array) $ids as $id) {
+                        if (isset($pickNames[$id])) {
+                            $picked[] = $pickNames[$id];
+                        }
+                    }
+                }
+                if ($picked) {
+                    $lines[] = '   Incluye: ' . implode(', ', $picked);
+                }
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = '*Total: ' . $fmt($order->total) . '*';
+        $lines[] = '(El costo de envío se coordina aparte)';
+
+        return implode("\n", $lines);
     }
 }

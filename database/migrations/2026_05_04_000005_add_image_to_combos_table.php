@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('colors', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100)->unique();
-            $table->timestamps();
+        Schema::table('combos', function (Blueprint $table) {
+            $table->string('image')->nullable()->after('is_active');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('colors');
+        Schema::table('combos', function (Blueprint $table) {
+            $table->dropColumn('image');
+        });
     }
 };

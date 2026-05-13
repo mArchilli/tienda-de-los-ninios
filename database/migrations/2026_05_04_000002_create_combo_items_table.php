@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('combo_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->unsignedTinyInteger('quantity')->default(1);
             $table->timestamps();
         });
     }
