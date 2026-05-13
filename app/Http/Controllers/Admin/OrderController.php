@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Combo;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -45,47 +46,79 @@ class OrderController extends Controller
     {
         $order->load('items.product');
 
-        // Resolvemos los nombres de los productos elegidos dentro de los combos.
-        $pickIds = [];
+        // Recopilamos combo_ids y pick product_ids para cargarlos en bulk.
+        $comboIds = [];
+        $pickIds  = [];
         foreach ($order->items as $item) {
-            if ($item->combo_data && ! empty($item->combo_data['picks'])) {
-                foreach ($item->combo_data['picks'] as $ids) {
-                    foreach ((array) $ids as $id) {
-                        $pickIds[] = (int) $id;
+            if (! is_null($item->combo_data)) {
+                if (! empty($item->combo_data['combo_id'])) {
+                    $comboIds[] = (int) $item->combo_data['combo_id'];
+                }
+                if (! empty($item->combo_data['picks'])) {
+                    foreach ($item->combo_data['picks'] as $ids) {
+                        foreach ((array) $ids as $id) {
+                            $pickIds[] = (int) $id;
+                        }
                     }
                 }
             }
         }
-        $pickNames = [];
-        if (! empty($pickIds)) {
-            $pickNames = Product::whereIn('id', array_unique($pickIds))->pluck('name', 'id')->toArray();
+
+        // Combos indexados por id (para imagen y descripción).
+        $combosById = [];
+        if (! empty($comboIds)) {
+            Combo::whereIn('id', array_unique($comboIds))->get()->each(function (Combo $c) use (&$combosById) {
+                $combosById[$c->id] = [
+                    'image' => $c->image ? '/' . ltrim($c->image, '/') : null,
+                ];
+            });
         }
 
-        $items = $order->items->map(function ($item) use ($pickNames) {
+        // Productos de picks indexados por id (nombre + primera imagen).
+        $picksById = [];
+        if (! empty($pickIds)) {
+            Product::whereIn('id', array_unique($pickIds))->get()->each(function (Product $p) use (&$picksById) {
+                $picksById[$p->id] = [
+                    'name'  => $p->name,
+                    'image' => $p->images[0] ?? null,
+                ];
+            });
+        }
+
+        $items = $order->items->map(function ($item) use ($combosById, $picksById) {
             $isCombo = ! is_null($item->combo_data);
-            $picked  = [];
+
+            $picks = [];
             if ($isCombo && ! empty($item->combo_data['picks'])) {
                 foreach ($item->combo_data['picks'] as $ids) {
                     foreach ((array) $ids as $id) {
-                        if (isset($pickNames[$id])) {
-                            $picked[] = $pickNames[$id];
+                        if (isset($picksById[$id])) {
+                            $picks[] = $picksById[$id];
                         }
                     }
                 }
             }
 
+            $comboId    = $isCombo ? ($item->combo_data['combo_id'] ?? null) : null;
+            $comboImage = ($comboId && isset($combosById[$comboId]))
+                ? $combosById[$comboId]['image']
+                : null;
+
             return [
-                'id'         => $item->id,
-                'type'       => $isCombo ? 'combo' : 'product',
-                'name'       => $isCombo
+                'id'       => $item->id,
+                'type'     => $isCombo ? 'combo' : 'product',
+                'name'     => $isCombo
                     ? ($item->combo_data['name'] ?? 'Combo')
                     : ($item->product?->name ?? 'Producto eliminado'),
-                'quantity'   => (int) $item->quantity,
-                'price'      => (float) $item->price,
-                'subtotal'   => (float) $item->price * (int) $item->quantity,
-                'size'       => $item->size,
-                'gender'     => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
-                'picks'      => $picked,
+                'image'    => $isCombo
+                    ? $comboImage
+                    : ($item->product?->images[0] ?? null),
+                'quantity' => (int) $item->quantity,
+                'price'    => (float) $item->price,
+                'subtotal' => (float) $item->price * (int) $item->quantity,
+                'size'     => $item->size,
+                'gender'   => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
+                'picks'    => $picks,
             ];
         })->values();
 
