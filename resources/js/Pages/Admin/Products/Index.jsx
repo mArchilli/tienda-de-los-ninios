@@ -20,6 +20,33 @@ const Spinner = () => (
     </svg>
 );
 
+// ─── Inline icons ─────────────────────────────────────────────────────────────
+
+const Icons = {
+    gender:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+    category: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />,
+    color:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />,
+    size:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 17h.01M15 17h.01M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />,
+    search:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+    close:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />,
+    check:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />,
+    plus:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />,
+    pencil:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />,
+    trash:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
+    eye:      <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></>,
+    star:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
+    filter:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />,
+    image:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+    money:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m-9-4h18" />,
+    sort:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />,
+};
+
+const Icon = ({ name, className = 'h-4 w-4' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {Icons[name]}
+    </svg>
+);
+
 // ─── Modal base ───────────────────────────────────────────────────────────────
 
 function Modal({ open, onClose, title, children, size = 'md' }) {
@@ -36,7 +63,7 @@ function Modal({ open, onClose, title, children, size = 'md' }) {
 
     if (!open) return null;
 
-    const widthClass = size === '3xl' ? 'max-w-5xl' : size === '2xl' ? 'max-w-7xl' : size === 'xl' ? 'max-w-2xl' : size === 'lg' ? 'max-w-lg' : 'max-w-md';
+    const widthClass = size === '3xl' ? 'max-w-5xl' : size === '2xl' ? 'max-w-3xl' : size === 'xl' ? 'max-w-2xl' : size === 'lg' ? 'max-w-lg' : 'max-w-md';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
@@ -48,9 +75,7 @@ function Modal({ open, onClose, title, children, size = 'md' }) {
                         onClick={onClose}
                         className="flex h-7 w-7 items-center justify-center rounded-full text-brand-text-muted hover:bg-gray-100 hover:text-brand-text transition-colors"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Icon name="close" />
                     </button>
                 </div>
                 <div className="overflow-y-auto px-6 py-5 flex-1">{children}</div>
@@ -73,42 +98,35 @@ function FlashBanner({ message, onDismiss }) {
     return (
         <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-sm">
             <svg className="h-4 w-4 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                {Icons.check}
             </svg>
             <span className="flex-1">{message}</span>
             <button onClick={onDismiss} className="text-emerald-400 hover:text-emerald-600 transition-colors">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" />
             </button>
         </div>
     );
 }
 
-// ─── Section header ───────────────────────────────────────────────────────────
+// ─── Section panel ────────────────────────────────────────────────────────────
+
+function SectionPanel({ iconName, label, children }) {
+    return (
+        <div className="rounded-xl border border-gray-200 bg-brand-bg/60 p-4 space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-wide flex items-center gap-2 text-brand-text-muted">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary-surface text-brand-primary">
+                    <Icon name={iconName} className="h-3.5 w-3.5" />
+                </span>
+                {label}
+            </p>
+            {children}
+        </div>
+    );
+}
 
 function SectionLabel({ children }) {
     return (
         <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted mb-2">{children}</p>
-    );
-}
-
-function SectionPanel({ accent, icon, label, children }) {
-    const styles = {
-        purple: { wrap: 'border-purple-200 bg-purple-50/70',  text: 'text-purple-700'  },
-        emerald: { wrap: 'border-emerald-200 bg-emerald-50/70', text: 'text-emerald-700' },
-        rose:    { wrap: 'border-rose-200   bg-rose-50/70',    text: 'text-rose-700'    },
-        amber:   { wrap: 'border-amber-200  bg-amber-50/70',   text: 'text-amber-700'   },
-        cyan:    { wrap: 'border-cyan-200   bg-cyan-50/70',    text: 'text-cyan-700'    },
-    };
-    const s = styles[accent] ?? styles.purple;
-    return (
-        <div className={`rounded-xl border ${s.wrap} p-3.5 space-y-2.5`}>
-            <p className={`text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 ${s.text}`}>
-                <span>{icon}</span>{label}
-            </p>
-            {children}
-        </div>
     );
 }
 
@@ -127,7 +145,7 @@ function CheckPill({ label, checked, onChange }) {
         >
             {checked && (
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    {Icons.check}
                 </svg>
             )}
             {label}
@@ -135,7 +153,7 @@ function CheckPill({ label, checked, onChange }) {
     );
 }
 
-// ─── Searchable pills with expand/collapse ────────────────────────────────────
+// ─── Searchable pills ─────────────────────────────────────────────────────────
 
 function SearchablePills({ items, selected, onToggle, placeholder = 'Buscar...', initialCount = 6 }) {
     const [query, setQuery] = useState('');
@@ -152,14 +170,14 @@ function SearchablePills({ items, selected, onToggle, placeholder = 'Buscar...',
         <div className="space-y-2">
             <div className="relative">
                 <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    {Icons.search}
                 </svg>
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={placeholder}
-                    className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"
                 />
                 {query && (
                     <button
@@ -168,7 +186,7 @@ function SearchablePills({ items, selected, onToggle, placeholder = 'Buscar...',
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text transition-colors"
                     >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            {Icons.close}
                         </svg>
                     </button>
                 )}
@@ -190,23 +208,9 @@ function SearchablePills({ items, selected, onToggle, placeholder = 'Buscar...',
                 <button
                     type="button"
                     onClick={() => setExpanded((x) => !x)}
-                    className="flex items-center gap-1 text-xs font-medium text-brand-secondary hover:text-brand-primary transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium text-brand-primary hover:text-brand-primary-dark transition-colors"
                 >
-                    {expanded ? (
-                        <>
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-                            </svg>
-                            Mostrar menos
-                        </>
-                    ) : (
-                        <>
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                            </svg>
-                            Ver {hiddenCount} más
-                        </>
-                    )}
+                    {expanded ? 'Mostrar menos' : `Ver ${hiddenCount} más`}
                 </button>
             )}
         </div>
@@ -228,7 +232,6 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
     const [query, setQuery] = useState('');
     const pendingFocusId = useRef(null);
 
-    // After each render: if we just selected a size, focus its stock input
     useEffect(() => {
         if (pendingFocusId.current === null) return;
         const el = document.getElementById(`size-stock-${pendingFocusId.current}`);
@@ -259,32 +262,30 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
 
     return (
         <div className="space-y-3">
-            {/* Search */}
             <div className="relative">
-                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {Icons.search}
                 </svg>
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Buscar talle..."
-                    className="w-full rounded-lg border border-amber-200 bg-white pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-amber-300 focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"
                 />
                 {query && (
-                    <button type="button" onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-600 transition-colors">
+                    <button type="button" onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text transition-colors">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            {Icons.close}
                         </svg>
                     </button>
                 )}
             </div>
 
-            {/* Grouped grids */}
             {SIZE_GROUPS.filter((g) => groups[g]).map((group) => (
                 <div key={group} className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center gap-2">
-                        <span className="inline-block h-0.5 w-5 rounded-full bg-amber-400" />
+                    <p className="text-[11px] font-bold text-brand-text-muted uppercase tracking-wider flex items-center gap-2">
+                        <span className="inline-block h-0.5 w-5 rounded-full bg-brand-primary" />
                         {group}
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -297,36 +298,27 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
                                     onMouseDown={(e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }}
                                     className={`cursor-pointer rounded-xl border p-2.5 transition-all select-none ${
                                         selected
-                                            ? 'border-amber-400 bg-white shadow-md shadow-amber-100'
-                                            : 'border-gray-200 bg-white hover:border-amber-300 hover:shadow-sm'
+                                            ? 'border-brand-primary bg-white shadow-md shadow-brand-primary/10'
+                                            : 'border-gray-200 bg-white hover:border-brand-primary/40 hover:shadow-sm'
                                     }`}
                                 >
                                     <div className="flex items-start justify-between gap-1 mb-1.5">
-                                        <span className={`text-xs font-bold leading-tight ${selected ? 'text-amber-600' : 'text-brand-text'}`}>
+                                        <span className={`text-xs font-bold leading-tight ${selected ? 'text-brand-primary' : 'text-brand-text'}`}>
                                             {s.name}
                                         </span>
                                         <div className={`shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors ${
-                                            selected ? 'border-amber-400 bg-amber-400' : 'border-gray-300 bg-white'
+                                            selected ? 'border-brand-primary bg-brand-primary' : 'border-gray-300 bg-white'
                                         }`}>
                                             {selected && (
                                                 <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    {Icons.check}
                                                 </svg>
                                             )}
                                         </div>
                                     </div>
                                     {selected ? (
                                         <div className="space-y-1">
-                                            <p className="text-[10px] font-medium text-amber-600 flex items-center gap-0.5">
-                                                <svg className="h-2.5 w-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                Disponible
-                                            </p>
-                                            <p className="text-[10px] text-brand-text-muted flex items-center gap-1">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block shrink-0" />
-                                                Stock disponible
-                                            </p>
+                                            <p className="text-[10px] text-brand-text-muted">Stock disponible</p>
                                             <input
                                                 id={`size-stock-${s.id}`}
                                                 type="number"
@@ -334,11 +326,11 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
                                                 value={selectedSizes[s.id]}
                                                 onChange={(e) => onSetStock(s.id, e.target.value)}
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="w-full rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-center font-medium outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200"
+                                                className="w-full rounded-lg border border-brand-primary/30 bg-brand-primary-surface px-2 py-1 text-xs text-center font-medium outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20"
                                             />
                                         </div>
                                     ) : (
-                                        <p className="text-[10px] text-brand-secondary">Click para activar</p>
+                                        <p className="text-[10px] text-brand-text-light">Click para activar</p>
                                     )}
                                 </div>
                             );
@@ -348,23 +340,22 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
             ))}
 
             {filtered.length === 0 && (
-                <p className="text-xs text-amber-500 italic py-1">Sin resultados para &quot;{query}&quot;</p>
+                <p className="text-xs text-brand-text-muted italic py-1">Sin resultados para &quot;{query}&quot;</p>
             )}
 
-            {/* Summary */}
             {selectedList.length > 0 && (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                     <div className="flex items-center gap-1.5 mb-2">
                         <svg className="h-3.5 w-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            {Icons.check}
                         </svg>
                         <span className="text-xs font-semibold text-emerald-700">
-                            Resumen: {selectedList.length} talle{selectedList.length !== 1 ? 's' : ''} seleccionado{selectedList.length !== 1 ? 's' : ''}
+                            {selectedList.length} talle{selectedList.length !== 1 ? 's' : ''} seleccionado{selectedList.length !== 1 ? 's' : ''}
                         </span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                         {selectedList.map((s) => (
-                            <span key={s.id} className="rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold text-white">
+                            <span key={s.id} className="rounded-full bg-brand-primary px-2.5 py-0.5 text-[10px] font-bold text-white">
                                 {s.name}: {selectedSizes[s.id]} u.
                             </span>
                         ))}
@@ -395,7 +386,6 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
 
     return (
         <div className="space-y-3">
-            {/* Existing thumbnails */}
             {existingImages.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {existingImages.map((url) => (
@@ -406,16 +396,13 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
                                 onClick={() => onRemoveExisting(url)}
                                 className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <Icon name="close" className="h-5 w-5 text-white" />
                             </button>
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* New image previews */}
             {newPreviews.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {newPreviews.map((url, i) => (
@@ -426,9 +413,7 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
                                 onClick={() => onRemoveNew(i)}
                                 className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <Icon name="close" className="h-5 w-5 text-white" />
                             </button>
                             <span className="absolute bottom-1 right-1 rounded bg-brand-primary px-1 text-[10px] text-white font-bold">nuevo</span>
                         </div>
@@ -436,15 +421,14 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
                 </div>
             )}
 
-            {/* Drop zone */}
             <div
                 onDrop={onDrop}
                 onDragOver={(e) => e.preventDefault()}
                 onClick={() => fileInputRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-6 text-brand-text-muted hover:border-brand-primary hover:bg-brand-primary/5 transition-colors"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-brand-bg/40 py-6 text-brand-text-muted hover:border-brand-primary hover:bg-brand-primary-surface/40 transition-colors"
             >
                 <svg className="h-8 w-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    {Icons.image}
                 </svg>
                 <p className="text-xs">Hacé clic o arrastrá imágenes aquí</p>
                 <input
@@ -460,14 +444,14 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
     );
 }
 
-// ─── Product modal (create + edit) ────────────────────────────────────────────
+// ─── Product modal ────────────────────────────────────────────────────────────
 
 const EMPTY_FORM = {
     name: '', description: '', price: '', is_featured: false,
     categories: [], colors: [], genders: [],
-    selectedSizes: {},    // { [sizeId]: stock }
-    existingImages: [],   // URL strings (edit only)
-    newImages: [],        // File objects
+    selectedSizes: {},
+    existingImages: [],
+    newImages: [],
 };
 
 function ProductModal({ open, onClose, product, allCategories, allColors, allSizes, allGenders }) {
@@ -569,14 +553,14 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
     const inputCls = (err) =>
         `w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
-            err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary focus:ring-brand-secondary/30'
+            err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
         }`;
 
     return (
         <Modal open={open} onClose={handleClose} title={isEditing ? 'Editar Prenda' : 'Nueva Prenda'} size="2xl">
             <form onSubmit={submit} className="space-y-5">
 
-                {/* ── Información básica ────────────────────────────── */}
+                {/* Info básica */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
                         <Field label="Nombre" error={errors.name}>
@@ -607,14 +591,14 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                         <button
                             type="button"
                             onClick={() => set('is_featured', !form.is_featured)}
-                            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                                 form.is_featured
-                                    ? 'border-amber-400 bg-amber-50 text-amber-600'
-                                    : 'border-gray-200 bg-white text-brand-text-muted hover:border-amber-300'
+                                    ? 'border-brand-cta bg-brand-cta-surface text-brand-cta'
+                                    : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-cta/40'
                             }`}
                         >
-                            <svg className={`h-4 w-4 ${form.is_featured ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            <svg className={`h-4 w-4 ${form.is_featured ? 'fill-brand-cta text-brand-cta' : 'text-gray-300'}`} viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                                {Icons.star}
                             </svg>
                             Destacado
                         </button>
@@ -633,7 +617,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     </div>
                 </div>
 
-                {/* ── Imágenes ──────────────────────────────────────── */}
+                {/* Imágenes */}
                 <div>
                     <SectionLabel>Imágenes</SectionLabel>
                     <ImageUploadZone
@@ -646,9 +630,9 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     {errors['images.0'] && <p className="mt-1.5 text-xs text-red-500">{errors['images.0']}</p>}
                 </div>
 
-                {/* ── Género ────────────────────────────────────────── */}
+                {/* Género */}
                 {allGenders.length > 0 && (
-                    <SectionPanel accent="purple" icon="👤" label="Género">
+                    <SectionPanel iconName="gender" label="Género">
                         <div className="flex flex-wrap gap-2">
                             {allGenders.map((g) => (
                                 <CheckPill
@@ -662,9 +646,9 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     </SectionPanel>
                 )}
 
-                {/* ── Categorías ────────────────────────────────────── */}
+                {/* Categorías */}
                 {allCategories.length > 0 && (
-                    <SectionPanel accent="emerald" icon="📁" label="Categorías">
+                    <SectionPanel iconName="category" label="Categorías">
                         <SearchablePills
                             items={allCategories}
                             selected={form.categories}
@@ -675,9 +659,9 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     </SectionPanel>
                 )}
 
-                {/* ── Colores ───────────────────────────────────────── */}
+                {/* Colores */}
                 {allColors.length > 0 && (
-                    <SectionPanel accent="rose" icon="🎨" label="Colores">
+                    <SectionPanel iconName="color" label="Colores">
                         <SearchablePills
                             items={allColors}
                             selected={form.colors}
@@ -688,9 +672,9 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     </SectionPanel>
                 )}
 
-                {/* ── Talles y stock ────────────────────────────────── */}
+                {/* Talles + stock */}
                 {allSizes.length > 0 && (
-                    <SectionPanel accent="amber" icon="📏" label="Talles y stock">
+                    <SectionPanel iconName="size" label="Talles y stock">
                         <SizePicker
                             sizes={allSizes}
                             selectedSizes={form.selectedSizes}
@@ -700,7 +684,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     </SectionPanel>
                 )}
 
-                {/* ── Actions ───────────────────────────────────────── */}
+                {/* Actions */}
                 <div className="flex justify-end gap-3 pt-1 border-t border-gray-100">
                     <button
                         type="button"
@@ -716,7 +700,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                     >
                         {processing ? <Spinner /> : (
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                {Icons.check}
                             </svg>
                         )}
                         {isEditing ? 'Guardar cambios' : 'Crear prenda'}
@@ -767,11 +751,7 @@ function DeleteModal({ open, onClose, product }) {
                         disabled={processing}
                         className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60"
                     >
-                        {processing ? <Spinner /> : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        )}
+                        {processing ? <Spinner /> : <Icon name="trash" />}
                         Eliminar
                     </button>
                 </div>
@@ -780,33 +760,26 @@ function DeleteModal({ open, onClose, product }) {
     );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Product card ─────────────────────────────────────────────────────────────
 
 function StockBadge({ stock }) {
-    if (stock === 0)
+    if (stock === 0) {
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gray-500 px-2.5 py-1 text-xs font-bold text-white shadow">
-                Stock: 0
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-700/90 px-2.5 py-0.5 text-[11px] font-bold text-white backdrop-blur-sm">
+                Sin stock
             </span>
         );
-    if (stock <= 3)
+    }
+    if (stock <= 3) {
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-cta px-2.5 py-1 text-xs font-bold text-white shadow">
-                ⚠ BAJO STOCK
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-cta px-2.5 py-0.5 text-[11px] font-bold text-white">
+                Stock bajo · {stock}
             </span>
         );
+    }
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow">
-            Stock: {stock}
-        </span>
-    );
-}
-
-function MetaItem({ icon, text }) {
-    return (
-        <span className="flex items-center gap-0.5 shrink-0">
-            <span>{icon}</span>
-            <span>{text}</span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-bold text-white">
+            Stock {stock}
         </span>
     );
 }
@@ -815,23 +788,16 @@ function ProductCard({ product, onEdit, onDelete }) {
     const stock = totalStock(product);
     const image = product.images?.[0] ?? null;
 
-    const metaItems = [
-        product.genders?.length > 0  && { key: 'g', icon: '👤', text: product.genders.map(g => g.name).join(', ') },
-        product.categories?.length > 0 && { key: 'c', icon: '📁', text: product.categories.map(c => c.name).join(', ') },
-        product.sizes?.length > 0    && { key: 's', icon: '📏', text: product.sizes.map(s => `${s.name}(${s.pivot?.stock ?? 0})`).join(' ') },
-        product.colors?.length > 0   && { key: 'col', icon: '🎨', text: product.colors.map(c => c.name).join(', ') },
-    ].filter(Boolean);
-
     return (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-200 hover:shadow-md hover:border-brand-primary/30 transition-all">
             {/* Image */}
             <div className="relative aspect-[3/4] bg-gray-50">
                 {image ? (
-                    <img src={glideUrl(image, 400, 533)} alt={product.name} className="w-full h-full object-cover" />
+                    <img src={glideUrl(image, 400, 533)} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-brand-text-light">
                         <svg className="h-16 w-16 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            {Icons.image}
                         </svg>
                     </div>
                 )}
@@ -840,73 +806,63 @@ function ProductCard({ product, onEdit, onDelete }) {
                     <StockBadge stock={stock} />
                 </div>
 
+                {product.is_featured && (
+                    <div className="absolute top-2 right-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-cta shadow">
+                            <svg className="h-3.5 w-3.5 fill-white text-white" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                                {Icons.star}
+                            </svg>
+                        </span>
+                    </div>
+                )}
+
                 <div className="absolute bottom-2 left-2">
-                    <span className="inline-flex items-center rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-white shadow">
+                    <span className="inline-flex items-center rounded-full bg-white/95 backdrop-blur-sm px-3 py-1 text-xs font-bold text-brand-primary shadow-sm">
                         ${Number(product.price).toLocaleString('es-AR')}
                     </span>
                 </div>
-
-                <div className="absolute top-2 right-2">
-                    <div className={`h-7 w-7 rounded-full flex items-center justify-center shadow ${product.is_featured ? 'bg-amber-400' : 'bg-white/80'}`}>
-                        <svg className={`h-3.5 w-3.5 ${product.is_featured ? 'text-white fill-white' : 'text-gray-400'}`} viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                    </div>
-                </div>
             </div>
 
-            {/* Card body */}
-            <div className="p-3 flex flex-col flex-1 justify-between gap-2">
-                <div className="flex flex-col gap-2">
-                    <h3 className="font-bold text-brand-text text-sm leading-tight truncate">{product.name}</h3>
+            {/* Body */}
+            <div className="p-4 flex flex-col flex-1 gap-3">
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-brand-text text-sm leading-tight line-clamp-2">{product.name}</h3>
 
-                    {metaItems.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-brand-text-muted">
-                            {metaItems.map((item, idx) => (
-                                <span key={item.key} className="flex items-center gap-x-2.5">
-                                    {idx > 0 && <span className="text-gray-300 -ml-1.5">·</span>}
-                                    <MetaItem icon={item.icon} text={item.text} />
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    {/* Meta */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                        {product.categories?.slice(0, 2).map((c) => (
+                            <span key={c.id} className="rounded-full bg-brand-primary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary">
+                                {c.name}
+                            </span>
+                        ))}
+                        {product.sizes?.length > 0 && (
+                            <span className="rounded-full bg-brand-secondary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary-dark">
+                                {product.sizes.length} talle{product.sizes.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                        {product.colors?.length > 0 && (
+                            <span className="rounded-full bg-brand-cta-surface px-2 py-0.5 text-[10px] font-medium text-brand-cta">
+                                {product.colors.length} color{product.colors.length !== 1 ? 'es' : ''}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-gray-100">
-                    <button className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Ver Prenda
-                    </button>
+                <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
                     <button
                         onClick={() => onEdit(product)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-cyan-500 py-2 text-xs font-semibold text-white hover:bg-cyan-600 transition-colors"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Icon name="pencil" className="h-3.5 w-3.5" />
                         Editar
                     </button>
                     <button
                         onClick={() => onDelete(product)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-red-500 py-2 text-xs font-semibold text-white hover:bg-red-600 transition-colors"
+                        title="Eliminar"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Eliminar
-                    </button>
-                    <button
-                        className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                        style={{ background: 'linear-gradient(135deg, #f953c6 0%, #b91d73 100%)' }}
-                    >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        Crear Oferta
+                        <Icon name="trash" className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </div>
@@ -914,16 +870,19 @@ function ProductCard({ product, onEdit, onDelete }) {
     );
 }
 
-function FilterSelect({ label, icon, value, onChange, options, placeholder, accentClass }) {
+// ─── Filter sidebar ───────────────────────────────────────────────────────────
+
+function FilterSelect({ label, iconName, value, onChange, options, placeholder }) {
     return (
-        <div className={`rounded-xl border-l-4 ${accentClass} bg-white p-3 shadow-sm`}>
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <span>{icon}</span> {label}
+                <Icon name={iconName} className="h-3.5 w-3.5 text-brand-primary" />
+                {label}
             </p>
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-brand-text focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none bg-white"
+                className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none bg-white"
             >
                 <option value="">{placeholder}</option>
                 {options.map((opt) => (
@@ -941,37 +900,40 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
         <aside className="w-72 shrink-0 border-l border-gray-200 bg-brand-bg">
             <div className="sticky top-0 max-h-screen overflow-y-auto p-4 space-y-3">
                 <div className="flex items-center justify-between pb-1">
-                    <div className="flex items-center gap-2 text-brand-primary font-bold text-sm">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-                        </svg>
+                    <div className="flex items-center gap-2 text-brand-text font-bold text-sm">
+                        <Icon name="filter" className="h-4 w-4 text-brand-primary" />
                         Filtros
                     </div>
                     <button
                         onClick={onReset}
-                        className="text-xs text-brand-text-muted hover:text-brand-cta transition-colors underline-offset-2 hover:underline"
+                        className="text-xs text-brand-text-muted hover:text-brand-primary transition-colors"
                     >
                         Limpiar todo
                     </button>
                 </div>
 
-                <div className="rounded-xl border-l-4 border-brand-primary bg-white p-3 shadow-sm">
+                {/* Search */}
+                <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
                     <div className="relative">
                         <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            {Icons.search}
                         </svg>
                         <input
                             type="text"
                             placeholder="Buscar..."
                             value={localFilters.search}
                             onChange={(e) => onChange('search', e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-sm text-brand-text placeholder-brand-text-light focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none"
+                            className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-sm text-brand-text placeholder-brand-text-light focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"
                         />
                     </div>
                 </div>
 
-                <div className="rounded-xl border-l-4 border-brand-secondary bg-white p-3 shadow-sm">
-                    <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2">Ordenar</p>
+                {/* Sort */}
+                <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                    <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <Icon name="sort" className="h-3.5 w-3.5 text-brand-primary" />
+                        Ordenar
+                    </p>
                     <div className="grid grid-cols-2 gap-1.5">
                         {[{ value: 'asc', label: 'A → Z' }, { value: 'desc', label: 'Z → A' }].map((opt) => (
                             <button
@@ -989,42 +951,48 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                     </div>
                 </div>
 
-                <div className="rounded-xl border-l-4 border-amber-400 bg-white p-3 shadow-sm">
-                    <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2">Especiales</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                            onClick={() => onChange('featured', localFilters.featured === '1' ? '' : '1')}
-                            className={`rounded-lg border py-1.5 text-sm font-medium flex items-center justify-center gap-1 transition-colors ${
-                                localFilters.featured === '1'
-                                    ? 'bg-amber-400 border-amber-400 text-white'
-                                    : 'bg-white border-gray-200 text-brand-text hover:border-amber-400 hover:text-amber-600'
-                            }`}
-                        >
-                            ⭐ Destacados
-                        </button>
-                        <button className="rounded-lg border border-gray-200 bg-white py-1.5 text-sm font-medium flex items-center justify-center gap-1 text-brand-text hover:border-brand-cta hover:text-brand-cta transition-colors">
-                            🏷️ Ofertas
-                        </button>
-                    </div>
+                {/* Featured */}
+                <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                    <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <svg className="h-3.5 w-3.5 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {Icons.star}
+                        </svg>
+                        Especiales
+                    </p>
+                    <button
+                        onClick={() => onChange('featured', localFilters.featured === '1' ? '' : '1')}
+                        className={`w-full rounded-lg border py-1.5 text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                            localFilters.featured === '1'
+                                ? 'bg-brand-cta border-brand-cta text-white'
+                                : 'bg-white border-gray-200 text-brand-text hover:border-brand-cta hover:text-brand-cta'
+                        }`}
+                    >
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" stroke="currentColor" fill={localFilters.featured === '1' ? 'currentColor' : 'none'}>
+                            {Icons.star}
+                        </svg>
+                        Destacados
+                    </button>
                 </div>
 
-                <FilterSelect label="Categoría" icon="📁" accentClass="border-emerald-400" value={localFilters.category} onChange={(v) => onChange('category', v)} options={categories} placeholder="Todas" />
-                <FilterSelect label="Color" icon="🎨" accentClass="border-pink-400" value={localFilters.color} onChange={(v) => onChange('color', v)} options={colors} placeholder="Todos" />
-                <FilterSelect label="Talle" icon="📏" accentClass="border-yellow-400" value={localFilters.size} onChange={(v) => onChange('size', v)} options={sizes} placeholder="Todos" />
-                <FilterSelect label="Género" icon="👤" accentClass="border-purple-400" value={localFilters.gender} onChange={(v) => onChange('gender', v)} options={genders} placeholder="Todos" />
+                <FilterSelect label="Categoría" iconName="category" value={localFilters.category} onChange={(v) => onChange('category', v)} options={categories} placeholder="Todas" />
+                <FilterSelect label="Color"     iconName="color"    value={localFilters.color}    onChange={(v) => onChange('color', v)}    options={colors}    placeholder="Todos" />
+                <FilterSelect label="Talle"     iconName="size"     value={localFilters.size}     onChange={(v) => onChange('size', v)}     options={sizes}     placeholder="Todos" />
+                <FilterSelect label="Género"    iconName="gender"   value={localFilters.gender}   onChange={(v) => onChange('gender', v)}   options={genders}   placeholder="Todos" />
 
-                <div className="rounded-xl border-l-4 border-brand-cta bg-white p-3 shadow-sm">
+                {/* Price */}
+                <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
                     <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                        <span>💰</span> Precio
+                        <Icon name="money" className="h-3.5 w-3.5 text-brand-cta" />
+                        Precio
                     </p>
                     <div className="space-y-2">
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-light text-sm pointer-events-none">$</span>
-                            <input type="number" placeholder="Mínimo" value={localFilters.min_price} onChange={(e) => onChange('min_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none" />
+                            <input type="number" placeholder="Mínimo" value={localFilters.min_price} onChange={(e) => onChange('min_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none" />
                         </div>
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-light text-sm pointer-events-none">$</span>
-                            <input type="number" placeholder="Máximo" value={localFilters.max_price} onChange={(e) => onChange('max_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none" />
+                            <input type="number" placeholder="Máximo" value={localFilters.max_price} onChange={(e) => onChange('max_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none" />
                         </div>
                     </div>
                 </div>
@@ -1086,7 +1054,7 @@ export default function Index({ products, filters, categories, colors, sizes, ge
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-brand-text">Prendas</h2>
+                        <h1 className="text-xl font-bold text-brand-text">Prendas</h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
                             {products.total} prenda{products.total !== 1 ? 's' : ''} encontradas
                         </p>
@@ -1095,9 +1063,7 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                         onClick={() => setCreateOpen(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Icon name="plus" />
                         Nueva Prenda
                     </button>
                 </div>
@@ -1106,18 +1072,19 @@ export default function Index({ products, filters, categories, colors, sizes, ge
             <Head title="Prendas" />
 
             <div className="flex min-h-full">
-                {/* ── Grid ───────────────────────────────────────────── */}
                 <div className="flex-1 min-w-0 p-6 space-y-5">
                     <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
 
                     {products.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-24 text-brand-text-muted">
-                            <svg className="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                            <p className="text-lg font-semibold">No se encontraron prendas</p>
+                            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-primary-surface text-brand-primary mb-4">
+                                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </span>
+                            <p className="text-lg font-semibold text-brand-text">No se encontraron prendas</p>
                             <p className="text-sm mt-1">Intentá cambiar los filtros de búsqueda</p>
-                            <button onClick={resetFilters} className="mt-4 text-sm font-medium text-brand-primary hover:text-brand-primary-dark underline underline-offset-2 transition-colors">
+                            <button onClick={resetFilters} className="mt-4 text-sm font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors">
                                 Limpiar filtros
                             </button>
                         </div>
@@ -1157,7 +1124,6 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                     )}
                 </div>
 
-                {/* ── Sidebar ────────────────────────────────────────── */}
                 <FilterSidebar
                     localFilters={localFilters}
                     onChange={handleChange}
@@ -1169,7 +1135,6 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                 />
             </div>
 
-            {/* ── Modals ─────────────────────────────────────────────── */}
             <ProductModal
                 open={createOpen || editTarget !== null}
                 onClose={() => { setCreateOpen(false); setEditTarget(null); }}

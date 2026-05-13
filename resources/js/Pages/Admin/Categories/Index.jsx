@@ -2,6 +2,28 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function initials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const Spinner = () => (
+    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+);
+
+const TagIcon = ({ className = 'h-5 w-5' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+);
+
 // ─── Modal base ───────────────────────────────────────────────────────────────
 
 function Modal({ open, onClose, title, children }) {
@@ -65,36 +87,34 @@ function FlashBanner({ message, onDismiss }) {
 
 function CategoryCard({ category, onEdit, onDelete }) {
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-brand-secondary/40 bg-brand-secondary-surface p-4 shadow-sm hover:border-brand-secondary transition-colors">
-            {/* Icon */}
-            <div className="flex justify-center">
-                <span className="text-4xl select-none">🏷️</span>
+        <div className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-brand-primary/30 transition-all">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-primary-surface text-brand-primary font-bold text-sm tracking-wide">
+                {initials(category.name)}
+            </span>
+
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-brand-text">{category.name}</p>
+                <p className="text-xs text-brand-text-muted">Categoría</p>
             </div>
 
-            {/* Name */}
-            <p className="text-center text-base font-bold text-brand-primary leading-snug">
-                {category.name}
-            </p>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                     onClick={() => onEdit(category)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-cyan-400 bg-white py-1.5 text-xs font-semibold text-cyan-500 hover:bg-cyan-50 transition-colors"
+                    title="Editar"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-brand-primary-surface hover:text-brand-primary transition-colors"
                 >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    Editar
                 </button>
                 <button
                     onClick={() => onDelete(category)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-red-400 bg-white py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                    title="Eliminar"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
                 >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Eliminar
                 </button>
             </div>
         </div>
@@ -133,8 +153,8 @@ function CreateModal({ open, onClose }) {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ej: Ropa, Calzado, Accesorios…"
                         autoFocus
-                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${
-                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'
+                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
                         }`}
                     />
                     {errors.name && <p className="mt-1.5 text-xs text-red-500">{errors.name}</p>}
@@ -144,10 +164,11 @@ function CreateModal({ open, onClose }) {
                         Cancelar
                     </button>
                     <button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                        )}
                         Crear categoría
                     </button>
                 </div>
@@ -187,8 +208,8 @@ function EditModal({ open, onClose, category }) {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         autoFocus
-                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${
-                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'
+                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
                         }`}
                     />
                     {errors.name && <p className="mt-1.5 text-xs text-red-500">{errors.name}</p>}
@@ -198,10 +219,11 @@ function EditModal({ open, onClose, category }) {
                         Cancelar
                     </button>
                     <button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-primary-dark transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
                         Guardar cambios
                     </button>
                 </div>
@@ -240,10 +262,11 @@ function DeleteModal({ open, onClose, category }) {
                         Cancelar
                     </button>
                     <button onClick={submit} disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        )}
                         Eliminar
                     </button>
                 </div>
@@ -278,7 +301,7 @@ export default function Index({ categories }) {
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-brand-text">Categorías</h2>
+                        <h1 className="text-xl font-bold text-brand-text">Categorías</h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
                             {categories.length} categoría{categories.length !== 1 ? 's' : ''} registrada{categories.length !== 1 ? 's' : ''}
                         </p>
@@ -298,7 +321,6 @@ export default function Index({ categories }) {
             <Head title="Categorías" />
 
             <div className="p-6 space-y-5">
-                {/* Flash */}
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
 
                 {/* Search bar */}
@@ -312,7 +334,7 @@ export default function Index({ categories }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Buscar categoría…"
-                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-9 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 transition shadow-sm"
+                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-9 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition shadow-sm"
                         />
                         {search && (
                             <button
@@ -330,10 +352,10 @@ export default function Index({ categories }) {
                 {/* Empty state */}
                 {categories.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-24 text-brand-text-muted">
-                        <svg className="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <p className="text-lg font-semibold">No hay categorías registradas</p>
+                        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-primary-surface text-brand-primary mb-4">
+                            <TagIcon className="h-8 w-8" />
+                        </span>
+                        <p className="text-lg font-semibold text-brand-text">No hay categorías registradas</p>
                         <p className="text-sm mt-1">Creá la primera categoría para empezar</p>
                         <button
                             onClick={() => setCreateOpen(true)}
@@ -350,30 +372,32 @@ export default function Index({ categories }) {
                 {/* No search results */}
                 {categories.length > 0 && filtered.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-16 text-brand-text-muted">
-                        <svg className="h-12 w-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <p className="font-semibold">Sin resultados para &quot;{search}&quot;</p>
-                        <button onClick={() => setSearch('')} className="mt-2 text-sm text-brand-primary hover:underline">
+                        <button onClick={() => setSearch('')} className="mt-2 text-sm font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors">
                             Limpiar búsqueda
                         </button>
                     </div>
                 )}
 
-                {/* Grid A-Z */}
+                {/* Grid */}
                 {filtered.length > 0 && (
-                    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4 bg-brand-primary-surface border-l-4 border-brand-secondary">
-                            <span className="text-xl">🏷️</span>
+                    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-primary-surface text-brand-primary">
+                                <TagIcon />
+                            </span>
                             <div className="flex-1">
-                                <h3 className="text-sm font-bold text-brand-primary">Todas las categorías</h3>
-                                <p className="text-xs text-brand-text-light mt-0.5">
-                                    {filtered.length} categoría{filtered.length !== 1 ? 's' : ''}{search ? ` — búsqueda: "${search}"` : ', ordenadas A–Z'}
+                                <h2 className="text-base font-bold text-brand-text">Todas las categorías</h2>
+                                <p className="text-xs text-brand-text-muted">
+                                    {filtered.length} categoría{filtered.length !== 1 ? 's' : ''}{search ? ` · búsqueda: "${search}"` : ' · ordenadas A–Z'}
                                 </p>
                             </div>
                         </div>
                         <div className="p-5">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                 {filtered.map((category) => (
                                     <CategoryCard
                                         key={category.id}

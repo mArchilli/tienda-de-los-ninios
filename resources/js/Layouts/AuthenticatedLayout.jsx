@@ -123,6 +123,24 @@ export default function AuthenticatedLayout({ header, children }) {
                     </SidebarNavLink>
 
                     <SidebarNavLink
+                        href={route('admin.metrics.index')}
+                        active={route().current('admin.metrics.*')}
+                        expanded={expanded}
+                        icon={
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 3v18h18M7 15l4-4 4 4 5-6"
+                                />
+                            </svg>
+                        }
+                    >
+                        Métricas
+                    </SidebarNavLink>
+
+                    <SidebarNavLink
                         href={route('admin.products.index')}
                         active={route().current('admin.products.*')}
                         expanded={expanded}

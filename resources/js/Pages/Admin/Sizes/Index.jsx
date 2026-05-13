@@ -7,14 +7,12 @@ import { useEffect, useMemo, useState } from 'react';
 function categorize(name) {
     const n = name.trim();
 
-    // Keyword detection takes priority — handles "4 - bebe/a", "10 - niño/a", etc.
     if (/beb[eé]/i.test(n)) return 'bebe';
     if (/ni[ñn][oa]/i.test(n)) return 'nino';
 
-    // Fallback heuristics for names without explicit labels
     if (/^(rn|recién\s*nacido|recien\s*nacido|newborn)$/i.test(n)) return 'bebe';
-    if (/\d\s*m(es(es)?)?$/i.test(n)) return 'bebe';       // 3m, 6 meses
-    if (/^\d+\s*[-/]\s*\d+\s*m/i.test(n)) return 'bebe';  // 0-3m, 3-6m
+    if (/\d\s*m(es(es)?)?$/i.test(n)) return 'bebe';
+    if (/^\d+\s*[-/]\s*\d+\s*m/i.test(n)) return 'bebe';
     if (/^\d+$/.test(n) && parseInt(n, 10) <= 3) return 'bebe';
     if (/^\d+$/.test(n)) {
         const v = parseInt(n, 10);
@@ -24,48 +22,57 @@ function categorize(name) {
     return 'otro';
 }
 
-// Split "10 - niño/a" → { main: "10", sub: "niño/a" }; "15-19" → { main: "15-19", sub: null }
-function parseName(name) {
-    const match = name.match(/^(.+?)\s+-\s+(.+)$/);
-    if (match) return { main: match[1].trim(), sub: match[2].trim() };
-    return { main: name, sub: null };
-}
+const BabyIcon = ({ className = 'h-5 w-5' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+);
+
+const ShirtIcon = ({ className = 'h-5 w-5' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+);
+
+const RulerIcon = ({ className = 'h-5 w-5' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 17h.01M15 17h.01M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+    </svg>
+);
 
 const SECTIONS = [
     {
         key: 'bebe',
         label: 'Bebé',
-        icon: '🍼',
-        accent: 'border-pink-300',
-        headerBg: 'bg-pink-50',
-        headerText: 'text-pink-700',
-        badge: 'bg-pink-100 text-pink-700 border-pink-200',
-        cardBorder: 'border-pink-200 hover:border-pink-400',
-        cardRing: 'hover:ring-pink-200',
+        description: 'Talles para recién nacidos y primer año',
+        Icon: BabyIcon,
+        chipBg: 'bg-brand-cta-surface',
+        chipText: 'text-brand-cta',
     },
     {
         key: 'nino',
         label: 'Niño / Niña',
-        icon: '👕',
-        accent: 'border-brand-secondary',
-        headerBg: 'bg-brand-secondary-surface',
-        headerText: 'text-brand-primary',
-        badge: 'bg-brand-primary-surface text-brand-primary border-brand-primary/20',
-        cardBorder: 'border-brand-secondary/40 hover:border-brand-secondary',
-        cardRing: 'hover:ring-brand-secondary/30',
+        description: 'Talles infantiles numéricos',
+        Icon: ShirtIcon,
+        chipBg: 'bg-brand-primary-surface',
+        chipText: 'text-brand-primary',
     },
     {
         key: 'otro',
         label: 'Otros talles',
-        icon: '📐',
-        accent: 'border-gray-300',
-        headerBg: 'bg-gray-50',
-        headerText: 'text-brand-text-muted',
-        badge: 'bg-gray-100 text-brand-text-muted border-gray-200',
-        cardBorder: 'border-gray-200 hover:border-gray-400',
-        cardRing: 'hover:ring-gray-200',
+        description: 'Letras, especiales y sin clasificar',
+        Icon: RulerIcon,
+        chipBg: 'bg-brand-secondary-surface',
+        chipText: 'text-brand-primary-dark',
     },
 ];
+
+const Spinner = () => (
+    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+);
 
 // ─── Modal base ───────────────────────────────────────────────────────────────
 
@@ -128,45 +135,36 @@ function FlashBanner({ message, onDismiss }) {
 
 // ─── Size card ────────────────────────────────────────────────────────────────
 
-function SizeCard({ size, onEdit, onDelete }) {
+function SizeCard({ size, section, onEdit, onDelete }) {
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-yellow-400 bg-yellow-50 p-4 shadow-sm">
-            {/* Ruler icon */}
-            <div className="flex justify-center">
-                <span className="text-4xl select-none">📏</span>
+        <div className="group flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm hover:shadow-md hover:border-brand-primary/30 transition-all">
+            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${section.chipBg} ${section.chipText} font-bold text-sm`}>
+                {size.name.length <= 3 ? size.name : <section.Icon />}
+            </span>
+
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-brand-text">{size.name}</p>
+                <p className="text-xs text-brand-text-muted">{section.label}</p>
             </div>
 
-            {/* Name */}
-            <p className="text-center text-base font-bold text-amber-500 leading-snug">
-                {size.name}
-            </p>
-
-            {/* Badge */}
-            <div className="flex justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">
-                    🏷️ Talle {size.name}
-                </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                     onClick={() => onEdit(size)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-cyan-400 bg-white py-1.5 text-xs font-semibold text-cyan-500 hover:bg-cyan-50 transition-colors"
+                    title="Editar"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-brand-primary-surface hover:text-brand-primary transition-colors"
                 >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    Editar
                 </button>
                 <button
                     onClick={() => onDelete(size)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-red-400 bg-white py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                    title="Eliminar"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
                 >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Eliminar
                 </button>
             </div>
         </div>
@@ -179,25 +177,26 @@ function SizeSection({ section, sizes, onEdit, onDelete }) {
     if (sizes.length === 0) return null;
 
     return (
-        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-            {/* Section header */}
-            <div className={`flex items-center gap-3 border-b border-gray-100 px-5 py-4 ${section.headerBg} border-l-4 ${section.accent}`}>
-                <span className="text-xl">{section.icon}</span>
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+                <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${section.chipBg} ${section.chipText}`}>
+                    <section.Icon />
+                </span>
                 <div className="flex-1">
-                    <h3 className={`text-sm font-bold ${section.headerText}`}>{section.label}</h3>
-                    <p className="text-xs text-brand-text-light mt-0.5">
-                        {sizes.length} talle{sizes.length !== 1 ? 's' : ''}
+                    <h2 className="text-base font-bold text-brand-text">{section.label}</h2>
+                    <p className="text-xs text-brand-text-muted">
+                        {sizes.length} talle{sizes.length !== 1 ? 's' : ''} · {section.description}
                     </p>
                 </div>
             </div>
 
-            {/* Cards grid */}
             <div className="p-5">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {sizes.map((size) => (
                         <SizeCard
                             key={size.id}
                             size={size}
+                            section={section}
                             onEdit={onEdit}
                             onDelete={onDelete}
                         />
@@ -240,13 +239,13 @@ function CreateModal({ open, onClose }) {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ej: XS, S, M, 6m, 4, 8…"
                         autoFocus
-                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${
-                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'
+                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
                         }`}
                     />
                     {errors.name && <p className="mt-1.5 text-xs text-red-500">{errors.name}</p>}
                     <p className="mt-2 text-xs text-brand-text-light">
-                        Bebés: RN, 3m, 0-3m — Niños: 4, 6, 8 — Otros: XS, S, M…
+                        Bebés: RN, 3m, 0-3m · Niños: 4, 6, 8 · Otros: XS, S, M…
                     </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-1">
@@ -254,10 +253,11 @@ function CreateModal({ open, onClose }) {
                         Cancelar
                     </button>
                     <button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                        )}
                         Crear talle
                     </button>
                 </div>
@@ -297,8 +297,8 @@ function EditModal({ open, onClose, size }) {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         autoFocus
-                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${
-                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'
+                        className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+                            errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
                         }`}
                     />
                     {errors.name && <p className="mt-1.5 text-xs text-red-500">{errors.name}</p>}
@@ -308,10 +308,11 @@ function EditModal({ open, onClose, size }) {
                         Cancelar
                     </button>
                     <button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-primary-dark transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
                         Guardar cambios
                     </button>
                 </div>
@@ -350,10 +351,11 @@ function DeleteModal({ open, onClose, size }) {
                         Cancelar
                     </button>
                     <button onClick={submit} disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60">
-                        {processing
-                            ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        }
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        )}
                         Eliminar
                     </button>
                 </div>
@@ -396,7 +398,7 @@ export default function Index({ sizes }) {
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-brand-text">Talles</h2>
+                        <h1 className="text-xl font-bold text-brand-text">Talles</h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
                             {sizes.length} talle{sizes.length !== 1 ? 's' : ''} registrado{sizes.length !== 1 ? 's' : ''}
                         </p>
@@ -416,10 +418,9 @@ export default function Index({ sizes }) {
             <Head title="Talles" />
 
             <div className="p-6 space-y-5">
-                {/* Flash */}
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
 
-                {/* Search bar */}
+                {/* Search */}
                 {sizes.length > 0 && (
                     <div className="relative max-w-sm">
                         <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -430,7 +431,7 @@ export default function Index({ sizes }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Buscar talle…"
-                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-9 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 transition shadow-sm"
+                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-9 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition shadow-sm"
                         />
                         {search && (
                             <button
@@ -448,10 +449,10 @@ export default function Index({ sizes }) {
                 {/* Empty state */}
                 {sizes.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-24 text-brand-text-muted">
-                        <svg className="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 17h.01M15 17h.01M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
-                        </svg>
-                        <p className="text-lg font-semibold">No hay talles registrados</p>
+                        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-primary-surface text-brand-primary mb-4">
+                            <RulerIcon className="h-8 w-8" />
+                        </span>
+                        <p className="text-lg font-semibold text-brand-text">No hay talles registrados</p>
                         <p className="text-sm mt-1">Creá el primer talle para empezar</p>
                         <button
                             onClick={() => setCreateOpen(true)}
@@ -468,11 +469,11 @@ export default function Index({ sizes }) {
                 {/* No search results */}
                 {sizes.length > 0 && totalVisible === 0 && (
                     <div className="flex flex-col items-center justify-center py-16 text-brand-text-muted">
-                        <svg className="h-12 w-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <p className="font-semibold">Sin resultados para &quot;{search}&quot;</p>
-                        <button onClick={() => setSearch('')} className="mt-2 text-sm text-brand-primary hover:underline">
+                        <button onClick={() => setSearch('')} className="mt-2 text-sm font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors">
                             Limpiar búsqueda
                         </button>
                     </div>

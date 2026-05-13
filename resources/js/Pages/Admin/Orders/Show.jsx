@@ -147,7 +147,7 @@ function ComboItem({ item }) {
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700">
+                            <span className="inline-flex items-center rounded-full border border-brand-cta/30 bg-brand-cta-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-cta">
                                 Combo
                             </span>
                             <p className="mt-1 font-semibold text-brand-text">{item.name}</p>
@@ -167,8 +167,8 @@ function ComboItem({ item }) {
 
             {/* Prendas elegidas dentro del combo */}
             {item.picks?.length > 0 && (
-                <div className="mt-3 rounded-xl border border-purple-100 bg-purple-50/50 p-4">
-                    <p className="mb-3 text-xs font-semibold text-purple-600 uppercase tracking-wider">
+                <div className="mt-3 rounded-xl border border-brand-cta/20 bg-brand-cta-surface/40 p-4">
+                    <p className="mb-3 text-xs font-semibold text-brand-cta uppercase tracking-wider">
                         Prendas incluidas
                     </p>
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -178,11 +178,11 @@ function ComboItem({ item }) {
                                     <img
                                         src={pick.image}
                                         alt={pick.name}
-                                        className="h-44 w-44 rounded-xl object-cover bg-white border border-purple-100 shadow-sm"
+                                        className="h-44 w-44 rounded-xl object-cover bg-white border border-brand-cta/20 shadow-sm"
                                     />
                                 ) : (
-                                    <div className="h-44 w-44 rounded-xl bg-purple-100 flex items-center justify-center">
-                                        <svg className="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="h-44 w-44 rounded-xl bg-brand-cta-surface flex items-center justify-center">
+                                        <svg className="h-8 w-8 text-brand-cta/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
                                         </svg>
@@ -257,8 +257,10 @@ export default function OrdersShow({ order }) {
                         onClick={toggleStatus}
                         disabled={processing}
                         className={
-                            'inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed ' +
-                            (isPending ? 'bg-sky-600 hover:bg-sky-700' : 'bg-amber-600 hover:bg-amber-700')
+                            'inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ' +
+                            (isPending
+                                ? 'bg-brand-cta text-white hover:bg-brand-cta-dark'
+                                : 'border border-gray-200 bg-white text-brand-text hover:border-brand-primary hover:text-brand-primary')
                         }
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -321,7 +323,7 @@ export default function OrdersShow({ order }) {
                         </Card>
 
                         <Card title="Resumen">
-                            <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-primary-surface via-brand-cta-surface to-brand-secondary-surface px-4 py-3">
+                            <div className="flex items-center justify-between rounded-xl bg-brand-primary-surface px-4 py-3">
                                 <span className="text-sm font-semibold text-brand-primary">Total</span>
                                 <span className="text-base font-bold text-brand-primary">{fmt(order.total)}</span>
                             </div>

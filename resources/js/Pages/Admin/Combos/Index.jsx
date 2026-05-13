@@ -21,6 +21,24 @@ const Spinner = () => (
     </svg>
 );
 
+const Icons = {
+    search:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+    close:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />,
+    check:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />,
+    plus:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />,
+    pencil:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />,
+    trash:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
+    star:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
+    gift:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
+    image:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+};
+
+const Icon = ({ name, className = 'h-4 w-4' }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {Icons[name]}
+    </svg>
+);
+
 // ─── Size grouping ─────────────────────────────────────────────────────────────
 
 const SIZE_GROUPS = ['Bebé', 'Niño/a', 'Otros'];
@@ -74,9 +92,7 @@ function Modal({ open, onClose, title, children, size = 'md' }) {
                         onClick={onClose}
                         className="flex h-7 w-7 items-center justify-center rounded-full text-brand-text-muted hover:bg-gray-100 hover:text-brand-text transition-colors"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Icon name="close" />
                     </button>
                 </div>
                 <div className="overflow-y-auto px-6 py-5 flex-1">{children}</div>
@@ -99,19 +115,17 @@ function FlashBanner({ message, onDismiss }) {
     return (
         <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-sm">
             <svg className="h-4 w-4 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                {Icons.check}
             </svg>
             <span className="flex-1">{message}</span>
             <button onClick={onDismiss} className="text-emerald-400 hover:text-emerald-600 transition-colors">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" />
             </button>
         </div>
     );
 }
 
-// ─── Size toggle picker (no stock) ────────────────────────────────────────────
+// ─── Size toggle picker ───────────────────────────────────────────────────────
 
 function SizeTogglePicker({ sizes, selectedSizeIds, onToggle }) {
     const groups = groupSizes(sizes);
@@ -120,8 +134,8 @@ function SizeTogglePicker({ sizes, selectedSizeIds, onToggle }) {
         <div className="space-y-3">
             {SIZE_GROUPS.filter((g) => groups[g]).map((group) => (
                 <div key={group} className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center gap-2">
-                        <span className="inline-block h-0.5 w-5 rounded-full bg-amber-400" />
+                    <p className="text-[11px] font-bold text-brand-text-muted uppercase tracking-wider flex items-center gap-2">
+                        <span className="inline-block h-0.5 w-5 rounded-full bg-brand-primary" />
                         {group}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -140,7 +154,7 @@ function SizeTogglePicker({ sizes, selectedSizeIds, onToggle }) {
                                 >
                                     {sel && (
                                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            {Icons.check}
                                         </svg>
                                     )}
                                     {s.name}
@@ -154,7 +168,7 @@ function SizeTogglePicker({ sizes, selectedSizeIds, onToggle }) {
     );
 }
 
-// ─── Category pills selector ──────────────────────────────────────────────────
+// ─── Category pills ───────────────────────────────────────────────────────────
 
 function CategoryPills({ categories, selectedIds, onToggle }) {
     const [query, setQuery] = useState('');
@@ -167,19 +181,19 @@ function CategoryPills({ categories, selectedIds, onToggle }) {
         <div className="space-y-2">
             <div className="relative">
                 <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    {Icons.search}
                 </svg>
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Buscar categoría..."
-                    className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"
                 />
                 {query && (
                     <button type="button" onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            {Icons.close}
                         </svg>
                     </button>
                 )}
@@ -200,7 +214,7 @@ function CategoryPills({ categories, selectedIds, onToggle }) {
                         >
                             {sel && (
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    {Icons.check}
                                 </svg>
                             )}
                             {cat.name}
@@ -215,7 +229,7 @@ function CategoryPills({ categories, selectedIds, onToggle }) {
     );
 }
 
-// ─── Product card inside category panel ───────────────────────────────────────
+// ─── Product selection card ───────────────────────────────────────────────────
 
 function ProductSelectionCard({ product, selected, onToggle }) {
     const thumb = glideUrl(product.images?.[0], 200, 267);
@@ -225,33 +239,28 @@ function ProductSelectionCard({ product, selected, onToggle }) {
             className={`relative cursor-pointer rounded-xl border-2 overflow-hidden transition-all select-none ${
                 selected
                     ? 'border-brand-primary shadow-md shadow-brand-primary/20'
-                    : 'border-gray-200 hover:border-brand-secondary'
+                    : 'border-gray-200 hover:border-brand-primary/40'
             }`}
         >
-            {/* Image */}
             <div className="aspect-[3/4] bg-gray-100 overflow-hidden">
                 {thumb ? (
                     <img src={thumb} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Icon name="image" className="h-8 w-8 text-gray-300" />
                     </div>
                 )}
             </div>
 
-            {/* Selected checkmark */}
             {selected && (
                 <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-brand-primary flex items-center justify-center shadow">
                     <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        {Icons.check}
                     </svg>
                 </div>
             )}
 
-            {/* Info */}
-            <div className="p-2">
+            <div className="p-2 bg-white">
                 <p className="text-[11px] font-semibold text-brand-text leading-tight line-clamp-2">{product.name}</p>
                 <p className="text-[11px] text-brand-cta font-bold mt-0.5">{fmt(product.price)}</p>
             </div>
@@ -295,20 +304,19 @@ function CategoryPanel({ category, settings, onChange, onRemove }) {
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-brand-primary-surface border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                    <span className="text-brand-primary font-semibold text-sm">🏷️ {category.name}</span>
-                    <span className="text-xs text-brand-text-muted">— Seleccioná las prendas disponibles para esta categoría</span>
+                <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-brand-primary truncate">{category.name}</p>
+                    <p className="text-xs text-brand-text-muted">Seleccioná prendas disponibles para esta categoría</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                     <button
                         type="button"
                         onClick={toggleSelectAll}
                         className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
                             allSelected
                                 ? 'border-red-300 text-red-500 hover:bg-red-50'
-                                : 'border-brand-secondary text-brand-primary hover:bg-brand-secondary/10'
+                                : 'border-brand-primary/40 text-brand-primary hover:bg-white'
                         }`}
                     >
                         {allSelected ? 'Deseleccionar todas' : 'Seleccionar todas'}
@@ -316,27 +324,24 @@ function CategoryPanel({ category, settings, onChange, onRemove }) {
                     <button
                         type="button"
                         onClick={onRemove}
-                        className="text-xs font-medium text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+                        title="Quitar categoría"
+                        className="text-brand-text-muted hover:text-red-500 flex items-center transition-colors"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Quitar
+                        <Icon name="close" />
                     </button>
                 </div>
             </div>
 
             <div className="p-4 space-y-4">
-                {/* Quantity */}
                 <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-xs text-brand-text-muted font-medium">¿Cuántas prendas elige el cliente de esta categoría?</span>
+                    <span className="text-xs text-brand-text-muted font-medium">Cantidad por combo</span>
                     <div className="flex gap-1.5">
                         {[1, 2, 3, 4, 5].map((q) => (
                             <button
                                 key={q}
                                 type="button"
                                 onClick={() => setQuantity(q)}
-                                className={`h-6 w-6 rounded-full text-xs font-bold transition-colors ${
+                                className={`h-7 w-7 rounded-full text-xs font-bold transition-colors ${
                                     quantity === q
                                         ? 'bg-brand-primary text-white'
                                         : 'bg-gray-100 text-brand-text-muted hover:bg-brand-primary-surface hover:text-brand-primary'
@@ -347,32 +352,30 @@ function CategoryPanel({ category, settings, onChange, onRemove }) {
                         ))}
                     </div>
                     <span className="text-xs text-brand-text-light">
-                        {selectedProductIds.length} prenda{selectedProductIds.length !== 1 ? 's' : ''} seleccionada{selectedProductIds.length !== 1 ? 's' : ''}
+                        {selectedProductIds.length} seleccionada{selectedProductIds.length !== 1 ? 's' : ''}
                     </span>
                 </div>
 
-                {/* Product search */}
                 <div className="relative">
                     <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        {Icons.search}
                     </svg>
                     <input
                         type="text"
                         value={productSearch}
                         onChange={(e) => setProductSearch(e.target.value)}
                         placeholder="Buscar prenda..."
-                        className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary outline-none"
+                        className="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-1.5 text-xs text-brand-text placeholder-brand-text-light focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"
                     />
                     {productSearch && (
                         <button type="button" onClick={() => setProductSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                {Icons.close}
                             </svg>
                         </button>
                     )}
                 </div>
 
-                {/* Products grid */}
                 {filteredProducts.length === 0 ? (
                     <p className="text-xs text-brand-text-muted italic text-center py-4">Sin prendas{productSearch ? ` para "${productSearch}"` : ''}</p>
                 ) : (
@@ -416,8 +419,8 @@ function ImageZone({ preview, onChange, onRemove }) {
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !preview && inputRef.current?.click()}
             className={`relative rounded-xl border-2 border-dashed transition-colors ${
-                preview ? 'border-brand-secondary cursor-default' : 'border-gray-300 hover:border-brand-secondary cursor-pointer'
-            } bg-gray-50`}
+                preview ? 'border-brand-primary/40 cursor-default' : 'border-gray-300 hover:border-brand-primary cursor-pointer'
+            } bg-brand-bg/40`}
         >
             {preview ? (
                 <div className="relative flex items-center justify-center p-3">
@@ -427,16 +430,12 @@ function ImageZone({ preview, onChange, onRemove }) {
                         onClick={(e) => { e.stopPropagation(); onRemove(); }}
                         className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center text-white shadow"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Icon name="close" className="h-3.5 w-3.5" />
                     </button>
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                    <svg className="h-8 w-8 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <Icon name="image" className="h-8 w-8 text-gray-300 mb-2" />
                     <p className="text-xs text-brand-text-muted">Hacer click para subir imagen</p>
                     <p className="text-[10px] text-brand-text-light mt-1">JPG, PNG, WEBP — máx. 5MB</p>
                 </div>
@@ -446,7 +445,7 @@ function ImageZone({ preview, onChange, onRemove }) {
     );
 }
 
-// ─── Combo form modal (create & edit) ─────────────────────────────────────────
+// ─── Combo form modal ─────────────────────────────────────────────────────────
 
 const EMPTY_FORM = { name: '', description: '', price: '', is_active: true, is_featured: false };
 
@@ -466,7 +465,6 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
     const [categorySettings, setCategorySettings] = useState({});
     const fetchRef = useRef(null);
 
-    // Populate form when editing
     useEffect(() => {
         if (!open) return;
 
@@ -482,7 +480,6 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
             const sizeIds = combo.sizes.map((s) => s.id);
             setSelectedSizeIds(sizeIds);
 
-            // Rebuild category settings from combo items
             const catIds = [];
             const settings = {};
             for (const item of combo.items ?? []) {
@@ -505,7 +502,6 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
         setErrors({});
     }, [open, combo]);
 
-    // Fetch categories when sizes change
     useEffect(() => {
         if (!open) return;
         if (selectedSizeIds.length === 0) {
@@ -620,42 +616,50 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
 
     const selectedCategories = availableCategories.filter((c) => selectedCategoryIds.includes(c.id));
 
+    const inputCls = (err) =>
+        `w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+            err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
+        }`;
+
     return (
         <Modal open={open} onClose={handleClose} title={isEdit ? 'Editar Combo' : 'Crear Nuevo Combo'} size="4xl">
             <form onSubmit={submit} className="space-y-6">
 
-                {/* ── Datos del combo ──────────────────────────────────── */}
-                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">Datos del Combo</p>
+                {/* Datos del combo */}
+                <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">Datos del combo</p>
 
-                    {/* Name */}
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Nombre <span className="text-red-400">*</span></label>
+                        <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Nombre <span className="text-red-400">*</span>
+                        </label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                             placeholder="Ej: Combo Verano Bebé"
-                            className={`w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${errors.name ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'}`}
+                            className={inputCls(errors.name)}
                         />
                         {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
                     </div>
 
-                    {/* Description */}
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Descripción <span className="text-brand-text-light text-xs">(Opcional)</span></label>
+                        <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Descripción <span className="text-brand-text-light text-xs">(Opcional)</span>
+                        </label>
                         <textarea
                             value={form.description}
                             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                             rows={3}
                             placeholder="Describí qué incluye este combo..."
-                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-brand-text outline-none transition focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary resize-none"
+                            className={inputCls(false) + ' resize-none'}
                         />
                     </div>
 
-                    {/* Price */}
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Precio <span className="text-red-400">*</span></label>
+                        <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Precio <span className="text-red-400">*</span>
+                        </label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-muted text-sm font-medium">$</span>
                             <input
@@ -665,7 +669,7 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                                 value={form.price}
                                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
                                 placeholder="0"
-                                className={`w-full rounded-xl border pl-8 pr-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 focus:ring-brand-secondary ${errors.price ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-secondary'}`}
+                                className={inputCls(errors.price).replace('px-4', 'pl-8 pr-4')}
                             />
                         </div>
                         {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price}</p>}
@@ -685,65 +689,81 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                         <label className="flex items-center gap-2.5 cursor-pointer select-none">
                             <div
                                 onClick={() => setForm((f) => ({ ...f, is_featured: !f.is_featured }))}
-                                className={`relative h-5 w-9 rounded-full transition-colors ${form.is_featured ? 'bg-amber-400' : 'bg-gray-300'}`}
+                                className={`relative h-5 w-9 rounded-full transition-colors ${form.is_featured ? 'bg-brand-cta' : 'bg-gray-300'}`}
                             >
                                 <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0.5'}`} />
                             </div>
-                            <span className="text-sm text-brand-text">⭐ Destacar en la tienda</span>
+                            <span className="text-sm text-brand-text flex items-center gap-1.5">
+                                <svg className="h-3.5 w-3.5 text-brand-cta" viewBox="0 0 24 24" stroke="currentColor" fill="currentColor">
+                                    {Icons.star}
+                                </svg>
+                                Destacar en la tienda
+                            </span>
                         </label>
                     </div>
 
-                    {/* Image */}
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Imagen de portada <span className="text-brand-text-light text-xs">(Opcional)</span></label>
+                        <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Imagen de portada <span className="text-brand-text-light text-xs">(Opcional)</span>
+                        </label>
                         <ImageZone preview={imagePreview} onChange={handleImage} onRemove={removeImage} />
                     </div>
                 </div>
 
-                {/* ── Talles ───────────────────────────────────────────── */}
-                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
-                            Talles disponibles
-                            <span className="font-normal text-amber-600 normal-case tracking-normal ml-2">— Seleccioná en qué talles estará disponible este combo</span>
-                        </p>
+                {/* Talles */}
+                <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">
+                                Talles disponibles
+                            </p>
+                            <p className="text-xs text-brand-text-light mt-0.5">
+                                Seleccioná en qué talles estará disponible este combo
+                            </p>
+                        </div>
                         {selectedSizeIds.length > 0 && (
-                            <span className="text-xs text-amber-600 font-medium">✓ {selectedSizeIds.length} talle{selectedSizeIds.length !== 1 ? 's' : ''} seleccionado{selectedSizeIds.length !== 1 ? 's' : ''}</span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary-surface px-2.5 py-0.5 text-[11px] font-semibold text-brand-primary">
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {Icons.check}
+                                </svg>
+                                {selectedSizeIds.length} seleccionado{selectedSizeIds.length !== 1 ? 's' : ''}
+                            </span>
                         )}
                     </div>
                     <SizeTogglePicker sizes={sizes} selectedSizeIds={selectedSizeIds} onToggle={toggleSize} />
                 </div>
 
-                {/* ── Categorías ───────────────────────────────────────── */}
+                {/* Categorías */}
                 {selectedSizeIds.length > 0 && (
-                    <div className="rounded-xl border border-brand-secondary/30 bg-brand-secondary-surface p-4 space-y-3">
-                        <p className="text-xs font-bold uppercase tracking-wide text-brand-primary">
-                            Categorías del Combo
-                            <span className="font-normal text-brand-text-muted normal-case tracking-normal ml-2">— Seleccioná qué tipos de prendas compondrán el combo</span>
-                        </p>
+                    <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-3">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">
+                                Categorías del combo
+                            </p>
+                            <p className="text-xs text-brand-text-light mt-0.5">
+                                Seleccioná qué tipos de prendas compondrán el combo
+                            </p>
+                        </div>
 
                         {categoriesLoading ? (
                             <div className="flex items-center gap-2 py-3 text-sm text-brand-text-muted">
                                 <Spinner /> Cargando categorías...
                             </div>
                         ) : availableCategories.length === 0 ? (
-                            <p className="text-xs text-brand-text-muted italic">No hay categorías con prendas en los talles seleccionados.</p>
+                            <p className="text-xs text-brand-text-muted italic">
+                                No hay categorías con prendas en los talles seleccionados.
+                            </p>
                         ) : (
-                            <>
-                                <CategoryPills
-                                    categories={availableCategories}
-                                    selectedIds={selectedCategoryIds}
-                                    onToggle={toggleCategory}
-                                />
-                                {selectedCategoryIds.length > 0 && (
-                                    <p className="text-xs text-brand-text-light">✓ {selectedCategoryIds.length} categoría{selectedCategoryIds.length !== 1 ? 's' : ''} seleccionada{selectedCategoryIds.length !== 1 ? 's' : ''}</p>
-                                )}
-                            </>
+                            <CategoryPills
+                                categories={availableCategories}
+                                selectedIds={selectedCategoryIds}
+                                onToggle={toggleCategory}
+                            />
                         )}
                     </div>
                 )}
 
-                {/* ── Category panels ──────────────────────────────────── */}
+                {/* Category panels */}
                 {selectedCategories.map((cat) => (
                     <CategoryPanel
                         key={cat.id}
@@ -754,7 +774,7 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                     />
                 ))}
 
-                {/* ── Actions ──────────────────────────────────────────── */}
+                {/* Actions */}
                 <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                     <button
                         type="button"
@@ -771,10 +791,10 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                     >
                         {processing ? <Spinner /> : (
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                {Icons.check}
                             </svg>
                         )}
-                        {isEdit ? 'Guardar cambios' : 'Guardar Combo'}
+                        {isEdit ? 'Guardar cambios' : 'Guardar combo'}
                     </button>
                 </div>
             </form>
@@ -812,11 +832,7 @@ function DeleteModal({ open, onClose, combo }) {
                         Cancelar
                     </button>
                     <button onClick={submit} disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60">
-                        {processing ? <Spinner /> : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        )}
+                        {processing ? <Spinner /> : <Icon name="trash" />}
                         Eliminar
                     </button>
                 </div>
@@ -839,52 +855,53 @@ function ComboCard({ combo, onEdit, onDelete }) {
     }, [combo.items]);
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-100 hover:shadow-md transition-shadow">
-            {/* Image — same portrait ratio as product cards */}
+        <div className="group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-200 hover:shadow-md hover:border-brand-primary/30 transition-all">
+            {/* Image */}
             <div className="relative aspect-[3/4] bg-gray-50">
                 {imgSrc ? (
                     <img src={imgSrc} alt={combo.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-brand-text-light">
                         <svg className="h-16 w-16 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            {Icons.gift}
                         </svg>
                     </div>
                 )}
 
-                {/* Price badge — bottom left */}
-                <div className="absolute bottom-2 left-2">
-                    <span className="inline-flex items-center rounded-full bg-brand-cta px-3 py-1 text-xs font-bold text-white shadow">
-                        {fmt(combo.price)}
-                    </span>
-                </div>
-
-                {/* Featured star — top right */}
-                <div className="absolute top-2 right-2">
-                    <div className={`h-7 w-7 rounded-full flex items-center justify-center shadow ${combo.is_featured ? 'bg-amber-400' : 'bg-white/80'}`}>
-                        <svg className={`h-3.5 w-3.5 ${combo.is_featured ? 'text-white fill-white' : 'text-gray-400'}`} viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                    </div>
-                </div>
-
-                {/* Active badge — top left */}
+                {/* Active badge */}
                 <div className="absolute top-2 left-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${combo.is_active ? 'bg-emerald-500 text-white' : 'bg-gray-400 text-white'}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow ${combo.is_active ? 'bg-emerald-500 text-white' : 'bg-gray-500 text-white'}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
                         {combo.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                 </div>
+
+                {/* Featured star */}
+                {combo.is_featured && (
+                    <div className="absolute top-2 right-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-cta shadow">
+                            <svg className="h-3.5 w-3.5 fill-white text-white" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                                {Icons.star}
+                            </svg>
+                        </span>
+                    </div>
+                )}
+
+                {/* Price */}
+                <div className="absolute bottom-2 left-2">
+                    <span className="inline-flex items-center rounded-full bg-white/95 backdrop-blur-sm px-3 py-1 text-xs font-bold text-brand-cta shadow-sm">
+                        {fmt(combo.price)}
+                    </span>
+                </div>
             </div>
 
-            {/* Card body */}
-            <div className="p-3 flex flex-col flex-1 justify-between gap-2">
-                <div className="flex flex-col gap-2">
-                    <h3 className="font-bold text-brand-text text-sm leading-tight truncate">{combo.name}</h3>
+            {/* Body */}
+            <div className="p-4 flex flex-col flex-1 gap-3">
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-brand-text text-sm leading-tight line-clamp-2">{combo.name}</h3>
 
-                    {/* Sizes */}
                     {combo.sizes?.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="mt-2 flex flex-wrap gap-1">
                             {combo.sizes.map((s) => (
                                 <span key={s.id} className="rounded-full bg-brand-primary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary">
                                     {s.name}
@@ -893,11 +910,10 @@ function ComboCard({ combo, onEdit, onDelete }) {
                         </div>
                     )}
 
-                    {/* Categories summary */}
                     {categoryCounts.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="mt-1.5 flex flex-wrap gap-1">
                             {categoryCounts.map(([name, count]) => (
-                                <span key={name} className="rounded-full bg-brand-secondary-surface px-2 py-0.5 text-[10px] text-brand-text-muted">
+                                <span key={name} className="rounded-full bg-brand-secondary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary-dark">
                                     {name} ({count})
                                 </span>
                             ))}
@@ -906,24 +922,20 @@ function ComboCard({ combo, onEdit, onDelete }) {
                 </div>
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
                     <button
                         onClick={() => onEdit(combo)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-cyan-500 py-2 text-xs font-semibold text-white hover:bg-cyan-600 transition-colors"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Icon name="pencil" className="h-3.5 w-3.5" />
                         Editar
                     </button>
                     <button
                         onClick={() => onDelete(combo)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-red-500 py-2 text-xs font-semibold text-white hover:bg-red-600 transition-colors"
+                        title="Eliminar"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Eliminar
+                        <Icon name="trash" className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </div>
@@ -987,7 +999,7 @@ export default function Index({ combos, sizes, categories, filters }) {
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-brand-text">Combos</h2>
+                        <h1 className="text-xl font-bold text-brand-text">Combos</h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
                             {total} combo{total !== 1 ? 's' : ''} {hasFilters ? 'encontrado' : 'registrado'}{total !== 1 ? 's' : ''}
                         </p>
@@ -996,9 +1008,7 @@ export default function Index({ combos, sizes, categories, filters }) {
                         onClick={() => setCreateOpen(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Icon name="plus" />
                         Nuevo Combo
                     </button>
                 </div>
@@ -1009,19 +1019,18 @@ export default function Index({ combos, sizes, categories, filters }) {
             <div className="p-6 space-y-5">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
 
-                {/* ── Búsqueda y filtros ──────────────────────────────────── */}
+                {/* Search + filters */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
-                    {/* Search bar */}
                     <div className="relative">
                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            {Icons.search}
                         </svg>
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => handleSearchChange(e.target.value)}
                             placeholder="Buscar combo por nombre..."
-                            className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-10 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none transition focus:border-brand-secondary focus:bg-white focus:ring-2 focus:ring-brand-secondary/30"
+                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                         />
                         {search && (
                             <button
@@ -1029,14 +1038,11 @@ export default function Index({ combos, sizes, categories, filters }) {
                                 onClick={() => handleSearchChange('')}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text transition-colors"
                             >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <Icon name="close" />
                             </button>
                         )}
                     </div>
 
-                    {/* Category filter pills */}
                     {categories?.length > 0 && (
                         <div className="space-y-2">
                             <p className="text-xs font-medium text-brand-text-muted">Filtrar por categoría</p>
@@ -1056,7 +1062,7 @@ export default function Index({ combos, sizes, categories, filters }) {
                                         >
                                             {active && (
                                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    {Icons.check}
                                                 </svg>
                                             )}
                                             {cat.name}
@@ -1067,7 +1073,6 @@ export default function Index({ combos, sizes, categories, filters }) {
                         </div>
                     )}
 
-                    {/* Active filters footer */}
                     {hasFilters && (
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                             <p className="text-xs text-brand-text-muted">
@@ -1076,7 +1081,7 @@ export default function Index({ combos, sizes, categories, filters }) {
                             <button
                                 type="button"
                                 onClick={resetFilters}
-                                className="text-xs font-medium text-brand-primary hover:text-brand-primary-dark underline underline-offset-2 transition-colors"
+                                className="text-xs font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
                             >
                                 Limpiar filtros
                             </button>
@@ -1087,31 +1092,29 @@ export default function Index({ combos, sizes, categories, filters }) {
                 {/* Empty state */}
                 {(combos.data?.length ?? 0) === 0 && (
                     <div className="flex flex-col items-center justify-center py-24 text-brand-text-muted">
-                        <svg className="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
+                        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-primary-surface text-brand-primary mb-4">
+                            <Icon name="gift" className="h-8 w-8" />
+                        </span>
                         {hasFilters ? (
                             <>
-                                <p className="text-lg font-semibold">No se encontraron combos</p>
+                                <p className="text-lg font-semibold text-brand-text">No se encontraron combos</p>
                                 <p className="text-sm mt-1">Intentá cambiar los filtros de búsqueda</p>
                                 <button
                                     onClick={resetFilters}
-                                    className="mt-4 text-sm font-medium text-brand-primary hover:text-brand-primary-dark underline underline-offset-2 transition-colors"
+                                    className="mt-4 text-sm font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
                                 >
                                     Limpiar filtros
                                 </button>
                             </>
                         ) : (
                             <>
-                                <p className="text-lg font-semibold">No hay combos registrados</p>
+                                <p className="text-lg font-semibold text-brand-text">No hay combos registrados</p>
                                 <p className="text-sm mt-1">Creá el primer combo para empezar</p>
                                 <button
                                     onClick={() => setCreateOpen(true)}
                                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
                                 >
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
+                                    <Icon name="plus" />
                                     Nuevo Combo
                                 </button>
                             </>
@@ -1121,12 +1124,14 @@ export default function Index({ combos, sizes, categories, filters }) {
 
                 {/* Grid */}
                 {(combos.data?.length ?? 0) > 0 && (
-                    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4 bg-brand-primary-surface border-l-4 border-brand-secondary">
-                            <span className="text-xl">🎁</span>
+                    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-cta-surface text-brand-cta">
+                                <Icon name="gift" />
+                            </span>
                             <div className="flex-1">
-                                <h3 className="text-sm font-bold text-brand-primary">Todos los combos</h3>
-                                <p className="text-xs text-brand-text-light mt-0.5">
+                                <h2 className="text-base font-bold text-brand-text">Todos los combos</h2>
+                                <p className="text-xs text-brand-text-muted">
                                     {combos.data.length} combo{combos.data.length !== 1 ? 's' : ''} en esta página
                                 </p>
                             </div>
@@ -1144,21 +1149,20 @@ export default function Index({ combos, sizes, categories, filters }) {
                             </div>
                         </div>
 
-                        {/* Pagination */}
                         {combos.last_page > 1 && (
-                            <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-5 py-4">
+                            <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 px-5 py-4">
                                 {combos.links?.map((link, i) => (
                                     <button
                                         key={i}
                                         disabled={!link.url || link.active}
                                         onClick={() => link.url && router.get(link.url)}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                        className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                             link.active
-                                                ? 'bg-brand-primary text-white'
+                                                ? 'bg-brand-primary text-white shadow-sm'
                                                 : link.url
-                                                ? 'border border-gray-200 text-brand-text-muted hover:bg-gray-50'
-                                                : 'border border-gray-100 text-gray-300 cursor-not-allowed'
+                                                ? 'bg-white text-brand-text hover:bg-brand-primary-surface border border-gray-200'
+                                                : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
                                         }`}
                                     />
                                 ))}
