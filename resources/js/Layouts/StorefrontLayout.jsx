@@ -10,9 +10,11 @@ import Footer from '@/Components/Storefront/Footer';
 export default function StorefrontLayout({ children, cartCount = 0 }) {
     return (
         <div className="min-h-screen bg-brand-bg text-brand-text font-sans">
-            <TopBar />
-            <Header cartCount={cartCount} />
-            <Navbar />
+            <div className="sticky top-0 z-40">
+                <TopBar />
+                <Header cartCount={cartCount} />
+                <Navbar />
+            </div>
             <main>{children}</main>
             <Footer />
         </div>

@@ -56,7 +56,7 @@ export default function TopBar() {
                 }
             `}</style>
 
-            <div className="sticky top-0 z-50 w-full bg-brand-primary-surface border-b border-brand-secondary/30 overflow-hidden">
+            <div className="w-full bg-brand-primary-surface border-b border-brand-secondary/30 overflow-hidden">
                 <div className="h-9 flex items-center">
                     <div className="topbar-track flex items-center whitespace-nowrap">
                         {[...items, ...items].map((item, i) => (

@@ -26,7 +26,7 @@ export default function Header({ cartCount }) {
     const { props } = usePage();
     const count = cartCount ?? props?.cartCount ?? 0;
     return (
-        <header className="sticky top-0 z-40 bg-brand-bg/95 backdrop-blur border-b border-brand-secondary/20">
+        <header className="bg-brand-bg/95 backdrop-blur border-b border-brand-secondary/20">
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-20 items-center justify-between gap-4">
                     {/* Logo */}
