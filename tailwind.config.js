@@ -15,6 +15,15 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            keyframes: {
+                'fade-in': {
+                    '0%':   { opacity: '0', transform: 'translateY(6px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+            },
+            animation: {
+                'fade-in': 'fade-in 0.3s ease-out both',
+            },
             colors: {
                 // ─── Paleta del panel admin ───────────────────────────────────────────
                 // Modificar estos valores cambia los colores en todo el panel de una vez.

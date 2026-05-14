@@ -2,6 +2,7 @@ import TopBar from '@/Components/Storefront/TopBar';
 import Header from '@/Components/Storefront/Header';
 import Navbar from '@/Components/Storefront/Navbar';
 import Footer from '@/Components/Storefront/Footer';
+import WhatsAppButton from '@/Components/Storefront/WhatsAppButton';
 
 // ─── StorefrontLayout ─────────────────────────────────────────────────────────
 // Layout compartido para vistas de cliente: TopBar + Header + Navbar + contenido + Footer.
@@ -17,6 +18,7 @@ export default function StorefrontLayout({ children, cartCount = 0 }) {
             </div>
             <main>{children}</main>
             <Footer />
+            <WhatsAppButton />
         </div>
     );
 }
