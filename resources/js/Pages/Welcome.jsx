@@ -13,8 +13,8 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
             <Head title="Mimos · Combos y ropa para los más chicos" />
 
             <Hero image={heroImage} />
-            <PriceRangeSection />
             <FeaturedCombos combos={featuredCombos} />
+            <PriceRangeSection />
             <TrustBanner />
             <CategoryShortcuts />
             <FeaturedProducts products={featuredProducts} />

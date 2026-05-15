@@ -21,7 +21,11 @@ return new class extends Migration
 
         // 2. Migrar datos existentes solo si la columna gender_id todavía existe en products
         if (Schema::hasColumn('products', 'gender_id')) {
-            DB::statement('INSERT IGNORE INTO gender_product (gender_id, product_id) SELECT gender_id, id FROM products WHERE gender_id IS NOT NULL');
+            $insertStatement = DB::getDriverName() === 'sqlite'
+                ? 'INSERT OR IGNORE INTO gender_product (gender_id, product_id) SELECT gender_id, id FROM products WHERE gender_id IS NOT NULL'
+                : 'INSERT IGNORE INTO gender_product (gender_id, product_id) SELECT gender_id, id FROM products WHERE gender_id IS NOT NULL';
+
+            DB::statement($insertStatement);
 
             // 3. Eliminar la foreign key y la columna gender_id de products
             Schema::table('products', function (Blueprint $table) {

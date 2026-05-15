@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .store-shell {
+        @apply mx-auto w-full max-w-[1800px] px-3 sm:px-4 lg:px-5 xl:px-6;
+    }
+
+    .store-section {
+        @apply py-12 lg:py-16 xl:py-20;
+    }
+
+    .store-section-bottom {
+        @apply pb-12 lg:pb-16 xl:pb-20;
+    }
+
+    .store-panel {
+        @apply relative overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_24px_60px_rgba(61,90,128,0.10)] backdrop-blur-sm;
+    }
+
+    .store-card {
+        @apply relative overflow-hidden rounded-[1.75rem] border border-white/70 bg-white shadow-[0_18px_40px_rgba(61,90,128,0.08)] backdrop-blur-sm;
+    }
+}
