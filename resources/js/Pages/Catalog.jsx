@@ -14,12 +14,12 @@ function ProductCard({ item }) {
     return (
         <Link href={href} className="group block h-full">
             <article className="flex h-full flex-col overflow-hidden bg-white transition duration-300 hover:-translate-y-0.5">
-                <div className="relative aspect-[4/5] overflow-hidden bg-brand-primary-surface/35">
+                <div className="relative aspect-[4/5] overflow-hidden bg-white">
                     {item.image ? (
                         <img
                             src={item.image}
                             alt={item.name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                            className="absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
                             loading="lazy"
                         />
                     ) : (
