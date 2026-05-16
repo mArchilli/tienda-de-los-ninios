@@ -75,7 +75,7 @@ export default function PriceRangeSection() {
                                 className={`group store-card ${range.bg} flex min-h-[235px] flex-col p-6 transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(61,90,128,0.12)] lg:min-h-[255px] lg:p-7`}
                             >
                                 <div className={`absolute -right-8 -top-8 h-24 w-24 rounded-full ${range.accent}`} />
-                                <div className={`relative mb-6 flex h-[4.6rem] w-[4.6rem] items-center justify-center rounded-[1.4rem] ${range.iconBg} shadow-[0_10px_24px_rgba(41,50,65,0.14)]`}>
+                                <div className={`home-surface relative mb-6 flex h-[4.6rem] w-[4.6rem] items-center justify-center ${range.iconBg} shadow-[0_10px_24px_rgba(41,50,65,0.14)]`}>
                                     {range.icon}
                                 </div>
 

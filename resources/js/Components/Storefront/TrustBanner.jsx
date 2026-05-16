@@ -50,7 +50,7 @@ export default function TrustBanner() {
                     <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
                         {ITEMS.map((item) => (
                             <div key={item.title} className="store-card flex items-start gap-4 px-4 py-4 sm:px-5">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-primary shadow-sm">
+                                <div className="home-surface flex h-12 w-12 shrink-0 items-center justify-center bg-white text-brand-primary shadow-sm">
                                     {item.icon}
                                 </div>
                                 <div className="min-w-0">

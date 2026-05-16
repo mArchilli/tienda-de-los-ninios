@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes topbar-marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
 @layer components {
     .store-shell {
         @apply mx-auto w-full max-w-[1800px] px-3 sm:px-4 lg:px-5 xl:px-6;
@@ -21,5 +31,31 @@
 
     .store-card {
         @apply relative overflow-hidden rounded-[1.75rem] border border-white/70 bg-white shadow-[0_18px_40px_rgba(61,90,128,0.08)] backdrop-blur-sm;
+    }
+
+    .topbar-marquee {
+        @apply flex items-center overflow-hidden whitespace-nowrap;
+    }
+
+    .topbar-marquee-track {
+        display: flex;
+        min-width: max-content;
+        align-items: center;
+        gap: 2.5rem;
+        padding-right: 2.5rem;
+        animation: topbar-marquee 28s linear infinite;
+        will-change: transform;
+    }
+
+    .home-angular .store-panel,
+    .home-angular .store-card,
+    .home-angular .home-panel,
+    .home-angular .home-surface,
+    .home-angular .home-media {
+        border-radius: 0.45rem;
+    }
+
+    .home-angular .home-button {
+        border-radius: 0.3rem;
     }
 }

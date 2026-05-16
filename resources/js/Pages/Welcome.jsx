@@ -12,12 +12,14 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
         <StorefrontLayout cartCount={cartCount}>
             <Head title="Mimos · Combos y ropa para los más chicos" />
 
-            <Hero image={heroImage} />
-            <FeaturedCombos combos={featuredCombos} />
-            <PriceRangeSection />
-            <TrustBanner />
-            <CategoryShortcuts />
-            <FeaturedProducts products={featuredProducts} />
+            <div className="home-angular">
+                <Hero image={heroImage} />
+                <FeaturedCombos combos={featuredCombos} />
+                <PriceRangeSection />
+                <TrustBanner />
+                <CategoryShortcuts />
+                <FeaturedProducts products={featuredProducts} />
+            </div>
         </StorefrontLayout>
     );
 }

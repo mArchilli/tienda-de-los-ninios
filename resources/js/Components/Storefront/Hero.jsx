@@ -81,13 +81,13 @@ export default function Hero() {
                         <div className="mt-6 flex flex-wrap gap-3.5">
                             <a
                                 href="#combos"
-                                className="inline-flex items-center justify-center rounded-xl bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark"
+                                className="home-button inline-flex items-center justify-center bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark"
                             >
                                 Ver combos
                             </a>
                             <a
                                 href="#armar"
-                                className="inline-flex items-center justify-center rounded-xl border-2 border-brand-primary bg-white/95 px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
+                                className="home-button inline-flex items-center justify-center border-2 border-brand-primary bg-white/95 px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
                             >
                                 {'Arm\u00e1 tu combo'}
                             </a>
@@ -108,7 +108,7 @@ export default function Hero() {
 
                 <div className="relative z-10 mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:-mt-2 lg:grid-cols-4 lg:gap-4">
                     {FEATURES.map((feature) => (
-                        <div key={feature.title} className="flex items-center gap-3 rounded-2xl bg-white/84 px-4 py-3 backdrop-blur-sm shadow-sm">
+                        <div key={feature.title} className="home-surface flex items-center gap-3 bg-white/84 px-4 py-3 backdrop-blur-sm shadow-sm">
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary-surface text-brand-primary">
                                 {feature.icon}
                             </div>

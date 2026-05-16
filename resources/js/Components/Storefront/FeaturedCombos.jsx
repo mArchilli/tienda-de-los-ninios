@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { useRef } from 'react';
 
 const FALLBACK = [
@@ -14,41 +15,43 @@ function fmt(price) {
 function ComboCard({ combo }) {
     return (
         <article className="group w-[285px] shrink-0 snap-start sm:w-[318px] lg:w-[338px] xl:w-[352px]">
-            <div className="store-card p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] bg-brand-secondary-surface">
-                    {combo.image ? (
-                        <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-brand-primary/40">
-                            <svg className="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
+            <Link href={`/combo/${combo.id}`} className="block">
+                <div className="store-card p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
+                    <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-secondary-surface">
+                        {combo.image ? (
+                            <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-brand-primary/40">
+                                <svg className="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                        )}
+
+                        <div className="absolute inset-0 bg-gradient-to-t from-brand-text/55 via-transparent to-white/10" />
+
+                        {combo.badge && (
+                            <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow ${combo.badgeColor ?? 'bg-brand-primary'}`}>
+                                {combo.badge}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="px-1 pb-1 pt-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                                <h3 className="text-base font-extrabold leading-tight text-brand-text">{combo.name}</h3>
+                                {combo.desc && (
+                                    <p className="mt-1 text-sm leading-relaxed text-brand-text-muted">{combo.desc}</p>
+                                )}
+                            </div>
+                            <span className="shrink-0 rounded-full bg-brand-cta-surface px-3 py-1 text-sm font-bold text-brand-cta shadow-sm">
+                                {fmt(combo.price)}
+                            </span>
                         </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-text/55 via-transparent to-white/10" />
-
-                    {combo.badge && (
-                        <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow ${combo.badgeColor ?? 'bg-brand-primary'}`}>
-                            {combo.badge}
-                        </span>
-                    )}
-                </div>
-
-                <div className="px-1 pb-1 pt-4">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                            <h3 className="text-base font-extrabold leading-tight text-brand-text">{combo.name}</h3>
-                            {combo.desc && (
-                                <p className="mt-1 text-sm leading-relaxed text-brand-text-muted">{combo.desc}</p>
-                            )}
-                        </div>
-                        <span className="shrink-0 rounded-full bg-brand-cta-surface px-3 py-1 text-sm font-bold text-brand-cta shadow-sm">
-                            {fmt(combo.price)}
-                        </span>
                     </div>
                 </div>
-            </div>
+            </Link>
         </article>
     );
 }
@@ -82,7 +85,7 @@ export default function FeaturedCombos({ combos }) {
                                 type="button"
                                 onClick={() => scroll(-1)}
                                 aria-label="Anterior"
-                                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary"
+                                className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -92,7 +95,7 @@ export default function FeaturedCombos({ combos }) {
                                 type="button"
                                 onClick={() => scroll(1)}
                                 aria-label="Siguiente"
-                                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary"
+                                className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -113,15 +116,15 @@ export default function FeaturedCombos({ combos }) {
                     </div>
 
                     <div className="relative z-10 mt-8 flex justify-center">
-                        <a
-                            href="#combos"
-                            className="inline-flex items-center gap-2 rounded-full bg-brand-primary px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition-colors hover:bg-brand-primary-dark"
+                        <Link
+                            href="/catalogo"
+                            className="home-button inline-flex items-center gap-2 bg-brand-primary px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition-colors hover:bg-brand-primary-dark"
                         >
                             Ver todos los combos
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
                             </svg>
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -15,7 +15,7 @@ const items = [
                 <path d="M12 21s-7-4.35-7-10a4.5 4.5 0 018-2.83A4.5 4.5 0 0119 11c0 5.65-7 10-7 10z" />
             </svg>
         ),
-        text: 'A domicilio o en tu sucursal m\u00e1s cercana',
+        text: 'Nueva colecci\u00f3n de temporada',
     },
     {
         icon: (
@@ -23,16 +23,45 @@ const items = [
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 15l-5 3.4 1.9-5.8L4 9h6.1z" />
             </svg>
         ),
-        text: 'Nueva colecci\u00f3n de temporada',
+        text: 'Todo tipo de combos',
     },
     {
         icon: (
             <svg className="h-3.5 w-3.5 shrink-0 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 4h12l1 4H5L6 4zM5 8v12h14V8" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 8V6a3 3 0 016 0v2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 11h12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 15h8" />
             </svg>
         ),
-        text: 'Ropa para beb\u00e9s y ni\u00f1os de 0 a 12 a\u00f1os',
+        text: 'Ofertas todos los d\u00edas',
+    },
+    {
+        icon: (
+            <svg className="h-3.5 w-3.5 shrink-0 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 3l7 4v5c0 4.4-2.9 8.4-7 9-4.1-.6-7-4.6-7-9V7l7-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.5 12.5l1.8 1.8 3.2-4" />
+            </svg>
+        ),
+        text: 'Compra 100% segura',
+    },
+    {
+        icon: (
+            <svg className="h-3.5 w-3.5 shrink-0 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8.5h18" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 15h3" />
+            </svg>
+        ),
+        text: 'Todos los m\u00e9todos de pago',
+    },
+    {
+        icon: (
+            <svg className="h-3.5 w-3.5 shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l2.5 2.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12a9 9 0 11-9-9" />
+            </svg>
+        ),
+        text: 'Armamos tu pedido r\u00e1pido',
     },
 ];
 
@@ -40,19 +69,18 @@ export default function TopBar() {
     return (
         <div className="border-b border-brand-primary-dark/30 bg-brand-primary text-white">
             <div className="store-shell">
-                <div className="flex h-8 items-center justify-center overflow-hidden text-center">
-                    <div className="hidden items-center gap-6 whitespace-nowrap text-[11px] font-medium tracking-[0.14em] uppercase sm:flex">
-                        {items.slice(0, 3).map((item) => (
-                            <span key={item.text} className="inline-flex items-center gap-2 text-white/88">
+                <div className="topbar-marquee h-8">
+                    <div className="topbar-marquee-track">
+                        {[...items, ...items].map((item, index) => (
+                            <span
+                                key={`${item.text}-${index}`}
+                                className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/88 sm:text-[11px]"
+                            >
                                 {item.icon}
                                 {item.text}
                             </span>
                         ))}
                     </div>
-                    <span className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/88 sm:hidden">
-                        {items[0].icon}
-                        {items[0].text}
-                    </span>
                 </div>
             </div>
         </div>

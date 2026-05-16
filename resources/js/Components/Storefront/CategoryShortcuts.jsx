@@ -40,9 +40,9 @@ export default function CategoryShortcuts() {
                                     <a
                                         key={category.label}
                                         href={category.href}
-                                        className="group relative flex flex-col items-center rounded-[1.5rem] px-3 py-4 transition duration-300 hover:-translate-y-1"
+                                        className="home-surface group relative flex flex-col items-center px-3 py-4 transition duration-300 hover:-translate-y-1"
                                     >
-                                        <div className={`absolute inset-0 rounded-[1.5rem] ${category.orb} opacity-0 transition duration-300 group-hover:opacity-100`} />
+                                        <div className={`home-surface absolute inset-0 ${category.orb} opacity-0 transition duration-300 group-hover:opacity-100`} />
                                         <div className="relative">
                                             <CircleSlot tint={category.tint} label={category.label} />
                                         </div>
@@ -54,7 +54,7 @@ export default function CategoryShortcuts() {
                             </div>
                         </div>
 
-                        <aside className="relative overflow-hidden rounded-[2rem] bg-brand-primary p-6 text-white shadow-[0_24px_50px_rgba(61,90,128,0.20)] sm:p-7 lg:p-8">
+                        <aside className="home-panel relative overflow-hidden bg-brand-primary p-6 text-white shadow-[0_24px_50px_rgba(61,90,128,0.20)] sm:p-7 lg:p-8">
                             <div className="absolute inset-0 bg-gradient-to-br from-white/12 via-transparent to-black/10" />
                             <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
                             <div className="absolute -bottom-12 -right-10 h-56 w-56 rounded-full bg-brand-secondary/35" />
@@ -69,7 +69,7 @@ export default function CategoryShortcuts() {
                                     </p>
                                     <a
                                         href="#about"
-                                        className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-brand-cta px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors hover:bg-brand-cta-dark"
+                                        className="home-button mt-5 inline-flex items-center gap-1.5 bg-brand-cta px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors hover:bg-brand-cta-dark"
                                     >
                                         {'Conoc\u00e9 m\u00e1s'}
                                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
