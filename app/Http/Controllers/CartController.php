@@ -39,6 +39,40 @@ class CartController extends Controller
         return $count;
     }
 
+    public static function currentCart(): array
+    {
+        $cart     = session('cart', ['products' => [], 'combos' => []]);
+        $products = array_values(array_map(fn ($i) => [
+            'key'         => $i['key'],
+            'type'        => 'product',
+            'name'        => $i['name'],
+            'image'       => $i['image'],
+            'size_name'   => $i['size_name'] ?? null,
+            'price'       => (float) $i['price'],
+            'quantity'    => (int) $i['quantity'],
+            'subtotal'    => (float) $i['price'] * (int) $i['quantity'],
+        ], $cart['products'] ?? []));
+
+        $combos = array_values(array_map(fn ($i) => [
+            'key'         => $i['key'],
+            'type'        => 'combo',
+            'name'        => $i['name'],
+            'image'       => $i['image'],
+            'size_name'   => $i['size_name'] ?? null,
+            'gender_name' => $i['gender_name'] ?? null,
+            'price'       => (float) $i['price'],
+            'quantity'    => (int) $i['quantity'],
+            'subtotal'    => (float) $i['price'] * (int) $i['quantity'],
+        ], $cart['combos'] ?? []));
+
+        $items = array_merge($products, $combos);
+
+        return [
+            'items'    => $items,
+            'subtotal' => array_sum(array_column($items, 'subtotal')),
+        ];
+    }
+
     protected function buildView(array $cart): array
     {
         $products = array_values(array_map(fn ($i) => [
