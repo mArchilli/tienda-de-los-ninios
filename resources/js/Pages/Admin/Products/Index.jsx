@@ -444,6 +444,24 @@ function ImageUploadZone({ existingImages, newImages, onAddNew, onRemoveExisting
     );
 }
 
+// ─── Product modal helpers ────────────────────────────────────────────────────
+
+function Field({ label, error, children }) {
+    return (
+        <div>
+            <label className="block text-sm font-medium text-brand-text mb-1.5">{label}</label>
+            {children}
+            {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
+        </div>
+    );
+}
+
+function inputCls(err) {
+    return `w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
+        err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
+    }`;
+}
+
 // ─── Product modal ────────────────────────────────────────────────────────────
 
 const EMPTY_FORM = {
@@ -542,19 +560,6 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
             router.post(route('admin.products.store'), payload, options);
         }
     };
-
-    const Field = ({ label, error, children }) => (
-        <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">{label}</label>
-            {children}
-            {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
-        </div>
-    );
-
-    const inputCls = (err) =>
-        `w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
-            err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
-        }`;
 
     return (
         <Modal open={open} onClose={handleClose} title={isEditing ? 'Editar Prenda' : 'Nueva Prenda'} size="2xl">
