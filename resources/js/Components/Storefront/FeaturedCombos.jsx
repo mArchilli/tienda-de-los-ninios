@@ -118,7 +118,7 @@ export default function FeaturedCombos({ combos }) {
                     <div className="relative z-10 mt-8 flex justify-center">
                         <Link
                             href="/catalogo"
-                            className="home-button inline-flex items-center gap-2 bg-brand-primary px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition-colors hover:bg-brand-primary-dark"
+                            className="home-button inline-flex items-center gap-2 bg-brand-cta px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition-colors hover:bg-brand-cta-dark"
                         >
                             Ver todos los combos
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

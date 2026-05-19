@@ -56,12 +56,7 @@ export default function Hero() {
             <div className="store-shell relative z-10 py-6 sm:py-8 lg:py-10 xl:py-12">
                 <div className="grid min-h-[360px] grid-cols-1 gap-5 lg:min-h-[430px] lg:grid-cols-[minmax(0,1.1fr)_minmax(220px,0.9fr)] lg:items-center xl:min-h-[470px]">
                     <div className="relative max-w-xl lg:max-w-2xl">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                            Nuevo
-                        </span>
-
-                        <h1 className="mt-4 font-extrabold leading-[0.9] text-brand-text">
+                        <h1 className="font-extrabold leading-[0.9] text-brand-text">
                             <span className="block text-5xl sm:text-6xl lg:text-[4.35rem] xl:text-[4.8rem]">COMBOS</span>
                             <span className="mt-1.5 block text-4xl text-brand-primary sm:text-5xl lg:text-[3.9rem] xl:text-[4.35rem]">
                                 PARA REGALAR
@@ -95,15 +90,6 @@ export default function Hero() {
                     </div>
 
                     <div className="relative hidden h-full lg:block" />
-                </div>
-
-                <div className="pointer-events-none absolute right-4 top-6 z-10 flex h-28 w-28 flex-col items-center justify-center rounded-full border-4 border-brand-bg bg-brand-primary text-center text-white shadow-xl sm:right-8 sm:top-8 sm:h-32 sm:w-32 lg:right-10 lg:top-10 lg:h-36 lg:w-36 xl:right-12 xl:top-12 xl:h-40 xl:w-40">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest opacity-80">Nuevos</span>
-                    <span className="text-lg font-extrabold leading-tight xl:text-[1.35rem]">COMBOS</span>
-                    <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider opacity-80">todas las<br />semanas</span>
-                    <svg className="mt-1 h-3 w-3 text-brand-cta xl:h-3.5 xl:w-3.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z" />
-                    </svg>
                 </div>
 
                 <div className="relative z-10 mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:-mt-2 lg:grid-cols-4 lg:gap-4">

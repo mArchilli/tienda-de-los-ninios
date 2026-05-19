@@ -1,22 +1,20 @@
 const CATEGORIES = [
-    { label: 'NENE', href: '#nene', tint: 'bg-brand-primary-surface', orb: 'bg-brand-primary/12' },
-    { label: 'NENA', href: '#nena', tint: 'bg-rose-50', orb: 'bg-rose-200/55' },
-    { label: 'UNISEX', href: '#unisex', tint: 'bg-brand-secondary-surface', orb: 'bg-brand-secondary/25' },
-    { label: 'ACCESORIOS', href: '#accesorios', tint: 'bg-amber-50', orb: 'bg-amber-200/55' },
-    { label: 'OUTLET', href: '#outlet', tint: 'bg-brand-cta-surface', orb: 'bg-brand-cta/12' },
+    { label: 'NENE', href: '#nene', tint: 'bg-brand-primary-surface', orb: 'bg-brand-primary/12', image: '/images/filtro-nene.png' },
+    { label: 'NENA', href: '#nena', tint: 'bg-rose-50', orb: 'bg-rose-200/55', image: '/images/filtro-nena.png' },
+    { label: 'UNISEX', href: '#unisex', tint: 'bg-brand-secondary-surface', orb: 'bg-brand-secondary/25', image: '/images/filtro-unisex.png' },
+    { label: 'COMBOS', href: '#combos', tint: 'bg-amber-50', orb: 'bg-amber-200/55', image: '/images/filtro-combos.png' },
+    { label: 'OUTLET', href: '#outlet', tint: 'bg-brand-cta-surface', orb: 'bg-brand-cta/12', image: '/images/filtro-outlet.png' },
 ];
 
-function CircleSlot({ tint, label }) {
+function CircleSlot({ tint, label, image }) {
     return (
         <div className={`relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full ${tint} shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:h-28 sm:w-28 lg:h-32 lg:w-32`}>
             <div className="absolute inset-x-4 top-3 h-5 rounded-full bg-white/45 blur-md" />
-            {label === 'OUTLET' ? (
-                <span className="text-3xl font-extrabold text-brand-cta lg:text-[2.2rem]">%</span>
-            ) : (
-                <svg className="h-11 w-11 text-brand-primary/50 lg:h-12 lg:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.4} d="M16 14a4 4 0 10-8 0M12 11a3 3 0 100-6 3 3 0 000 6zM4 21c0-3.5 3.5-6 8-6s8 2.5 8 6" />
-                </svg>
-            )}
+            <img
+                src={image}
+                alt={`Filtro ${label.toLowerCase()}`}
+                className="relative z-10 h-16 w-16 object-contain sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+            />
         </div>
     );
 }
@@ -44,7 +42,7 @@ export default function CategoryShortcuts() {
                                     >
                                         <div className={`home-surface absolute inset-0 ${category.orb} opacity-0 transition duration-300 group-hover:opacity-100`} />
                                         <div className="relative">
-                                            <CircleSlot tint={category.tint} label={category.label} />
+                                            <CircleSlot tint={category.tint} label={category.label} image={category.image} />
                                         </div>
                                         <span className="relative mt-3 text-xs font-bold tracking-[0.18em] text-brand-text transition-colors group-hover:text-brand-primary">
                                             {category.label}

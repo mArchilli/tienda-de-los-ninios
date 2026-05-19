@@ -48,6 +48,9 @@ function ProductCard({ product }) {
                         <p className="mt-2 inline-flex rounded-full bg-brand-cta-surface px-3 py-1 text-sm font-bold text-brand-cta shadow-sm">
                             {fmt(product.price)}
                         </p>
+                        <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
+                            Ver producto
+                        </span>
                     </div>
                 </div>
             </Link>

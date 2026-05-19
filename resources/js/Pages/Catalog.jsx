@@ -11,7 +11,7 @@ function ProductCard({ item }) {
 
     return (
         <Link href={href} className="group block h-full">
-            <article className="flex h-full flex-col overflow-hidden rounded-md border border-brand-secondary/20 bg-white shadow-[0_10px_24px_rgba(41,50,65,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-secondary/40 hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
+            <article className="flex h-full flex-col overflow-hidden border border-brand-primary/35 bg-white shadow-[0_10px_24px_rgba(41,50,65,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
                 <div className="relative aspect-[4/5] overflow-hidden bg-brand-primary-surface/35">
                     {item.image ? (
                         <img
@@ -41,13 +41,16 @@ function ProductCard({ item }) {
                     )}
                 </div>
 
-                <div className="flex flex-1 flex-col px-3 py-3 sm:px-3.5 sm:py-3.5">
-                    <h3 className="line-clamp-2 min-h-[2.2rem] text-[13px] font-semibold leading-[1.15] text-brand-text sm:min-h-[2.35rem] sm:text-[13.5px]">
+                <div className="flex flex-1 flex-col px-3.5 py-3.5 sm:px-4 sm:py-4">
+                    <h3 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-semibold leading-[1.15] text-brand-text sm:min-h-[2.5rem] sm:text-[13.5px]">
                         {item.name}
                     </h3>
                     <p className="mt-2 text-[15px] font-extrabold tracking-[-0.01em] text-brand-text sm:text-base">
                         {fmt(item.price)}
                     </p>
+                    <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
+                        {item.type === 'combo' ? 'Armar combo' : 'Ver producto'}
+                    </span>
                 </div>
             </article>
         </Link>
@@ -149,7 +152,7 @@ export default function Catalog({ combos = [], products = [], cartCount }) {
                             <p className="text-sm">No hay prendas ni combos disponibles por el momento.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-3.5 xl:grid-cols-6 xl:gap-4 2xl:grid-cols-7">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
                             {items.map((item) => (
                                 <ProductCard key={`${item.type}-${item.id}`} item={item} />
                             ))}
