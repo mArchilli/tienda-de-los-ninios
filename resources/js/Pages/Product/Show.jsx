@@ -8,58 +8,119 @@ function fmt(price) {
 
 function ImageGallery({ images, name }) {
     const [active, setActive] = useState(0);
+    const [zoomOpen, setZoomOpen] = useState(false);
     const list = images?.length ? images : [null];
 
+    useEffect(() => {
+        if (!zoomOpen) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                setZoomOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [zoomOpen]);
+
     return (
-        <div className="store-panel p-3 sm:p-4 lg:p-5">
-            <div className="grid gap-4 lg:grid-cols-[86px_minmax(0,1fr)] xl:grid-cols-[94px_minmax(0,1fr)] xl:gap-4">
-                <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[560px] lg:flex-col lg:overflow-y-auto lg:overflow-x-visible lg:pr-1">
-                    {list.map((src, index) => (
+        <>
+            <div className="store-panel p-3 sm:p-4 lg:p-5">
+                <div className="grid gap-4 lg:grid-cols-[86px_minmax(0,1fr)] xl:grid-cols-[94px_minmax(0,1fr)] xl:gap-4">
+                    <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[560px] lg:flex-col lg:overflow-y-auto lg:overflow-x-visible lg:pr-1">
+                        {list.map((src, index) => (
+                            <button
+                                key={index}
+                                type="button"
+                                onClick={() => setActive(index)}
+                                className={`group relative shrink-0 overflow-hidden border bg-white transition-all duration-200 lg:w-full ${
+                                    active === index
+                                        ? 'border-brand-primary shadow-[0_14px_28px_rgba(61,90,128,0.18)]'
+                                        : 'border-brand-primary/35 hover:border-brand-primary hover:bg-brand-primary-surface/30'
+                                }`}
+                                aria-label={`Imagen ${index + 1}`}
+                            >
+                                <div className="aspect-[4/5] w-20 sm:w-24 lg:w-full">
+                                    {src ? (
+                                        <img
+                                            src={src}
+                                            alt=""
+                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full bg-brand-primary-surface" />
+                                    )}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="order-1 overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.78))] shadow-[0_20px_44px_rgba(61,90,128,0.10)] lg:order-2">
                         <button
-                            key={index}
                             type="button"
-                            onClick={() => setActive(index)}
-                            className={`group relative shrink-0 overflow-hidden border bg-white transition-all duration-200 lg:w-full ${
-                                active === index
-                                    ? 'border-brand-primary shadow-[0_14px_28px_rgba(61,90,128,0.18)]'
-                                    : 'border-brand-primary/35 hover:border-brand-primary hover:bg-brand-primary-surface/30'
-                            }`}
-                            aria-label={`Imagen ${index + 1}`}
+                            onClick={() => list[active] && setZoomOpen(true)}
+                            disabled={!list[active]}
+                            className="relative block w-full text-left disabled:cursor-default"
+                            aria-label={list[active] ? 'Ver imagen ampliada' : 'Imagen no disponible'}
                         >
-                            <div className="aspect-[4/5] w-20 sm:w-24 lg:w-full">
-                                {src ? (
-                                    <img
-                                        src={src}
-                                        alt=""
-                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                                    />
+                            <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] xl:max-w-[500px]">
+                                {list[active] ? (
+                                    <>
+                                        <img
+                                            src={list[active]}
+                                            alt={name}
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <span className="absolute bottom-3 right-3 inline-flex items-center bg-brand-cta px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">
+                                            Tocar para ampliar
+                                        </span>
+                                    </>
                                 ) : (
-                                    <div className="h-full w-full bg-brand-primary-surface" />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-brand-primary-surface">
+                                        <svg className="h-16 w-16 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
                                 )}
                             </div>
                         </button>
-                    ))}
-                </div>
-
-                <div className="order-1 overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.78))] shadow-[0_20px_44px_rgba(61,90,128,0.10)] lg:order-2">
-                    <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] xl:max-w-[500px]">
-                        {list[active] ? (
-                            <img
-                                src={list[active]}
-                                alt={name}
-                                className="h-full w-full object-cover"
-                            />
-                        ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-brand-primary-surface">
-                                <svg className="h-16 w-16 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {zoomOpen && list[active] && (
+                <div
+                    className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgba(16,24,40,0.88)] px-3 py-6 sm:px-6"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Vista ampliada de ${name}`}
+                    onClick={() => setZoomOpen(false)}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setZoomOpen(false)}
+                        className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center bg-white/92 text-brand-text shadow-md transition-colors hover:bg-white"
+                        aria-label="Cerrar imagen ampliada"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 6l12 12M18 6L6 18" />
+                        </svg>
+                    </button>
+
+                    <div
+                        className="relative max-h-full w-full max-w-6xl overflow-hidden bg-white shadow-[0_28px_80px_rgba(0,0,0,0.28)]"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <img
+                            src={list[active]}
+                            alt={name}
+                            className="max-h-[85vh] w-full object-contain bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.92))]"
+                        />
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
@@ -125,11 +186,11 @@ function RelatedCard({ item }) {
                     )}
                 </div>
 
-                <div className="flex flex-1 flex-col px-3.5 py-3.5 sm:px-4 sm:py-4">
-                    <h3 className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-[1.2] text-brand-text sm:text-[13.5px]">
+                <div className="flex flex-1 flex-col px-4 py-4 sm:px-5 sm:py-5">
+                    <h3 className="line-clamp-2 text-[17px] font-bold leading-[1.08] text-brand-text sm:text-[18px]">
                         {item.name}
                     </h3>
-                    <p className="mt-2 text-[15px] font-extrabold tracking-[-0.01em] text-brand-text sm:text-base">
+                    <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                         {fmt(item.price)}
                     </p>
                     <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
@@ -193,10 +254,8 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
             <Head title={`${product.name} - Mimos`} />
 
             <section className="relative overflow-hidden bg-brand-bg">
-                <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,_rgba(152,193,217,0.18),_transparent_45%),radial-gradient(circle_at_top_right,_rgba(238,108,77,0.12),_transparent_34%)]" />
-
-                <div className="store-shell relative py-5 sm:py-6 lg:py-8 xl:py-10">
-                    <nav className="mb-6 sm:mb-8">
+                <div className="store-shell relative pt-1 pb-4 sm:pt-2 sm:pb-5 lg:pt-3 lg:pb-6 xl:pt-4 xl:pb-7">
+                    <nav className="mb-3 sm:mb-4">
                         <div className="inline-flex flex-wrap items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur sm:text-[11px]">
                             <Link href="/" className="transition-colors hover:text-brand-primary">
                                 Inicio
@@ -212,7 +271,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                         </div>
                     </nav>
 
-                    <div className="grid grid-cols-1 gap-7 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.92fr)] xl:items-start xl:gap-8">
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.92fr)] xl:items-start xl:gap-7">
                         <ImageGallery images={product.images} name={product.name} />
 
                         <div className="store-panel px-5 py-5 sm:px-6 sm:py-6 lg:px-6 lg:py-6">
@@ -228,17 +287,20 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                         {product.name}
                                     </h1>
 
-                                    <div className="mt-5 rounded-[1.4rem] border border-brand-secondary/25 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(253,242,238,0.82))] px-4 py-4 shadow-[0_14px_30px_rgba(238,108,77,0.08)] sm:px-5">
+                                    <div className="mt-5 border border-brand-primary/35 bg-white/95 px-4 py-4 shadow-[0_14px_30px_rgba(61,90,128,0.10)] sm:px-5">
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                                             Precio
                                         </p>
-                                        <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em] text-brand-text sm:text-[2.15rem]">
+                                        <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em] text-brand-cta sm:text-[2.15rem]">
                                             {fmt(product.price)}
                                         </p>
                                     </div>
 
                                     {product.description && (
                                         <div className="mt-5 border border-brand-primary/35 bg-brand-primary-surface/45 px-4 py-4 sm:px-5">
+                                            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-text">
+                                                Descripcion
+                                            </p>
                                             <p className="text-sm leading-relaxed text-brand-text-muted whitespace-pre-line">
                                                 {product.description}
                                             </p>
@@ -255,7 +317,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                             {product.colors.map((color) => (
                                                 <span
                                                     key={color.id}
-                                                    className="inline-flex items-center border border-brand-primary/35 bg-brand-bg px-3.5 py-2 text-xs font-medium text-brand-text shadow-sm"
+                                                    className="text-sm font-medium text-brand-text"
                                                 >
                                                     {color.name}
                                                 </span>

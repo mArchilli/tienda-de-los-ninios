@@ -1,10 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
-// ─── Checkout ─────────────────────────────────────────────────────────────────
-// Resumen de productos + selector de método de envío con dos formularios
-// (a domicilio / a sucursal). El envío a sucursal omite dirección y observaciones.
-
 function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
 }
@@ -21,32 +17,34 @@ const COURIERS = ['Correo Argentino', 'OCA', 'Andreani', 'Vía Cargo', 'Otro'];
 function Field({ label, error, children }) {
     return (
         <label className="block text-sm">
-            <span className="block font-semibold text-brand-text">{label}</span>
-            <div className="mt-1">{children}</div>
-            {error && <p className="mt-1 text-xs text-brand-cta-dark font-semibold">{error}</p>}
+            <span className="block font-semibold uppercase tracking-[0.08em] text-brand-text">{label}</span>
+            <div className="mt-1.5">{children}</div>
+            {error && <p className="mt-1 text-xs font-semibold text-brand-cta-dark">{error}</p>}
         </label>
     );
 }
 
 const inputCls =
-    'w-full rounded-md border border-brand-secondary/40 bg-white px-3 py-2 text-sm text-brand-text shadow-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none';
+    'w-full border border-brand-primary/25 bg-white px-3 py-2.5 text-sm text-brand-text shadow-sm outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15';
 
 function ProductsCard({ items }) {
     return (
-        <section className="rounded-2xl border border-brand-secondary/30 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-brand-primary bg-clip-text text-transparent">
-                Productos
-            </h2>
-            <ul className="mt-4 divide-y divide-brand-secondary/20">
+        <section className="border border-brand-primary/25 bg-white p-5 shadow-[0_18px_36px_rgba(41,50,65,0.06)]">
+            <div className="border border-brand-primary bg-brand-primary px-4 py-4 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/72">Pedido</p>
+                <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.02em]">Productos</h2>
+            </div>
+
+            <ul className="mt-4 divide-y divide-brand-primary/12">
                 {items.map((it) => (
                     <li key={it.key} className="flex items-center gap-4 py-3">
                         {it.image ? (
-                            <img src={it.image} alt={it.name} className="h-14 w-14 rounded-lg object-cover bg-white" />
+                            <img src={it.image} alt={it.name} className="h-14 w-14 border border-brand-primary/20 bg-white object-cover" />
                         ) : (
-                            <div className="h-14 w-14 rounded-lg bg-brand-primary-surface" />
+                            <div className="h-14 w-14 border border-brand-primary/20 bg-brand-primary-surface" />
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-brand-text">{it.name}</p>
+                            <p className="text-sm font-extrabold uppercase tracking-[0.04em] text-brand-text">{it.name}</p>
                             <p className="text-xs text-brand-text-muted">
                                 {it.size_name && <>Talle: {it.size_name} · </>}
                                 Cantidad: {it.quantity}
@@ -65,16 +63,24 @@ function ProductsCard({ items }) {
 
 function MethodToggle({ value, onChange }) {
     const opts = [
-        { key: 'home',   label: 'Envío a Domicilio', icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l9-9 9 9M5 11v9h4v-6h6v6h4v-9" />
-            </svg>
-        )},
-        { key: 'branch', label: 'Envío a Sucursal', icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7l9-4 9 4M4 10h16v10H4zM9 20v-6h6v6" />
-            </svg>
-        )},
+        {
+            key: 'home',
+            label: 'Envío a domicilio',
+            icon: (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l9-9 9 9M5 11v9h4v-6h6v6h4v-9" />
+                </svg>
+            ),
+        },
+        {
+            key: 'branch',
+            label: 'Envío a sucursal',
+            icon: (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7l9-4 9 4M4 10h16v10H4zM9 20v-6h6v6" />
+                </svg>
+            ),
+        },
     ];
 
     return (
@@ -86,10 +92,10 @@ function MethodToggle({ value, onChange }) {
                         key={o.key}
                         type="button"
                         onClick={() => onChange(o.key)}
-                        className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition ${
+                        className={`flex items-center justify-center gap-2 border px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] transition ${
                             active
-                                ? 'border-transparent bg-gradient-to-r from-purple-600 to-brand-secondary-dark text-white shadow'
-                                : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-primary'
+                                ? 'border-brand-primary bg-brand-primary text-white shadow-sm'
+                                : 'border-brand-primary/25 bg-white text-brand-text hover:border-brand-primary hover:text-brand-primary'
                         }`}
                     >
                         {o.icon}
@@ -101,23 +107,32 @@ function MethodToggle({ value, onChange }) {
     );
 }
 
+function SummaryRow({ label, value, accent }) {
+    return (
+        <div className={`flex items-center justify-between border px-4 py-3 ${accent ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-primary/25 bg-white'}`}>
+            <span className={`text-sm font-semibold uppercase tracking-[0.12em] ${accent ? 'text-white' : 'text-brand-primary'}`}>{label}</span>
+            <span className={`text-sm font-bold ${accent ? 'text-white text-base' : 'text-brand-text'}`}>{value}</span>
+        </div>
+    );
+}
+
 export default function CheckoutIndex({ cart }) {
-    const items    = cart?.items ?? [];
+    const items = cart?.items ?? [];
     const subtotal = cart?.subtotal ?? 0;
 
     const { data, setData, post, processing, errors } = useForm({
         shipping_method: 'home',
-        first_name:      '',
-        last_name:       '',
-        email:           '',
-        dni:             '',
-        province:        '',
-        locality:        '',
-        postal_code:     '',
-        courier:         '',
-        address:         '',
-        phone:           '',
-        observations:    '',
+        first_name: '',
+        last_name: '',
+        email: '',
+        dni: '',
+        province: '',
+        locality: '',
+        postal_code: '',
+        courier: '',
+        address: '',
+        phone: '',
+        observations: '',
     });
 
     const submit = (e) => {
@@ -131,19 +146,32 @@ export default function CheckoutIndex({ cart }) {
         <StorefrontLayout>
             <Head title="Checkout · Mimos" />
 
-            <form onSubmit={submit} className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-10">
+            <form onSubmit={submit} className="mx-auto max-w-screen-2xl px-4 py-10 sm:px-6 lg:px-8">
+                <div className="mb-6">
+                    <span className="inline-flex border border-brand-primary/25 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary">
+                        Checkout
+                    </span>
+                    <h1 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] text-brand-text">
+                        Finalizar compra
+                    </h1>
+                    <p className="mt-1 text-sm text-brand-text-muted">
+                        Completá tus datos para continuar con el pedido.
+                    </p>
+                </div>
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
                     <div className="space-y-6">
                         <ProductsCard items={items} />
 
-                        <section className="rounded-2xl border border-brand-secondary/30 bg-white p-5 shadow-sm">
-                            <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-brand-primary bg-clip-text text-transparent">
-                                Información de Envío
-                            </h2>
+                        <section className="border border-brand-primary/25 bg-white p-5 shadow-[0_18px_36px_rgba(41,50,65,0.06)]">
+                            <div className="border border-brand-primary bg-brand-primary px-4 py-4 text-white">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/72">Envío</p>
+                                <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.02em]">Información de envío</h2>
+                            </div>
 
                             <div className="mt-4">
-                                <p className="text-sm font-semibold text-brand-text">
-                                    Método de Envío <span className="font-normal text-brand-text-muted">(A cargo del comprador)</span>
+                                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-brand-text">
+                                    Método de envío <span className="font-normal normal-case tracking-normal text-brand-text-muted">(A cargo del comprador)</span>
                                 </p>
                                 <p className="mt-1 text-xs text-brand-text-muted">
                                     En ambos casos nos comunicaremos con usted para informarle el importe del envío.
@@ -151,7 +179,7 @@ export default function CheckoutIndex({ cart }) {
                                 <div className="mt-3">
                                     <MethodToggle value={data.shipping_method} onChange={(v) => setData('shipping_method', v)} />
                                 </div>
-                                <div className="mt-3 rounded-md bg-brand-secondary-surface px-3 py-2 text-xs text-brand-text-muted">
+                                <div className="mt-3 border border-brand-primary/18 bg-brand-primary-surface px-3 py-2 text-xs text-brand-text-muted">
                                     {isHome
                                         ? 'Te contactaremos luego de la compra para coordinar el envío y su costo.'
                                         : 'Te contactaremos luego de la compra para coordinar la sucursal de retiro y el costo.'}
@@ -165,7 +193,7 @@ export default function CheckoutIndex({ cart }) {
                                 <Field label="Apellido" error={errors.last_name}>
                                     <input className={inputCls} value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} />
                                 </Field>
-                                <Field label="Correo Electrónico" error={errors.email}>
+                                <Field label="Correo electrónico" error={errors.email}>
                                     <input type="email" className={inputCls} value={data.email} onChange={(e) => setData('email', e.target.value)} />
                                 </Field>
                                 <Field label="DNI" error={errors.dni}>
@@ -187,10 +215,10 @@ export default function CheckoutIndex({ cart }) {
                                         placeholder="Ingresá tu localidad"
                                     />
                                 </Field>
-                                <Field label="Código Postal" error={errors.postal_code}>
+                                <Field label="Código postal" error={errors.postal_code}>
                                     <input className={inputCls} value={data.postal_code} onChange={(e) => setData('postal_code', e.target.value)} />
                                 </Field>
-                                <Field label="Empresa de Correo" error={errors.courier}>
+                                <Field label="Empresa de correo" error={errors.courier}>
                                     <select className={inputCls} value={data.courier} onChange={(e) => setData('courier', e.target.value)}>
                                         <option value="">Seleccione una empresa</option>
                                         {COURIERS.map((c) => (
@@ -205,7 +233,7 @@ export default function CheckoutIndex({ cart }) {
                                     </Field>
                                 )}
 
-                                <Field label="Teléfono de Contacto (solo números, ej: 1123456789)" error={errors.phone}>
+                                <Field label="Teléfono de contacto" error={errors.phone}>
                                     <input className={inputCls} value={data.phone} onChange={(e) => setData('phone', e.target.value)} placeholder="1123456789" />
                                 </Field>
 
@@ -226,30 +254,22 @@ export default function CheckoutIndex({ cart }) {
                         </section>
                     </div>
 
-                    <aside className="space-y-3 self-start rounded-2xl border border-brand-secondary/30 bg-white p-5 shadow-sm">
-                        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-brand-primary bg-clip-text text-transparent">
-                            Resumen
-                        </h2>
+                    <aside className="space-y-3 self-start border border-brand-primary/25 bg-white p-5 shadow-[0_18px_36px_rgba(41,50,65,0.08)]">
+                        <div className="border border-brand-primary bg-brand-primary px-4 py-4 text-white">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/72">Resumen</p>
+                            <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.02em]">Tu compra</h2>
+                        </div>
 
-                        <div className="flex items-center justify-between rounded-xl border border-brand-secondary/30 bg-white px-4 py-3">
-                            <span className="text-sm font-semibold text-brand-primary">Subtotal</span>
-                            <span className="text-sm font-bold text-brand-text">{fmt(subtotal)}</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-brand-secondary/30 bg-white px-4 py-3">
-                            <span className="text-sm font-semibold text-brand-primary">Envío</span>
-                            <span className="text-sm text-brand-text-muted">A confirmar</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-brand-secondary/30 bg-gradient-to-r from-brand-primary-surface via-brand-cta-surface to-brand-secondary-surface px-4 py-3">
-                            <span className="text-sm font-semibold text-brand-primary">Total</span>
-                            <span className="text-base font-bold text-brand-primary">{fmt(subtotal)}</span>
-                        </div>
+                        <SummaryRow label="Subtotal" value={fmt(subtotal)} />
+                        <SummaryRow label="Envío" value="A confirmar" />
+                        <SummaryRow label="Total" value={fmt(subtotal)} accent />
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="mt-2 block w-full rounded-full bg-gradient-to-r from-purple-600 to-brand-secondary-dark py-3 text-center text-sm font-bold text-white shadow hover:opacity-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="mt-2 block w-full bg-brand-cta py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-brand-cta-dark disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {processing ? 'Procesando…' : 'Proceder al Pago'}
+                            {processing ? 'Procesando…' : 'Proceder al pago'}
                         </button>
                     </aside>
                 </div>

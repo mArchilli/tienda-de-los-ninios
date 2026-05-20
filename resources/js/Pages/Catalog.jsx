@@ -52,11 +52,11 @@ function ProductCard({ item }) {
                     </span>
                 </div>
 
-                <div className="flex flex-1 flex-col px-3.5 py-3.5 sm:px-4 sm:py-4">
-                    <h3 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-semibold leading-[1.15] text-brand-text sm:min-h-[2.5rem] sm:text-[13.5px]">
+                <div className="flex flex-1 flex-col px-4 py-4 sm:px-5 sm:py-5">
+                    <h3 className="line-clamp-2 text-[17px] font-bold leading-[1.08] text-brand-text sm:text-[18px]">
                         {item.name}
                     </h3>
-                    <p className="mt-2 text-[17px] font-extrabold tracking-[-0.01em] text-brand-cta">
+                    <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                         {fmt(item.price)}
                     </p>
                     <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
