@@ -19,7 +19,7 @@ function ProductCard({ product }) {
     return (
         <article className="group">
             <Link href={`/producto/${product.id}`} className="block">
-                <div className="store-card p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
+                <div className="store-card rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
                     <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-primary-surface">
                         {product.image ? (
                             <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -43,9 +43,9 @@ function ProductCard({ product }) {
                         </span>
                     </div>
 
-                    <div className="px-1 pb-1 pt-4">
-                        <h3 className="line-clamp-2 text-base font-extrabold leading-tight text-brand-text">{product.name}</h3>
-                        <p className="mt-2 inline-flex rounded-full bg-brand-cta-surface px-3 py-1 text-sm font-bold text-brand-cta shadow-sm">
+                    <div className="px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
+                        <h3 className="line-clamp-2 text-[17px] font-bold leading-[1.08] text-brand-text sm:text-[18px]">{product.name}</h3>
+                        <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                             {fmt(product.price)}
                         </p>
                         <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">

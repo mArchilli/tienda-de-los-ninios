@@ -16,7 +16,7 @@ function ComboCard({ combo }) {
     return (
         <article className="group w-[285px] shrink-0 snap-start sm:w-[318px] lg:w-[338px] xl:w-[352px]">
             <Link href={`/combo/${combo.id}`} className="block">
-                <div className="store-card p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
+                <div className="store-card rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
                     <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-secondary-surface">
                         {combo.image ? (
                             <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -37,15 +37,15 @@ function ComboCard({ combo }) {
                         )}
                     </div>
 
-                    <div className="px-1 pb-1 pt-4">
+                    <div className="px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                                <h3 className="text-base font-extrabold leading-tight text-brand-text">{combo.name}</h3>
+                                <h3 className="text-[17px] font-bold leading-[1.08] text-brand-text sm:text-[18px]">{combo.name}</h3>
                                 {combo.desc && (
                                     <p className="mt-1 text-sm leading-relaxed text-brand-text-muted">{combo.desc}</p>
                                 )}
                             </div>
-                            <span className="shrink-0 rounded-full bg-brand-cta-surface px-3 py-1 text-sm font-bold text-brand-cta shadow-sm">
+                            <span className="mt-0.5 shrink-0 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                                 {fmt(combo.price)}
                             </span>
                         </div>
