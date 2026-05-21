@@ -10,7 +10,7 @@ import FeaturedProducts from '@/Components/Storefront/FeaturedProducts';
 export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount }) {
     return (
         <StorefrontLayout cartCount={cartCount}>
-            <Head title="Mimos · Combos y ropa para los más chicos" />
+            <Head title="La Tienda de Los Niños · Combos y ropa para los más chicos" />
 
             <div className="home-angular">
                 <Hero image={heroImage} />

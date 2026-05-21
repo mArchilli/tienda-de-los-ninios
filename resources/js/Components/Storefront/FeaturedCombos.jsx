@@ -1,12 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useRef } from 'react';
 
-const FALLBACK = [
-    { id: 1, name: 'Combo Nene Aventura', desc: 'Campera + Remera + Jean', price: 38900, badge: 'M\u00c1S VENDIDO', badgeColor: 'bg-emerald-700' },
-    { id: 2, name: 'Combo Nene Urban', desc: 'Buzo + Pantal\u00f3n + Remera', price: 35900, badge: 'NUEVO EN EL LIVE', badgeColor: 'bg-amber-500' },
-    { id: 3, name: 'Combo Nene Cl\u00e1sico', desc: 'Buzo + Remera + Jogger', price: 36900, badge: 'FAVORITO', badgeColor: 'bg-brand-primary' },
-    { id: 4, name: 'Combo Nene Verano', desc: 'Remera + Bermuda + Gorra', price: 28900, badge: null, badgeColor: null },
-];
 
 function fmt(price) {
     return '$' + Number(price).toLocaleString('es-AR');
@@ -58,7 +52,9 @@ function ComboCard({ combo }) {
 
 export default function FeaturedCombos({ combos }) {
     const scrollerRef = useRef(null);
-    const items = combos?.length ? combos : FALLBACK;
+    const items = combos ?? [];
+
+    if (items.length === 0) return null;
 
     const scroll = (direction) => {
         const node = scrollerRef.current;

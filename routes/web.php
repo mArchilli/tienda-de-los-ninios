@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\CartController;
+use App\Models\Combo;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
 use App\Http\Controllers\DashboardController;
@@ -21,10 +22,23 @@ use Inertia\Inertia;
 Route::get('/images/products/{filename}', [ImageController::class, 'show'])->where('filename', '.*');
 
 Route::get('/', function () {
+    $combos = Combo::where('is_active', true)
+        ->orderByDesc('is_featured')
+        ->orderBy('name')
+        ->get(['id', 'name', 'description', 'price', 'image', 'is_featured'])
+        ->map(fn ($c) => [
+            'id'         => $c->id,
+            'name'       => $c->name,
+            'desc'       => $c->description,
+            'price'      => (float) $c->price,
+            'image'      => $c->image ? '/' . ltrim($c->image, '/') : null,
+            'badge'      => $c->is_featured ? 'DESTACADO' : null,
+            'badgeColor' => $c->is_featured ? 'bg-brand-cta' : null,
+        ])
+        ->values();
+
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        'featuredCombos' => $combos,
     ]);
 })->name('home');
 
