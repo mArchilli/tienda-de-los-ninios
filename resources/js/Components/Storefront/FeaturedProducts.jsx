@@ -1,15 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 
-const FALLBACK = [
-    { id: 1, name: 'Buzo Frisa Nene', price: 18900 },
-    { id: 2, name: 'Remera Estampada', price: 9500 },
-    { id: 3, name: 'Jogger Algod\u00f3n', price: 14200 },
-    { id: 4, name: 'Campera Liviana', price: 24900 },
-    { id: 5, name: 'Vestido Rosa', price: 17500 },
-    { id: 6, name: 'Set Body + Gorrito', price: 12300 },
-    { id: 7, name: 'Pantal\u00f3n Cargo', price: 16800 },
-    { id: 8, name: 'Conjunto Verano', price: 19900 },
-];
+const ITEMS_PER_PAGE = 5;
 
 function fmt(price) {
     return '$' + Number(price).toLocaleString('es-AR');
@@ -17,9 +9,9 @@ function fmt(price) {
 
 function ProductCard({ product }) {
     return (
-        <article className="group">
-            <Link href={`/producto/${product.id}`} className="block">
-                <div className="store-card rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
+        <article className="group h-full">
+            <Link href={`/producto/${product.id}`} className="flex h-full flex-col">
+                <div className="store-card flex h-full flex-col rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
                     <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-primary-surface">
                         {product.image ? (
                             <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -30,9 +22,7 @@ function ProductCard({ product }) {
                                 </svg>
                             </div>
                         )}
-
                         <div className="absolute inset-0 bg-gradient-to-t from-brand-text/12 via-transparent to-white/10" />
-
                         <span
                             aria-hidden="true"
                             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/88 text-brand-text-muted shadow-sm backdrop-blur transition-colors group-hover:text-brand-cta"
@@ -43,12 +33,12 @@ function ProductCard({ product }) {
                         </span>
                     </div>
 
-                    <div className="px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
-                        <h3 className="line-clamp-2 text-[17px] font-bold leading-[1.08] text-brand-text sm:text-[18px]">{product.name}</h3>
-                        <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
+                    <div className="flex flex-1 flex-col px-3 pb-3 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+                        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-brand-text sm:text-[17px]">{product.name}</h3>
+                        <p className="mt-1 text-[14px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                             {fmt(product.price)}
                         </p>
-                        <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
+                        <span className="mt-auto inline-flex h-9 w-full items-center justify-center bg-brand-cta px-4 text-xs font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark sm:h-10 sm:text-sm">
                             Ver producto
                         </span>
                     </div>
@@ -59,7 +49,15 @@ function ProductCard({ product }) {
 }
 
 export default function FeaturedProducts({ products }) {
-    const items = products?.length ? products : FALLBACK;
+    const [page, setPage] = useState(0);
+    const items = products ?? [];
+
+    if (items.length === 0) return null;
+
+    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    const visible = items.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+    const hasPrev = page > 0;
+    const hasNext = page < totalPages - 1;
 
     return (
         <section className="bg-brand-bg">
@@ -68,23 +66,95 @@ export default function FeaturedProducts({ products }) {
                     <div className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-brand-primary/10 blur-3xl" />
                     <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-brand-secondary/20 blur-3xl" />
 
-                    <div className="relative z-10 flex items-end justify-between gap-4">
+                    {/* Header */}
+                    <div className="relative z-10 flex items-center justify-between gap-4">
                         <h2 className="text-xl font-extrabold tracking-[0.08em] text-brand-text sm:text-2xl lg:text-[1.9rem]">
                             PRODUCTOS DESTACADOS
                         </h2>
-                        <Link href="/catalogo" className="inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-primary hover:text-brand-primary-dark">
-                            Ver todo
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
-                            </svg>
-                        </Link>
+
+                        <div className="flex items-center gap-3">
+                            {/* Arrows: desktop only */}
+                            {totalPages > 1 && (
+                                <div className="hidden items-center gap-3 sm:flex">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(p => p - 1)}
+                                        disabled={!hasPrev}
+                                        aria-label="Anteriores"
+                                        className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-30"
+                                    >
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(p => p + 1)}
+                                        disabled={!hasNext}
+                                        aria-label="Siguientes"
+                                        className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text shadow-sm backdrop-blur-sm transition hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-30"
+                                    >
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+
+                            <Link
+                                href="/catalogo"
+                                className="inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-primary hover:text-brand-primary-dark"
+                            >
+                                Ver todo
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
+                                </svg>
+                            </Link>
+                        </div>
                     </div>
 
-                    <div className="relative z-10 mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-5 xl:grid-cols-4 xl:gap-6">
-                        {items.map((product) => (
+                    {/* Mobile: swipe carousel */}
+                    <div className="relative z-10 mt-7 sm:hidden">
+                        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {items.map((product) => (
+                                <div key={product.id} className="w-[calc(50%-4px)] flex-none snap-start">
+                                    <ProductCard product={product} />
+                                </div>
+                            ))}
+                        </div>
+                        <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-brand-text-muted/50">
+                            deslizá para ver más
+                        </p>
+                    </div>
+
+                    {/* Desktop: page-based grid */}
+                    <div
+                        key={page}
+                        className="relative z-10 mt-7 hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-4 lg:gap-5"
+                    >
+                        {visible.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
+
+                    {/* Dots: desktop only */}
+                    {totalPages > 1 && (
+                        <div className="relative z-10 mt-6 hidden items-center justify-center gap-2 sm:flex">
+                            {Array.from({ length: totalPages }).map((_, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setPage(i)}
+                                    aria-label={`Página ${i + 1}`}
+                                    className={`h-2 rounded-full transition-all duration-300 ${
+                                        i === page
+                                            ? 'w-6 bg-brand-primary'
+                                            : 'w-2 bg-brand-secondary/40 hover:bg-brand-secondary/70'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

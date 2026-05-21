@@ -9,13 +9,13 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\CartController;
 use App\Models\Combo;
+use App\Models\Product;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController as StorefrontProductController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -37,8 +37,20 @@ Route::get('/', function () {
         ])
         ->values();
 
+    $products = Product::where('is_featured', true)
+        ->orderBy('name')
+        ->get(['id', 'name', 'price', 'images'])
+        ->map(fn ($p) => [
+            'id'    => $p->id,
+            'name'  => $p->name,
+            'price' => (float) $p->price,
+            'image' => $p->images[0] ?? null,
+        ])
+        ->values();
+
     return Inertia::render('Welcome', [
-        'featuredCombos' => $combos,
+        'featuredCombos'   => $combos,
+        'featuredProducts' => $products,
     ]);
 })->name('home');
 
