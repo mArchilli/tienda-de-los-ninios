@@ -9,6 +9,10 @@ class ImageController extends Controller
 {
     public function show(Request $request, string $filename)
     {
+        if (! extension_loaded('gd')) {
+            abort(500, 'La extensión GD de PHP no está habilitada. Activala en php.ini y reiniciá Apache.');
+        }
+
         $path = 'images/products/' . $filename;
 
         $server = ServerFactory::create([

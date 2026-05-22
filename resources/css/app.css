@@ -43,7 +43,7 @@
         align-items: center;
         gap: 2.5rem;
         padding-right: 2.5rem;
-        animation: topbar-marquee 28s linear infinite;
+        animation: topbar-marquee 40s linear infinite;
         will-change: transform;
     }
 
