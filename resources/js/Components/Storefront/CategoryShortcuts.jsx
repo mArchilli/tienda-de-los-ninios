@@ -52,17 +52,22 @@ export default function CategoryShortcuts() {
                             </div>
                         </div>
 
-                        <aside className="home-panel relative overflow-hidden bg-brand-primary p-6 text-white shadow-[0_24px_50px_rgba(61,90,128,0.20)] sm:p-7 lg:p-8">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/12 via-transparent to-black/10" />
-                            <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
-                            <div className="absolute -bottom-12 -right-10 h-56 w-56 rounded-full bg-brand-secondary/35" />
+                        <aside className="home-panel relative overflow-hidden shadow-[0_24px_50px_rgba(61,90,128,0.20)]">
+                            <img
+                                src="/images/banner-filtros.png"
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute inset-0 h-full w-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/88 via-brand-primary/70 to-brand-primary/28" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/18 via-transparent to-white/8" />
 
-                            <div className="relative z-10 flex min-h-[260px] flex-col justify-between lg:min-h-[320px]">
+                            <div className="relative z-10 flex min-h-[260px] flex-col justify-between p-6 sm:p-7 lg:min-h-[320px] lg:p-8">
                                 <div className="max-w-[66%]">
-                                    <h3 className="text-xl font-extrabold leading-tight sm:text-2xl lg:text-[1.95rem]">
+                                    <h3 className="text-xl font-extrabold leading-tight text-brand-text sm:text-2xl lg:text-[1.95rem]">
                                         {'CALIDAD, DISE\u00d1O Y COMODIDAD'}
                                     </h3>
-                                    <p className="mt-3 text-sm leading-relaxed text-white/88">
+                                    <p className="mt-3 text-sm leading-relaxed text-brand-text/80">
                                         {'Prendas pensadas para acompa\u00f1ar cada aventura de todos los d\u00edas.'}
                                     </p>
                                     <a
@@ -74,12 +79,6 @@ export default function CategoryShortcuts() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
                                         </svg>
                                     </a>
-                                </div>
-
-                                <div className="absolute bottom-6 right-6 flex h-24 w-24 items-center justify-center rounded-full bg-brand-secondary shadow-[0_18px_32px_rgba(41,50,65,0.16)] lg:h-28 lg:w-28">
-                                    <svg className="h-12 w-12 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.4} d="M16 14a4 4 0 10-8 0M12 11a3 3 0 100-6 3 3 0 000 6zM4 21c0-3.5 3.5-6 8-6s8 2.5 8 6" />
-                                    </svg>
                                 </div>
                             </div>
                         </aside>
