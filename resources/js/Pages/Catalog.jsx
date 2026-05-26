@@ -125,7 +125,7 @@ export default function Catalog({ combos = [], products = [], cartCount }) {
 
     return (
         <StorefrontLayout cartCount={cartCount}>
-            <Head title={'Cat\u00e1logo \u00b7 Mimos'} />
+            <Head title={'Cat\u00e1logo'} />
 
             <section className="bg-brand-text text-white">
                 <div className="w-full px-3 py-2.5 text-center text-[11px] font-light uppercase tracking-[0.18em] sm:px-5 sm:text-sm lg:px-8">
