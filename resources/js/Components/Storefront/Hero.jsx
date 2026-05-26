@@ -58,7 +58,7 @@ export default function Hero() {
                         src="/images/banner.png"
                         alt=""
                         aria-hidden="true"
-                        className="h-full w-full object-contain object-center"
+                        className="h-full w-full object-cover object-center"
                     />
                 </div>
                 <div className="absolute inset-0 hidden md:block bg-gradient-to-r from-brand-bg/94 via-brand-bg/76 via-[40%] to-brand-bg/18" />
