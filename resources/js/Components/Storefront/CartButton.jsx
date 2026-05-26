@@ -142,7 +142,7 @@ export default function CartButton() {
         <div ref={wrapRef} className="fixed bottom-24 right-6 z-50">
             {/* Floating panel */}
             {open && (
-                <div className="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-brand-secondary/30 animate-fade-in overflow-hidden">
+                <div className="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] sm:w-80 overflow-hidden border border-brand-secondary/30 bg-white shadow-2xl animate-fade-in rounded-none">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3.5 sm:py-3 border-b border-brand-secondary/15 bg-gradient-to-r from-brand-primary-surface to-brand-secondary-surface">
                         <div className="flex items-center gap-2">

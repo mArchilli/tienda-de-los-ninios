@@ -1,9 +1,9 @@
 const CATEGORIES = [
     { label: 'NENE', href: '#nene', tint: 'bg-brand-primary-surface', orb: 'bg-brand-primary/12', image: '/images/filtro-nene.png' },
     { label: 'NENA', href: '#nena', tint: 'bg-rose-50', orb: 'bg-rose-200/55', image: '/images/filtro-nena.png' },
-    { label: 'UNISEX', href: '#unisex', tint: 'bg-brand-secondary-surface', orb: 'bg-brand-secondary/25', image: '/images/filtro-unisex.png' },
-    { label: 'COMBOS', href: '#combos', tint: 'bg-amber-50', orb: 'bg-amber-200/55', image: '/images/filtro-combos.png' },
-    { label: 'OUTLET', href: '#outlet', tint: 'bg-brand-cta-surface', orb: 'bg-brand-cta/12', image: '/images/filtro-outlet.png' },
+    { label: 'BEBE', href: '#bebe', tint: 'bg-brand-secondary-surface', orb: 'bg-brand-secondary/25', image: '/images/filtro-bebe.png' },
+    { label: 'BEBA', href: '#beba', tint: 'bg-amber-50', orb: 'bg-amber-200/55', image: '/images/filtro-beba.png' },
+    { label: 'CREAR COMBO', href: '#armar', tint: 'bg-brand-cta-surface', orb: 'bg-brand-cta/12', image: '/images/filtro-combos.png' },
 ];
 
 function CircleSlot({ tint, label, image }) {
@@ -44,7 +44,7 @@ export default function CategoryShortcuts() {
                                         <div className="relative">
                                             <CircleSlot tint={category.tint} label={category.label} image={category.image} />
                                         </div>
-                                        <span className="relative mt-3 text-xs font-bold tracking-[0.18em] text-brand-text transition-colors group-hover:text-brand-primary">
+                                        <span className="relative mt-3 text-center text-[11px] font-bold leading-tight tracking-[0.14em] text-brand-text transition-colors group-hover:text-brand-primary sm:text-xs sm:tracking-[0.18em]">
                                             {category.label}
                                         </span>
                                     </a>
