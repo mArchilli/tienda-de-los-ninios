@@ -255,21 +255,32 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
 
             <section className="relative overflow-hidden bg-brand-bg">
                 <div className="store-shell relative pt-1 pb-4 sm:pt-2 sm:pb-5 lg:pt-3 lg:pb-6 xl:pt-4 xl:pb-7">
-                    <nav className="mb-3 sm:mb-4">
-                        <div className="inline-flex flex-wrap items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur sm:text-[11px]">
-                            <Link href="/" className="transition-colors hover:text-brand-primary">
-                                Inicio
-                            </Link>
-                            <span className="text-brand-text-light">/</span>
-                            <Link href="/catalogo" className="transition-colors hover:text-brand-primary">
-                                Catalogo
-                            </Link>
-                            <span className="text-brand-text-light">/</span>
-                            <span className="max-w-[16rem] truncate text-brand-text">
-                                {product.name}
-                            </span>
-                        </div>
-                    </nav>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
+                        <nav>
+                            <div className="inline-flex flex-wrap items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur sm:text-[11px]">
+                                <Link href="/" className="transition-colors hover:text-brand-primary">
+                                    Inicio
+                                </Link>
+                                <span className="text-brand-text-light">/</span>
+                                <Link href="/catalogo" className="transition-colors hover:text-brand-primary">
+                                    Catalogo
+                                </Link>
+                                <span className="text-brand-text-light">/</span>
+                                <span className="max-w-[16rem] truncate text-brand-text">
+                                    {product.name}
+                                </span>
+                            </div>
+                        </nav>
+                        <Link
+                            href="/catalogo"
+                            className="inline-flex items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm backdrop-blur transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta sm:text-[11px]"
+                        >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Volver al catalogo
+                        </Link>
+                    </div>
 
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.92fr)] xl:items-start xl:gap-7">
                         <ImageGallery images={product.images} name={product.name} />

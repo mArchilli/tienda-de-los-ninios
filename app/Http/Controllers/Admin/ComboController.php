@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Combo;
 use App\Models\ComboItem;
+use App\Models\Product;
 use App\Models\Size;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Inertia\Inertia;
@@ -44,16 +46,102 @@ class ComboController extends Controller
         }
 
         $categories = Category::whereHas('products', function ($q) use ($sizeIds) {
-            $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds));
+            $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
+                ->where('product_size.stock', '>', 0));
         })
         ->with(['products' => function ($q) use ($sizeIds) {
-            $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds))
+            $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
+                ->where('product_size.stock', '>', 0))
+              ->with(['sizes' => fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
+                  ->where('product_size.stock', '>', 0)])
               ->orderBy('name');
         }])
         ->orderBy('name')
         ->get(['id', 'name']);
 
-        return response()->json($categories);
+        $payload = $categories->map(function ($cat) {
+            $products = $cat->products->map(fn ($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
+                'price'    => $p->price,
+                'images'   => $p->images,
+                'size_ids' => $p->sizes->pluck('id')->values()->all(),
+            ])->values();
+
+            return [
+                'id'       => $cat->id,
+                'name'     => $cat->name,
+                'size_ids' => $products->flatMap(fn ($p) => $p['size_ids'])->unique()->values()->all(),
+                'products' => $products,
+            ];
+        });
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Devuelve los talles seleccionados que NO tienen al menos una prenda con ese
+     * talle entre los productos elegidos en cada categoría. Si la lista está
+     * vacía, el combo es vendible en todos los talles seleccionados.
+     *
+     * @return array<int, array{size_id:int, size_name:string, categories:array<int, string>}>
+     */
+    private function uncoveredSizes(array $sizeIds, array $categoriesData): array
+    {
+        if (empty($sizeIds) || empty($categoriesData)) {
+            return [];
+        }
+
+        $sizeNames = Size::whereIn('id', $sizeIds)->pluck('name', 'id')->all();
+        $categoryNames = Category::whereIn('id', array_column($categoriesData, 'category_id'))
+            ->pluck('name', 'id')->all();
+
+        $uncovered = [];
+        foreach ($sizeIds as $sizeId) {
+            $missing = [];
+            foreach ($categoriesData as $catData) {
+                $productIds = $catData['product_ids'] ?? [];
+                if (empty($productIds)) {
+                    $missing[] = $categoryNames[$catData['category_id']] ?? ('#' . $catData['category_id']);
+                    continue;
+                }
+                $hit = Product::whereIn('id', $productIds)
+                    ->whereHas('sizes', fn ($q) => $q->where('sizes.id', $sizeId)
+                        ->where('product_size.stock', '>', 0))
+                    ->exists();
+                if (! $hit) {
+                    $missing[] = $categoryNames[$catData['category_id']] ?? ('#' . $catData['category_id']);
+                }
+            }
+            if (! empty($missing)) {
+                $uncovered[] = [
+                    'size_id'    => (int) $sizeId,
+                    'size_name'  => $sizeNames[$sizeId] ?? ('#' . $sizeId),
+                    'categories' => $missing,
+                ];
+            }
+        }
+
+        return $uncovered;
+    }
+
+    private function assertSizeCoverage(Request $request): void
+    {
+        $sizeIds = array_values(array_filter((array) $request->input('sizes', []), 'is_numeric'));
+        $categoriesData = (array) $request->input('categories', []);
+
+        $uncovered = $this->uncoveredSizes($sizeIds, $categoriesData);
+        if (empty($uncovered)) {
+            return;
+        }
+
+        $msg = collect($uncovered)
+            ->map(fn ($u) => "Talle {$u['size_name']}: faltan prendas en " . implode(', ', $u['categories']))
+            ->implode('. ');
+
+        throw ValidationException::withMessages([
+            'sizes' => 'No se puede guardar el combo en talles sin cobertura completa. ' . $msg,
+        ]);
     }
 
     public function store(Request $request)
@@ -73,6 +161,8 @@ class ComboController extends Controller
             'categories.*.product_ids'     => 'nullable|array',
             'categories.*.product_ids.*'   => 'exists:products,id',
         ]);
+
+        $this->assertSizeCoverage($request);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
@@ -121,6 +211,8 @@ class ComboController extends Controller
             'categories.*.product_ids'     => 'nullable|array',
             'categories.*.product_ids.*'   => 'exists:products,id',
         ]);
+
+        $this->assertSizeCoverage($request);
 
         if ($request->hasFile('image')) {
             if ($combo->image) {

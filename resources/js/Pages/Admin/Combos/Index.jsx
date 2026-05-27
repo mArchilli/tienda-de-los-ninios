@@ -270,7 +270,7 @@ function ProductSelectionCard({ product, selected, onToggle }) {
 
 // ─── Category panel ───────────────────────────────────────────────────────────
 
-function CategoryPanel({ category, settings, onChange, onRemove }) {
+function CategoryPanel({ category, settings, onChange, onRemove, sizes = [], selectedSizeIds = [] }) {
     const [productSearch, setProductSearch] = useState('');
 
     const quantity = settings?.quantity ?? 1;
@@ -281,6 +281,20 @@ function CategoryPanel({ category, settings, onChange, onRemove }) {
         const q = productSearch.toLowerCase();
         return (category.products ?? []).filter((p) => p.name.toLowerCase().includes(q));
     }, [category.products, productSearch]);
+
+    // Productos agrupados por talle. Un producto puede aparecer en varios grupos
+    // si está disponible en múltiples talles seleccionados del combo.
+    const groupedBySize = useMemo(() => {
+        const sizeMap = new Map(sizes.map((s) => [s.id, s]));
+        return selectedSizeIds
+            .map((sid) => {
+                const size = sizeMap.get(sid);
+                if (!size) return null;
+                const items = filteredProducts.filter((p) => (p.size_ids ?? []).includes(sid));
+                return { size, items };
+            })
+            .filter((g) => g && g.items.length > 0);
+    }, [filteredProducts, selectedSizeIds, sizes]);
 
     const allIds = (category.products ?? []).map((p) => p.id);
     const allSelected = allIds.length > 0 && allIds.every((id) => selectedProductIds.includes(id));
@@ -378,18 +392,42 @@ function CategoryPanel({ category, settings, onChange, onRemove }) {
 
                 {filteredProducts.length === 0 ? (
                     <p className="text-xs text-brand-text-muted italic text-center py-4">Sin prendas{productSearch ? ` para "${productSearch}"` : ''}</p>
+                ) : groupedBySize.length === 0 ? (
+                    <p className="text-xs text-brand-text-muted italic text-center py-4">Sin prendas para los talles seleccionados</p>
                 ) : (
-                    <div className="max-h-64 overflow-y-auto pr-1">
-                        <div className="grid grid-cols-4 gap-2">
-                            {filteredProducts.map((product) => (
-                                <ProductSelectionCard
-                                    key={product.id}
-                                    product={product}
-                                    selected={selectedProductIds.includes(product.id)}
-                                    onToggle={() => toggleProduct(product.id)}
-                                />
-                            ))}
-                        </div>
+                    <div className="max-h-80 overflow-y-auto pr-1 space-y-4">
+                        {groupedBySize.map(({ size, items }) => {
+                            const pickedInGroup = items.filter((p) => selectedProductIds.includes(p.id)).length;
+                            return (
+                                <div key={size.id}>
+                                    <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-gray-100 sticky top-0 bg-white z-[1]">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="inline-flex h-5 items-center justify-center rounded-full bg-brand-primary px-2 text-[10px] font-bold text-white">
+                                                Talle {size.name.trim()}
+                                            </span>
+                                            <span className="text-[11px] text-brand-text-muted">
+                                                {items.length} prenda{items.length === 1 ? '' : 's'}
+                                            </span>
+                                        </div>
+                                        {pickedInGroup > 0 && (
+                                            <span className="text-[10px] font-semibold text-brand-cta">
+                                                {pickedInGroup} seleccionada{pickedInGroup === 1 ? '' : 's'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {items.map((product) => (
+                                            <ProductSelectionCard
+                                                key={`${size.id}-${product.id}`}
+                                                product={product}
+                                                selected={selectedProductIds.includes(product.id)}
+                                                onToggle={() => toggleProduct(product.id)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -616,6 +654,36 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
 
     const selectedCategories = availableCategories.filter((c) => selectedCategoryIds.includes(c.id));
 
+    const uncoveredSizes = useMemo(() => {
+        if (selectedSizeIds.length === 0 || selectedCategoryIds.length === 0) return [];
+
+        const coverageByCategory = {};
+        for (const catId of selectedCategoryIds) {
+            const cat = availableCategories.find((c) => c.id === catId);
+            const picked = categorySettings[catId]?.selectedProductIds ?? [];
+            const covered = new Set();
+            for (const p of cat?.products ?? []) {
+                if (picked.includes(p.id)) {
+                    for (const sid of p.size_ids ?? []) covered.add(sid);
+                }
+            }
+            coverageByCategory[catId] = covered;
+        }
+
+        return selectedSizeIds
+            .map((sid) => {
+                const size = sizes.find((s) => s.id === sid);
+                const missing = selectedCategoryIds
+                    .filter((catId) => !coverageByCategory[catId].has(sid))
+                    .map((catId) => availableCategories.find((c) => c.id === catId)?.name)
+                    .filter(Boolean);
+                return missing.length ? { id: sid, name: size?.name ?? `#${sid}`, missing } : null;
+            })
+            .filter(Boolean);
+    }, [selectedSizeIds, selectedCategoryIds, availableCategories, categorySettings, sizes]);
+
+    const hasUncovered = uncoveredSizes.length > 0;
+
     const inputCls = (err) =>
         `w-full rounded-xl border px-4 py-2.5 text-sm text-brand-text outline-none transition focus:ring-2 ${
             err ? 'border-red-400 focus:ring-red-200' : 'border-gray-200 focus:border-brand-primary focus:ring-brand-primary/20'
@@ -771,8 +839,33 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                         settings={categorySettings[cat.id]}
                         onChange={(s) => updateCategorySettings(cat.id, s)}
                         onRemove={() => toggleCategory(cat.id)}
+                        sizes={sizes}
+                        selectedSizeIds={selectedSizeIds}
                     />
                 ))}
+
+                {/* Cobertura de talles */}
+                {hasUncovered && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
+                            Talles sin cobertura completa
+                        </p>
+                        <p className="text-xs text-amber-800">
+                            No se puede vender el combo en estos talles porque alguna categoría no tiene prendas seleccionadas con ese talle. Quitá el talle o agregá prendas en las categorías que faltan.
+                        </p>
+                        <ul className="text-xs text-amber-900 space-y-1 pl-1">
+                            {uncoveredSizes.map((u) => (
+                                <li key={u.id}>
+                                    <span className="font-semibold">Talle {u.name}:</span> faltan prendas en {u.missing.join(', ')}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {errors.sizes && (
+                    <p className="text-xs text-red-500">{errors.sizes}</p>
+                )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -786,8 +879,9 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                     </button>
                     <button
                         type="submit"
-                        disabled={processing}
-                        className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60"
+                        disabled={processing || hasUncovered}
+                        title={hasUncovered ? 'Resolvé los talles sin cobertura antes de guardar' : ''}
+                        className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {processing ? <Spinner /> : (
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

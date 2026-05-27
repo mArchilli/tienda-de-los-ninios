@@ -1,8 +1,10 @@
+import { Link } from '@inertiajs/react';
+
 const ENTREPRENEUR_COMBO = {
     label: 'Combos para emprendedores',
     title: 'Pensado para emprendedores y revendedores',
     sub: 'Una propuesta de mayor valor, con mejor presentacion y mas presencia para ofrecer en tu negocio.',
-    href: '/catalogo',
+    href: '/catalogo?tipo=combos&precio_min=100000',
     image: '/images/combo-emprendedor.png',
 };
 
@@ -19,7 +21,7 @@ export default function PriceRangeSection() {
                     </h2>
 
                     <div className="relative z-10 mt-8">
-                        <a
+                        <Link
                             href={ENTREPRENEUR_COMBO.href}
                             className="group flex w-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1.5"
                         >
@@ -58,7 +60,7 @@ export default function PriceRangeSection() {
                                     </span>
                                 </div>
                             </div>
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

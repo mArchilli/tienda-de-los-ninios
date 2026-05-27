@@ -1,9 +1,11 @@
+import { Link } from '@inertiajs/react';
+
 const CATEGORIES = [
-    { label: 'NENE', href: '#nene', image: '/images/filtro-nene.png' },
-    { label: 'NENA', href: '#nena', image: '/images/filtro-nena.png' },
-    { label: 'BEBE', href: '#bebe', image: '/images/filtro-bebe.png' },
-    { label: 'BEBA', href: '#beba', image: '/images/filtro-beba.png' },
-    { label: 'CREAR COMBO', href: '#armar', image: '/images/filtro-combos.png' },
+    { label: 'NENE',   href: '/catalogo?audiencia=nino', image: '/images/filtro-nene.png'   },
+    { label: 'NENA',   href: '/catalogo?audiencia=nina', image: '/images/filtro-nena.png'   },
+    { label: 'BEBE',   href: '/catalogo?audiencia=bebe', image: '/images/filtro-bebe.png'   },
+    { label: 'BEBA',   href: '/catalogo?audiencia=beba', image: '/images/filtro-beba.png'   },
+    { label: 'COMBOS', href: '/catalogo?tipo=combos',    image: '/images/filtro-combos.png' },
 ];
 
 function CircleSlot({ label, image }) {
@@ -33,7 +35,7 @@ export default function CategoryShortcuts() {
 
                         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
                             {CATEGORIES.map((category) => (
-                                <a
+                                <Link
                                     key={category.label}
                                     href={category.href}
                                     className="group relative flex flex-col items-center px-3 py-4 transition duration-300 hover:-translate-y-1"
@@ -44,7 +46,7 @@ export default function CategoryShortcuts() {
                                     <span className="relative mt-3 text-center text-[11px] font-bold leading-tight tracking-[0.14em] text-brand-text transition-colors group-hover:text-brand-primary sm:text-xs sm:tracking-[0.18em]">
                                         {category.label}
                                     </span>
-                                </a>
+                                </Link>
                             ))}
                         </div>
                     </div>

@@ -85,38 +85,70 @@ function ProductPickerCard({ product, selected, onToggle }) {
         <button
             type="button"
             onClick={onToggle}
-            className="text-left group block"
+            aria-pressed={selected}
+            className={`group relative flex h-full w-full flex-col overflow-hidden bg-white text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 ${
+                selected
+                    ? 'border-2 border-brand-cta shadow-[0_14px_30px_rgba(255,90,78,0.18)] -translate-y-0.5'
+                    : 'border border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:-translate-y-0.5 hover:border-brand-cta/50 hover:shadow-[0_14px_28px_rgba(41,50,65,0.10)]'
+            }`}
         >
-            <div
-                className={`relative aspect-[4/5] overflow-hidden bg-white border-2 transition-colors ${
-                    selected ? 'border-brand-cta' : 'border-transparent hover:border-brand-secondary/60'
-                }`}
-            >
+            <div className="relative aspect-[4/5] overflow-hidden bg-brand-secondary-light">
                 {product.image ? (
                     <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        className="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.04]"
                         loading="lazy"
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-brand-primary-surface">
-                        <svg className="h-10 w-10 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-10 w-10 text-brand-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
                 )}
+
+                {/* Indicador de selección (siempre visible, cambia de estado) */}
+                <span
+                    aria-hidden="true"
+                    className={`absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200 ${
+                        selected
+                            ? 'bg-brand-cta border-brand-cta text-white scale-100 shadow-md'
+                            : 'bg-white/90 border-brand-secondary text-transparent scale-90 group-hover:scale-100 group-hover:border-brand-cta/60'
+                    }`}
+                >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+
+                {/* Velo coral suave cuando está seleccionado */}
                 {selected && (
-                    <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-cta text-white shadow">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </span>
+                    <div className="pointer-events-none absolute inset-0 bg-brand-cta/5" />
                 )}
             </div>
-            <p className="mt-2 px-1 text-[12px] font-medium text-brand-text leading-tight truncate">
-                {product.name}
-            </p>
+
+            <div className="flex flex-1 flex-col px-3 py-3">
+                <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-brand-text">
+                    {product.name}
+                </p>
+                <span
+                    className={`mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                        selected ? 'text-brand-cta' : 'text-brand-text-light group-hover:text-brand-text-muted'
+                    }`}
+                >
+                    {selected ? (
+                        <>
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Seleccionado
+                        </>
+                    ) : (
+                        'Seleccionar'
+                    )}
+                </span>
+            </div>
         </button>
     );
 }
@@ -194,10 +226,15 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
         }
     }, [picks]);
 
-    // Scroll suave al paso activo
+    // Scroll suave al paso activo, dejando espacio para el navbar sticky
     useEffect(() => {
         const el = stepRefs.current[activeStep];
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!el) return;
+        // El layout del storefront envuelve TopBar + Header en un .sticky.top-0
+        const stickyHeader = document.querySelector('.sticky.top-0');
+        const headerHeight = stickyHeader?.getBoundingClientRect().height ?? 110;
+        const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 16;
+        window.scrollTo({ top, behavior: 'smooth' });
     }, [activeStep]);
 
     // Auto-dismiss feedback
@@ -278,45 +315,128 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
             <Head title={`${combo.name} · Mimos`} />
 
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-                {/* Breadcrumb */}
-                <nav className="text-[11px] uppercase tracking-[0.18em] text-brand-text-muted mb-6">
-                    <Link href="/" className="hover:text-brand-text transition-colors">Inicio</Link>
-                    <span className="mx-2 text-brand-text-light">/</span>
-                    <Link href="/catalogo" className="hover:text-brand-text transition-colors">Catálogo</Link>
-                    <span className="mx-2 text-brand-text-light">/</span>
-                    <span className="text-brand-text font-semibold">{combo.name}</span>
-                </nav>
+                {/* Breadcrumb + volver */}
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                    <nav className="text-[11px] uppercase tracking-[0.18em] text-brand-text-muted">
+                        <Link href="/" className="hover:text-brand-text transition-colors">Inicio</Link>
+                        <span className="mx-2 text-brand-text-light">/</span>
+                        <Link href="/catalogo" className="hover:text-brand-text transition-colors">Catálogo</Link>
+                        <span className="mx-2 text-brand-text-light">/</span>
+                        <span className="text-brand-text font-semibold">{combo.name}</span>
+                    </nav>
+                    <Link
+                        href="/catalogo"
+                        className="inline-flex items-center gap-2 border border-brand-secondary bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta"
+                    >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Volver al catálogo
+                    </Link>
+                </div>
 
                 {/* Hero del combo */}
-                <header className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8 lg:gap-12 items-start">
-                    <div className="aspect-[4/5] overflow-hidden bg-white">
-                        {combo.image ? (
-                            <img src={combo.image} alt={combo.name} className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-brand-primary-surface">
-                                <svg className="h-16 w-16 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                            </div>
-                        )}
+                <header className="grid grid-cols-1 lg:grid-cols-[minmax(0,460px)_1fr] gap-8 lg:gap-14 items-start">
+                    {/* Imagen — se muestra completa (object-contain) sobre fondo crema */}
+                    <div className="relative overflow-hidden bg-brand-secondary-light border border-brand-secondary/60 shadow-[0_18px_40px_rgba(41,50,65,0.08)]">
+                        <div className="aspect-[4/5] w-full">
+                            {combo.image ? (
+                                <img
+                                    src={combo.image}
+                                    alt={combo.name}
+                                    className="h-full w-full object-contain"
+                                />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-brand-primary-surface">
+                                    <svg className="h-16 w-16 text-brand-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                            )}
+                        </div>
+                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 bg-brand-text px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            Combo
+                        </span>
                     </div>
 
-                    <div>
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-brand-cta font-semibold">
-                            Combo
+                    {/* Detalles */}
+                    <div className="flex flex-col">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-brand-cta font-bold">
+                            Combo · Armalo a tu medida
                         </p>
-                        <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-brand-text leading-tight">
+                        <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-text leading-[1.05]">
                             {combo.name}
                         </h1>
-                        <p className="mt-3 text-2xl font-bold text-brand-text">{fmt(combo.price)}</p>
+
+                        {/* Precio destacado */}
+                        <div className="mt-5 flex items-baseline gap-3">
+                            <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-cta leading-none">
+                                {fmt(combo.price)}
+                            </span>
+                            <span className="text-xs uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
+                                Precio final
+                            </span>
+                        </div>
+
                         {combo.description && (
-                            <p className="mt-5 text-sm leading-relaxed text-brand-text-muted whitespace-pre-line">
+                            <p className="mt-5 text-base leading-relaxed text-brand-text-muted whitespace-pre-line max-w-xl">
                                 {combo.description}
                             </p>
                         )}
-                        <p className="mt-6 text-xs text-brand-text-muted">
-                            Armá tu combo en {2 + combo.categories.length} pasos: elegí talle, género y los productos de cada categoría.
-                        </p>
+
+                        {/* Incluye — chips de categorías */}
+                        {combo.categories.length > 0 && (
+                            <div className="mt-7">
+                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text font-bold mb-3">
+                                    Tu combo incluye
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {combo.categories.map((cat) => (
+                                        <span
+                                            key={cat.id}
+                                            className="inline-flex items-center gap-2 bg-white border border-brand-secondary px-3.5 py-2 text-sm font-semibold text-brand-text shadow-[0_4px_10px_rgba(41,50,65,0.04)]"
+                                        >
+                                            <span className="flex h-5 min-w-[20px] items-center justify-center bg-brand-cta px-1.5 text-[11px] font-bold text-white">
+                                                ×{cat.quantity}
+                                            </span>
+                                            {cat.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Talles disponibles */}
+                        {combo.sizes.length > 0 && (
+                            <div className="mt-6">
+                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
+                                    Talles disponibles
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {combo.sizes.map((s) => (
+                                        <span
+                                            key={s.id}
+                                            className="inline-flex h-8 min-w-[36px] items-center justify-center bg-brand-secondary-light border border-brand-secondary px-2.5 text-xs font-bold text-brand-text"
+                                        >
+                                            {s.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pasos / banner inferior */}
+                        <div className="mt-7 flex items-center gap-3 border-l-2 border-brand-cta bg-brand-secondary-light/60 px-4 py-3">
+                            <svg className="h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <p className="text-sm text-brand-text">
+                                Armá tu combo en <span className="font-bold">{2 + combo.categories.length} pasos</span>: elegí talle, género y los productos de cada categoría.
+                            </p>
+                        </div>
                     </div>
                 </header>
 
@@ -407,15 +527,33 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
                                 {activeStep === stepKey && (
                                     <div className="pb-6">
                                         {products.length === 0 ? (
-                                            <p className="text-sm text-brand-text-muted italic">
-                                                No hay productos disponibles para esta categoría con el talle y género elegidos.
-                                            </p>
+                                            <div className="rounded-sm border border-dashed border-brand-secondary bg-brand-secondary-light px-4 py-6 text-center">
+                                                <p className="text-sm text-brand-text-muted italic">
+                                                    No hay productos disponibles para esta categoría con el talle y género elegidos.
+                                                </p>
+                                            </div>
                                         ) : (
                                             <>
-                                                <p className="text-xs text-brand-text-muted mb-3">
-                                                    Elegí {cat.quantity} {cat.quantity === 1 ? 'producto' : 'productos'} de esta categoría.
-                                                </p>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
+                                                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-l-2 border-brand-cta pl-3">
+                                                    <p className="text-xs text-brand-text-muted">
+                                                        Elegí <span className="font-semibold text-brand-text">{cat.quantity}</span> {cat.quantity === 1 ? 'producto' : 'productos'} de esta categoría.
+                                                    </p>
+                                                    <span
+                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                                                            isCategoryComplete(cat)
+                                                                ? 'bg-brand-cta/10 text-brand-cta'
+                                                                : 'bg-brand-secondary-light text-brand-text-muted'
+                                                        }`}
+                                                    >
+                                                        {picked.length} / {cat.quantity}
+                                                        {isCategoryComplete(cat) && (
+                                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-5">
                                                     {products.map((p) => (
                                                         <ProductPickerCard
                                                             key={p.id}
