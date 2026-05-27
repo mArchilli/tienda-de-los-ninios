@@ -1,3 +1,5 @@
+import AutoLoopCarousel from './AutoLoopCarousel';
+
 const ITEMS = [
     {
         title: 'ENV\u00cdOS A TODO EL PA\u00cdS',
@@ -40,26 +42,42 @@ const ITEMS = [
 ];
 
 export default function TrustBanner() {
+    const renderItem = (item) => (
+        <div className="home-surface flex items-start gap-4 border border-brand-secondary/55 bg-white/65 px-4 py-4 shadow-[0_12px_28px_rgba(31,31,31,0.04)] sm:px-5">
+            <div className="home-media flex h-12 w-12 shrink-0 items-center justify-center bg-brand-cta/10 text-brand-cta">
+                {item.icon}
+            </div>
+            <div className="min-w-0">
+                <p className="text-[12px] font-extrabold tracking-[0.18em] text-brand-text">
+                    {item.title}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-brand-text-muted">
+                    {item.sub}
+                </p>
+            </div>
+        </div>
+    );
+
     return (
         <section className="relative overflow-hidden bg-brand-bg">
             <div className="absolute -left-12 bottom-0 h-36 w-36 rounded-full bg-white/30 blur-3xl" />
             <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-brand-primary/10 blur-3xl" />
 
             <div className="store-shell store-section-bottom relative z-10">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+                <div className="sm:hidden">
+                    <AutoLoopCarousel
+                        items={ITEMS}
+                        ariaLabel="Servicios y beneficios"
+                        className="px-2"
+                        itemClassName="px-1"
+                        renderItem={renderItem}
+                    />
+                </div>
+
+                <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
                     {ITEMS.map((item) => (
-                        <div key={item.title} className="flex items-start gap-4 px-4 py-4 sm:px-5">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center text-brand-cta">
-                                {item.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[12px] font-extrabold tracking-[0.18em] text-brand-text">
-                                    {item.title}
-                                </p>
-                                <p className="mt-1.5 text-sm leading-relaxed text-brand-text-muted">
-                                    {item.sub}
-                                </p>
-                            </div>
+                        <div key={item.title}>
+                            {renderItem(item)}
                         </div>
                     ))}
                 </div>

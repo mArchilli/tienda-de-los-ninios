@@ -53,8 +53,8 @@ function ProductCard({ item }) {
 
     return (
         <Link href={href} className="group block h-full">
-            <article className="flex h-full flex-col overflow-hidden border border-brand-primary/35 bg-white shadow-[0_10px_24px_rgba(41,50,65,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
-                <div className="relative aspect-[4/5] overflow-hidden bg-white">
+            <article className="store-card flex h-full flex-col border-brand-primary/35 p-3 transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-white">
                     {item.image ? (
                         <img
                             src={item.image}
@@ -71,13 +71,13 @@ function ProductCard({ item }) {
                     )}
 
                     {item.is_featured && (
-                        <span className="absolute left-3 top-3 rounded-sm bg-brand-cta px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
+                        <span className="absolute left-3 top-3 rounded-md bg-brand-cta px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
                             New
                         </span>
                     )}
 
                     {item.type === 'combo' && (
-                        <span className="absolute right-3 top-3 rounded-sm bg-brand-text px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
+                        <span className="absolute right-3 top-3 rounded-md bg-brand-text px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
                             Combo
                         </span>
                     )}
@@ -99,7 +99,7 @@ function ProductCard({ item }) {
                     <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                         {fmt(item.price)}
                     </p>
-                    <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
+                    <span className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-[0.9rem] bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
                         {item.type === 'combo' ? 'Armar combo' : 'Ver producto'}
                     </span>
                 </div>

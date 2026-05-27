@@ -31,13 +31,13 @@ function ChannelCard({ channel }) {
     const content = (
         <>
             <div className="flex items-start gap-4 sm:gap-5">
-                <div className={`flex h-16 w-16 shrink-0 items-center justify-center ${channel.iconBg} text-white shadow-sm ring-1 ring-white/16`}>
+                <div className={`home-media flex h-16 w-16 shrink-0 items-center justify-center ${channel.iconBg} text-white shadow-sm ring-1 ring-white/16`}>
                     {channel.icon}
                 </div>
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
                         <h3 className="text-2xl font-extrabold text-white sm:text-[2rem]">{channel.title}</h3>
-                        <span className="inline-flex items-center bg-white/14 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/88">
+                        <span className="inline-flex items-center rounded-full bg-white/14 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/88">
                             {channel.badge}
                         </span>
                     </div>
@@ -47,8 +47,8 @@ function ChannelCard({ channel }) {
                 </div>
             </div>
 
-            <div className={`mt-6 flex items-center gap-3 border px-5 py-4 text-white ${channel.detailClass}`}>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-white/10">
+            <div className={`home-surface mt-6 flex items-center gap-3 border px-5 py-4 text-white ${channel.detailClass}`}>
+                <div className="home-media flex h-11 w-11 shrink-0 items-center justify-center bg-white/10">
                     {channel.detailIcon}
                 </div>
                 <div>
@@ -58,7 +58,7 @@ function ChannelCard({ channel }) {
             </div>
 
             <div className="mt-6">
-                <span className="inline-flex items-center gap-2 bg-white px-5 py-3 text-sm font-bold text-brand-text transition-transform group-hover:translate-x-1">
+                <span className="home-button inline-flex items-center gap-2 bg-white px-5 py-3 text-sm font-bold text-brand-text transition-transform group-hover:translate-x-1">
                     {channel.cta}
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
@@ -74,7 +74,7 @@ function ChannelCard({ channel }) {
                 href={channel.href}
                 target="_blank"
                 rel="noreferrer"
-                className={`group block px-5 py-6 text-white shadow-[0_24px_50px_rgba(31,31,31,0.14)] transition duration-300 hover:-translate-y-1 sm:px-6 sm:py-7 lg:px-7 ${channel.panelClass}`}
+                className={`home-surface group block px-5 py-6 text-white shadow-[0_24px_50px_rgba(31,31,31,0.14)] transition duration-300 hover:-translate-y-1 sm:px-6 sm:py-7 lg:px-7 ${channel.panelClass}`}
             >
                 {content}
             </a>
@@ -84,7 +84,7 @@ function ChannelCard({ channel }) {
     return (
         <Link
             href={channel.href}
-            className={`group block px-5 py-6 text-white shadow-[0_24px_50px_rgba(31,31,31,0.14)] transition duration-300 hover:-translate-y-1 sm:px-6 sm:py-7 lg:px-7 ${channel.panelClass}`}
+            className={`home-surface group block px-5 py-6 text-white shadow-[0_24px_50px_rgba(31,31,31,0.14)] transition duration-300 hover:-translate-y-1 sm:px-6 sm:py-7 lg:px-7 ${channel.panelClass}`}
         >
             {content}
         </Link>
@@ -100,8 +100,8 @@ export default function About() {
                     <div className="absolute -right-10 bottom-8 h-48 w-48 bg-brand-secondary/18 blur-3xl" />
 
                     <div className="relative z-10">
-                        <h2 className="text-4xl font-extrabold tracking-[-0.03em] text-brand-text sm:text-5xl lg:text-[4rem]">
-                            Sobre nosotros
+                        <h2 className="home-section-title">
+                            SOBRE NOSOTROS
                         </h2>
                     </div>
 
@@ -128,7 +128,7 @@ export default function About() {
                             </div>
                         </div>
 
-                        <div className="overflow-hidden">
+                        <div className="home-media overflow-hidden">
                             <img
                                 src="/images/about-imagen.png"
                                 alt="Sobre nosotros"

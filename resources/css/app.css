@@ -113,13 +113,28 @@
         will-change: transform;
     }
 
-    .home-angular .store-panel,
-    .home-angular .store-card,
+    .home-angular .store-panel {
+        border-radius: 1.4rem;
+    }
+
+    .home-angular .store-card {
+        border-radius: 1.1rem;
+    }
+
     .home-angular .home-panel,
-    .home-angular .home-surface,
-    .home-angular .home-media,
-    .home-angular .home-button,
-    .home-angular [class*="rounded"] {
-        border-radius: 0;
+    .home-angular .home-surface {
+        border-radius: 1rem;
+    }
+
+    .home-angular .home-media {
+        border-radius: 0.9rem;
+    }
+
+    .home-angular .home-button {
+        border-radius: 0.85rem;
+    }
+
+    .home-section-title {
+        @apply text-xl font-extrabold uppercase tracking-[0.08em] text-brand-text sm:text-2xl lg:text-[1.9rem];
     }
 }

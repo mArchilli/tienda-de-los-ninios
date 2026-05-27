@@ -51,26 +51,25 @@ const WHATSAPP_MESSAGE = encodeURIComponent('Hola! Tengo una duda sobre la tiend
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
 function FaqItem({ item, featured = false }) {
+    const label = item.question.replace(/^\u00bf/, '').replace(/\?$/, '');
+
     return (
         <details
-            className={`group border border-brand-secondary/60 bg-white transition-colors open:border-brand-cta ${
+            className={`home-surface group border border-brand-secondary/60 bg-white transition-colors open:border-brand-cta ${
                 featured ? 'shadow-[0_18px_42px_rgba(31,31,31,0.07)]' : 'shadow-[0_12px_30px_rgba(31,31,31,0.05)]'
             }`}
             open={featured}
         >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 sm:px-6 sm:py-6">
                 <div className="flex items-center gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-brand-cta/12 text-brand-cta">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9a3 3 0 116 0c0 1.8-3 2.4-3 4" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17h.01" />
-                        </svg>
+                    <span className="home-media flex h-11 w-11 shrink-0 items-center justify-center bg-brand-cta/12 text-base font-bold text-brand-cta">
+                        {item.number}
                     </span>
                     <h3 className="text-left text-lg font-extrabold leading-tight text-brand-text sm:text-[1.35rem]">
-                        {item.question}
+                        {`${item.number}. ${label}`}
                     </h3>
                 </div>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-brand-cta/45 text-brand-cta transition-colors group-open:border-brand-cta group-open:text-brand-cta">
+                <span className="home-media flex h-10 w-10 shrink-0 items-center justify-center border border-brand-cta/45 text-brand-cta transition-colors group-open:border-brand-cta group-open:text-brand-cta">
                     <svg className="h-4 w-4 transition-transform group-open:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12h14" />
                     </svg>
@@ -98,11 +97,8 @@ export default function FAQ() {
 
                     <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-2xl">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-brand-cta">
-                                Ayuda
-                            </p>
-                            <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] text-brand-text sm:text-5xl lg:text-[4rem]">
-                                Preguntas frecuentes
+                            <h2 className="home-section-title">
+                                PREGUNTAS FRECUENTES
                             </h2>
                         </div>
                     </div>
@@ -111,7 +107,7 @@ export default function FAQ() {
                         {FAQS.map((item, index) => (
                             <FaqItem
                                 key={item.question}
-                                item={item}
+                                item={{ ...item, number: index + 1 }}
                                 featured={index === 0}
                             />
                         ))}

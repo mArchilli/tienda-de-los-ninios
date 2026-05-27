@@ -9,7 +9,7 @@ function ComboCard({ combo }) {
     return (
         <article className="group h-full">
             <Link href={`/combo/${combo.id}`} className="flex h-full flex-col">
-                <div className="store-card flex h-full flex-col rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(31,31,31,0.08)]">
+                <div className="store-card flex h-full flex-col border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(31,31,31,0.08)]">
                     <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-secondary-surface">
                         {combo.image ? (
                             <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -66,7 +66,7 @@ export default function FeaturedCombos({ combos }) {
 
                     {/* Header */}
                     <div className="relative z-10 flex items-end justify-between gap-4">
-                        <h2 className="text-xl font-extrabold tracking-[0.08em] text-brand-text sm:text-2xl lg:text-[1.9rem]">
+                        <h2 className="home-section-title">
                             {'LO MÁS ELEGIDO DE ESTA SEMANA'}
                             <span className="ml-2 text-brand-cta">{'♡'}</span>
                         </h2>

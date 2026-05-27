@@ -1,3 +1,5 @@
+import AutoLoopCarousel from './AutoLoopCarousel';
+
 const FEATURES = [
     {
         title: 'Listos para regalar',
@@ -40,9 +42,22 @@ const FEATURES = [
 ];
 
 export default function Hero() {
+    const renderFeature = (feature) => (
+        <div className="home-surface flex min-h-[92px] flex-col items-center justify-center gap-2 border border-brand-secondary/55 bg-white/70 px-3 py-3 text-center shadow-[0_12px_28px_rgba(31,31,31,0.04)] sm:min-h-[98px] sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5">
+            <div className="home-media flex h-10 w-10 shrink-0 items-center justify-center bg-brand-cta/10 text-brand-cta sm:h-11 sm:w-11">
+                {feature.icon}
+            </div>
+            <div className="min-w-0">
+                <p className="text-[13px] font-extrabold uppercase leading-[1.15] tracking-[0.08em] text-brand-text sm:text-base">
+                    {feature.title}
+                </p>
+            </div>
+        </div>
+    );
+
     return (
         <section className="bg-brand-bg">
-            <div className="relative h-[350px] md:hidden">
+            <div className="home-media relative h-[350px] overflow-hidden md:hidden">
                 <img
                     src="/images/banner-mobile.png"
                     alt=""
@@ -52,7 +67,7 @@ export default function Hero() {
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-bg/12 via-transparent to-brand-bg/55" />
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/18 via-transparent to-white/10" />
             </div>
-            <div className="relative overflow-hidden">
+            <div className="home-panel relative overflow-hidden">
                 <div className="absolute inset-0 hidden md:flex items-center justify-center">
                     <img
                         src="/images/banner.png"
@@ -106,17 +121,20 @@ export default function Hero() {
             </div>
 
             <div className="store-shell relative z-10 pb-6 pt-3 sm:pb-8 sm:pt-4 lg:pb-10 lg:pt-6 xl:pb-12">
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+                <div className="sm:hidden">
+                    <AutoLoopCarousel
+                        items={FEATURES}
+                        ariaLabel="Beneficios destacados"
+                        className="px-2"
+                        itemClassName="px-1"
+                        renderItem={renderFeature}
+                    />
+                </div>
+
+                <div className="hidden grid-cols-2 gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
                     {FEATURES.map((feature) => (
-                        <div key={feature.title} className="flex min-h-[92px] flex-col items-center justify-center gap-2 px-3 py-3 text-center sm:min-h-[98px] sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center text-brand-cta sm:h-11 sm:w-11">
-                                {feature.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[13px] font-extrabold uppercase leading-[1.15] tracking-[0.08em] text-brand-text sm:text-base">
-                                    {feature.title}
-                                </p>
-                            </div>
+                        <div key={feature.title}>
+                            {renderFeature(feature)}
                         </div>
                     ))}
                 </div>

@@ -1,6 +1,5 @@
 import TopBar from '@/Components/Storefront/TopBar';
 import Header from '@/Components/Storefront/Header';
-import Navbar from '@/Components/Storefront/Navbar';
 import Footer from '@/Components/Storefront/Footer';
 import WhatsAppButton from '@/Components/Storefront/WhatsAppButton';
 import CartButton from '@/Components/Storefront/CartButton';
@@ -15,9 +14,8 @@ export default function StorefrontLayout({ children, cartCount = 0 }) {
             <div className="sticky top-0 z-40">
                 <TopBar />
                 <Header cartCount={cartCount} />
-                <Navbar />
             </div>
-            <main>{children}</main>
+            <main className="overflow-x-hidden">{children}</main>
             <Footer />
             <CartButton />
             <WhatsAppButton />
