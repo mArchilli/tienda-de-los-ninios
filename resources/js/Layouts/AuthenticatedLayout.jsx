@@ -1,4 +1,3 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -217,7 +216,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 >
                     {expanded && (
                         <Link href="/" className="flex items-center">
-                            <ApplicationLogo className="h-9 w-auto fill-current text-white" />
+                            <img
+                                src="/images/logo.png"
+                                alt="La Tienda de los Niños"
+                                className="h-10 w-auto select-none"
+                            />
                         </Link>
                     )}
                     <button
@@ -287,7 +290,11 @@ export default function AuthenticatedLayout({ header, children }) {
             {/* ── Topbar mobile ─────────────────────────────────────────── */}
             <header className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between h-14 px-4 bg-brand-primary border-b border-brand-primary-dark/60 shadow-md">
                 <Link href="/" className="flex items-center">
-                    <ApplicationLogo className="h-8 w-auto fill-current text-white" />
+                    <img
+                        src="/images/logo.png"
+                        alt="La Tienda de los Niños"
+                        className="h-9 w-auto select-none"
+                    />
                 </Link>
                 <button
                     onClick={() => setMobileOpen(true)}
@@ -307,7 +314,11 @@ export default function AuthenticatedLayout({ header, children }) {
             >
                 <div className="flex items-center justify-between h-14 px-4 border-b border-brand-primary-dark/60 shrink-0">
                     <Link href="/" onClick={closeMobile} className="flex items-center">
-                        <ApplicationLogo className="h-8 w-auto fill-current text-white" />
+                        <img
+                            src="/images/logo.png"
+                            alt="La Tienda de los Niños"
+                            className="h-9 w-auto select-none"
+                        />
                     </Link>
                     <button
                         onClick={closeMobile}

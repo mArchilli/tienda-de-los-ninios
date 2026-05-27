@@ -4,35 +4,35 @@
 
 @layer base {
     :root {
-        --background-main: #FAF8F5;
-        --background-soft: #F6F1EC;
+        --background-main: #F8F6F3;
+        --background-soft: #F5F2EE;
         --background-card: #FFFFFF;
-        --primary-color: #3D5A80;
-        --primary-hover: #2C4260;
-        --primary-soft: #5271A0;
-        --text-main: #293241;
-        --text-secondary: #6B7A8F;
-        --border-color: #DDE6EE;
-        --footer-background: #293241;
-        --section-background: #EBF0F7;
+        --primary-color: #FF5A4E;
+        --primary-hover: #F04B40;
+        --primary-soft: #FF8A80;
+        --text-main: #1F1F1F;
+        --text-secondary: #5E5E5E;
+        --border-color: #E9E5E1;
+        --footer-background: #1E2635;
+        --section-background: #F3ECE7;
 
-        --brand-bg: 250 248 245;
+        --brand-bg: 248 246 243;
         --brand-card: 255 255 255;
-        --brand-primary: 61 90 128;
-        --brand-primary-light: 82 113 160;
-        --brand-primary-dark: 44 66 96;
-        --brand-primary-surface: 235 240 247;
-        --brand-secondary: 221 230 238;
-        --brand-secondary-light: 235 245 251;
-        --brand-secondary-dark: 122 174 200;
-        --brand-secondary-surface: 235 245 251;
-        --brand-cta: 238 108 77;
-        --brand-cta-dark: 232 85 46;
-        --brand-cta-surface: 253 242 238;
-        --brand-text: 41 50 65;
-        --brand-text-muted: 107 122 143;
-        --brand-text-light: 155 168 184;
-        --brand-footer: 41 50 65;
+        --brand-primary: 30 38 53;
+        --brand-primary-light: 42 52 71;
+        --brand-primary-dark: 20 26 38;
+        --brand-primary-surface: 245 242 238;
+        --brand-secondary: 233 229 225;
+        --brand-secondary-light: 245 242 238;
+        --brand-secondary-dark: 211 207 202;
+        --brand-secondary-surface: 243 236 231;
+        --brand-cta: 255 90 78;
+        --brand-cta-dark: 240 75 64;
+        --brand-cta-surface: 243 236 231;
+        --brand-text: 31 31 31;
+        --brand-text-muted: 94 94 94;
+        --brand-text-light: 140 140 140;
+        --brand-footer: 30 38 53;
     }
 
     .storefront-theme {
