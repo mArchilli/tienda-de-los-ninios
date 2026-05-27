@@ -17,7 +17,7 @@ export default {
             },
             keyframes: {
                 'fade-in': {
-                    '0%':   { opacity: '0', transform: 'translateY(6px)' },
+                    '0%': { opacity: '0', transform: 'translateY(6px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
                 },
             },
@@ -25,7 +25,7 @@ export default {
                 'fade-in': 'fade-in 0.3s ease-out both',
             },
             colors: {
-                // ─── Paleta del panel admin ───────────────────────────────────────────
+                  // ─── Paleta del panel admin ───────────────────────────────────────────
                 // Modificar estos valores cambia los colores en todo el panel de una vez.
                 //
                 //   brand.bg            → fondo general de las páginas
@@ -35,33 +35,36 @@ export default {
                 //   brand.text          → texto principal y variantes
                 // ─────────────────────────────────────────────────────────────────────
                 brand: {
-                    bg: '#FAF8F5',            // fondo blanco roto / crema suave
+                    bg: 'rgb(var(--brand-bg) / <alpha-value>)',
+                    card: 'rgb(var(--brand-card) / <alpha-value>)',
 
                     primary: {
-                        DEFAULT: '#3D5A80',   // azul petróleo suave
-                        light:   '#5271A0',   // hover / íconos activos
-                        dark:    '#2C4260',   // active / pressed
-                        surface: '#EBF0F7',   // fondo tint muy suave (tarjetas, badges)
+                        DEFAULT: 'rgb(var(--brand-primary) / <alpha-value>)',
+                        light: 'rgb(var(--brand-primary-light) / <alpha-value>)',
+                        dark: 'rgb(var(--brand-primary-dark) / <alpha-value>)',
+                        surface: 'rgb(var(--brand-primary-surface) / <alpha-value>)',
                     },
 
                     secondary: {
-                        DEFAULT: '#98C1D9',   // celeste grisáceo
-                        light:   '#B5D5E8',
-                        dark:    '#7AAEC8',
-                        surface: '#EBF5FB',   // fondo tint muy suave
+                        DEFAULT: 'rgb(var(--brand-secondary) / <alpha-value>)',
+                        light: 'rgb(var(--brand-secondary-light) / <alpha-value>)',
+                        dark: 'rgb(var(--brand-secondary-dark) / <alpha-value>)',
+                        surface: 'rgb(var(--brand-secondary-surface) / <alpha-value>)',
                     },
 
                     cta: {
-                        DEFAULT: '#EE6C4D',   // coral suave — botones de compra y ofertas
-                        dark:    '#E8552E',   // hover
-                        surface: '#FDF2EE',   // fondo tint muy suave
+                        DEFAULT: 'rgb(var(--brand-cta) / <alpha-value>)',
+                        dark: 'rgb(var(--brand-cta-dark) / <alpha-value>)',
+                        surface: 'rgb(var(--brand-cta-surface) / <alpha-value>)',
                     },
 
                     text: {
-                        DEFAULT: '#293241',   // gris oscuro principal
-                        muted:   '#6B7A8F',   // texto secundario / etiquetas
-                        light:   '#9BA8B8',   // placeholder / deshabilitado
+                        DEFAULT: 'rgb(var(--brand-text) / <alpha-value>)',
+                        muted: 'rgb(var(--brand-text-muted) / <alpha-value>)',
+                        light: 'rgb(var(--brand-text-light) / <alpha-value>)',
                     },
+
+                    footer: 'rgb(var(--brand-footer) / <alpha-value>)',
                 },
             },
         },

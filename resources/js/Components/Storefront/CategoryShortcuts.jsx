@@ -52,7 +52,7 @@ export default function CategoryShortcuts() {
                             </div>
                         </div>
 
-                        <aside className="home-panel relative overflow-hidden shadow-[0_24px_50px_rgba(61,90,128,0.20)]">
+                        <aside className="home-panel relative overflow-hidden shadow-[0_24px_50px_rgba(31,31,31,0.12)]">
                             <img
                                 src="/images/banner-filtros.png"
                                 alt=""

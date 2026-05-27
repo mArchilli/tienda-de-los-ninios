@@ -69,7 +69,7 @@ export default function Hero() {
                         <div className="relative max-w-xl lg:max-w-2xl">
                             <h1 className="font-extrabold leading-[0.9] text-brand-text">
                                 <span className="block text-[3.65rem] sm:text-7xl lg:text-[5.1rem] xl:text-[5.55rem]">COMBOS</span>
-                                <span className="mt-1.5 block text-[3rem] text-brand-primary sm:text-6xl lg:text-[4.55rem] xl:text-[4.95rem]">
+                                <span className="mt-1.5 block text-[3rem] text-brand-cta sm:text-6xl lg:text-[4.55rem] xl:text-[4.95rem]">
                                     PARA REGALAR
                                     <svg className="ml-2 inline-block h-7 w-7 -translate-y-1 text-brand-cta sm:h-8 sm:w-8" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 21s-7-4.35-7-10a4.5 4.5 0 018-2.83A4.5 4.5 0 0119 11c0 5.65-7 10-7 10z" />
@@ -92,7 +92,7 @@ export default function Hero() {
                                     Ver combos
                                 </a>
                                 <a
-                                    href="#armar"
+                                    href="/crear-combo"
                                     className="home-button inline-flex items-center justify-center border-2 border-brand-primary bg-white/95 px-6 py-3 text-xs font-bold uppercase tracking-wide text-brand-primary transition-colors hover:bg-brand-primary hover:text-white sm:px-7 sm:py-3.5 sm:text-sm"
                                 >
                                     {'Arm\u00e1 tu combo'}
@@ -109,7 +109,7 @@ export default function Hero() {
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
                     {FEATURES.map((feature) => (
                         <div key={feature.title} className="home-surface flex min-h-[92px] flex-col items-center justify-center gap-2 bg-white/84 px-3 py-3 text-center backdrop-blur-sm shadow-sm sm:min-h-[98px] sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-sm sm:h-11 sm:w-11">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center text-brand-cta sm:h-11 sm:w-11">
                                 {feature.icon}
                             </div>
                             <div className="min-w-0">

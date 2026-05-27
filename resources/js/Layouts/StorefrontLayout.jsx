@@ -11,7 +11,7 @@ import CartButton from '@/Components/Storefront/CartButton';
 
 export default function StorefrontLayout({ children, cartCount = 0 }) {
     return (
-        <div className="min-h-screen bg-brand-bg text-brand-text font-sans">
+        <div className="storefront-theme min-h-screen bg-brand-bg text-brand-text font-sans">
             <div className="sticky top-0 z-40">
                 <TopBar />
                 <Header cartCount={cartCount} />

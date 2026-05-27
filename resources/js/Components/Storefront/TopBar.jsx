@@ -23,7 +23,7 @@ const items = [
 
 export default function TopBar() {
     return (
-        <div className="border-b border-brand-primary-dark/30 bg-brand-primary text-white">
+        <div className="border-b border-brand-cta-dark/30 bg-brand-cta text-white">
             <div className="store-shell">
                 <div className="topbar-marquee h-8">
                     <div className="topbar-marquee-track">

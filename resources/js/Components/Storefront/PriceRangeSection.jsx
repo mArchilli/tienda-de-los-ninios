@@ -43,7 +43,7 @@ const RANGES = [
         title: 'Tu combo',
         sub: 'Personalizalo a tu gusto',
         ctaLabel: 'Crear ahora',
-        href: '#armar',
+        href: '/crear-combo',
         image: '/images/banner-arma-combo.png',
         overlay: 'bg-[linear-gradient(180deg,rgba(41,50,65,0.18),rgba(41,50,65,0.7))]',
         iconBg: 'bg-white/14',
@@ -72,7 +72,7 @@ export default function PriceRangeSection() {
                             <a
                                 key={range.title}
                                 href={range.href}
-                                className="group store-card flex min-h-[235px] flex-col overflow-hidden transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(61,90,128,0.12)] lg:min-h-[255px]"
+                                className="group store-card flex min-h-[235px] flex-col overflow-hidden transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(31,31,31,0.10)] lg:min-h-[255px]"
                             >
                                 <img
                                     src={range.image}

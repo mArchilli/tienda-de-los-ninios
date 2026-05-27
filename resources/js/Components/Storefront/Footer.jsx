@@ -36,7 +36,7 @@ function SocialIcon({ label, children }) {
         <a
             href="#"
             aria-label={label}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/10 text-white transition-colors hover:bg-brand-cta"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20"
         >
             {children}
         </a>
@@ -45,14 +45,14 @@ function SocialIcon({ label, children }) {
 
 export default function Footer() {
     return (
-        <footer className="bg-brand-text text-white">
+        <footer className="bg-white text-brand-text">
             <div className="store-shell pb-10 pt-4">
                 <div className="grid grid-cols-1 gap-10 px-6 py-10 sm:px-8 lg:grid-cols-5 lg:px-10 lg:py-12">
                     <div className="lg:col-span-2">
                         <div className="inline-block rounded-2xl bg-white px-3 py-2 shadow-sm">
                             <Logo />
                         </div>
-                        <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/72">
+                        <p className="mt-5 max-w-sm text-sm leading-relaxed text-brand-text-muted">
                             {'Combos y prendas pensadas para acompa\u00f1ar cada etapa de la infancia, con calidad y mucho cari\u00f1o.'}
                         </p>
                         <div className="mt-6 flex gap-2">
@@ -78,11 +78,11 @@ export default function Footer() {
 
                     {COLUMNS.map((column) => (
                         <div key={column.title}>
-                            <p className="text-sm font-bold uppercase tracking-[0.2em] text-white">{column.title}</p>
+                            <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-text">{column.title}</p>
                             <ul className="mt-5 space-y-2.5">
                                 {column.links.map((link) => (
                                     <li key={link.label}>
-                                        <a href={link.href} className="text-sm text-white/72 transition-colors hover:text-white">
+                                        <a href={link.href} className="text-sm text-brand-text-muted transition-colors hover:text-brand-cta">
                                             {link.label}
                                         </a>
                                     </li>
@@ -91,10 +91,14 @@ export default function Footer() {
                         </div>
                     ))}
                 </div>
+            </div>
 
-                <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 px-6 py-5 text-xs text-white/60 sm:flex-row sm:px-8 lg:px-10">
-                    <p>{'\u00a9'} 2026 La Tienda de los Ninos. Todos los derechos reservados.</p>
-                    <p>Desarrollado por <span className="text-brand-cta">PAMPA LABS</span></p>
+            <div className="bg-brand-cta text-white">
+                <div className="store-shell">
+                    <div className="flex flex-col items-center justify-between gap-3 px-6 py-5 text-xs sm:flex-row sm:px-8 lg:px-10">
+                        <p>{'\u00a9'} 2026 La Tienda de los Ninos. Todos los derechos reservados.</p>
+                        <p>Desarrollado por <span className="text-brand-text">PAMPA LABS</span></p>
+                    </div>
                 </div>
             </div>
         </footer>

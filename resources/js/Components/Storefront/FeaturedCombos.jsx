@@ -9,7 +9,7 @@ function ComboCard({ combo }) {
     return (
         <article className="group h-full">
             <Link href={`/combo/${combo.id}`} className="flex h-full flex-col">
-                <div className="store-card flex h-full flex-col rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(61,90,128,0.12)]">
+                <div className="store-card flex h-full flex-col rounded-none border-brand-primary/35 p-3 transition duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-primary group-hover:shadow-[0_24px_48px_rgba(31,31,31,0.08)]">
                     <div className="home-media relative aspect-[4/5] overflow-hidden bg-brand-secondary-surface">
                         {combo.image ? (
                             <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
