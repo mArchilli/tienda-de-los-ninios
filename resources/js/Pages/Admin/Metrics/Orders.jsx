@@ -34,6 +34,20 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
     );
 
     const [billable, setBillable] = useState(initialBillable);
+    const [search, setSearch] = useState('');
+
+    const filteredOrders = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (! q) return orders;
+        return orders.filter((o) => {
+            const fullName = `${o.first_name ?? ''} ${o.last_name ?? ''}`.toLowerCase();
+            return (
+                String(o.id).includes(q) ||
+                fullName.includes(q) ||
+                (o.email ?? '').toLowerCase().includes(q)
+            );
+        });
+    }, [orders, search]);
 
     const liveStats = useMemo(() => {
         let revenue = 0;
@@ -65,17 +79,38 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
     };
 
     const toggleAll = (check) => {
-        if (check) setBillable(new Set(orders.map((o) => o.id)));
-        else setBillable(new Set());
+        setBillable((prev) => {
+            const next = new Set(prev);
+            for (const o of filteredOrders) {
+                if (check) next.add(o.id);
+                else next.delete(o.id);
+            }
+            return next;
+        });
     };
 
     const { processing, patch } = useForm({});
+    const [confirmOpen, setConfirmOpen] = useState(false);
+
+    const pendingChanges = useMemo(() => {
+        const toCancel = [];
+        const toReactivate = [];
+        for (const o of orders) {
+            const nowBillable = billable.has(o.id);
+            if (o.is_billable && ! nowBillable) toCancel.push(o);
+            if (! o.is_billable && nowBillable) toReactivate.push(o);
+        }
+        return { toCancel, toReactivate };
+    }, [orders, billable]);
 
     const submit = (e) => {
         e.preventDefault();
         if (! dirty) return;
-        if (! confirm('Vas a actualizar el estado de las órdenes seleccionadas. Esta acción ajusta las métricas y el stock. ¿Continuar?')) return;
+        setConfirmOpen(true);
+    };
 
+    const confirmSave = () => {
+        setConfirmOpen(false);
         router.patch(
             route('admin.metrics.orders.update'),
             { month, billable_order_ids: Array.from(billable) },
@@ -135,37 +170,71 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
                 </div>
 
                 <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-5 py-4">
-                        <div className="text-sm text-brand-text-muted">
-                            <span className="font-semibold text-brand-text">{orders.length}</span> orden{orders.length === 1 ? '' : 'es'} en el período
-                            {' · '}
-                            <span className="font-semibold text-brand-text">{billable.size}</span> tildada{billable.size === 1 ? '' : 's'}
+                    <div className="border-b border-gray-200 px-5 py-4 space-y-3">
+                        <div className="relative">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-brand-text-muted">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                                </svg>
+                            </span>
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Buscar por ID, nombre o email..."
+                                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-brand-text shadow-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none"
+                            />
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearch('')}
+                                    className="absolute inset-y-0 right-2 flex items-center text-brand-text-muted hover:text-brand-text"
+                                    aria-label="Limpiar búsqueda"
+                                >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => toggleAll(true)}
-                                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-text hover:bg-gray-50"
-                            >
-                                Tildar todas
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => toggleAll(false)}
-                                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-text hover:bg-gray-50"
-                            >
-                                Destildar todas
-                            </button>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-sm text-brand-text-muted">
+                                <span className="font-semibold text-brand-text">{filteredOrders.length}</span>
+                                {search ? ' resultado' + (filteredOrders.length === 1 ? '' : 's') : ' orden' + (orders.length === 1 ? '' : 'es') + ' en el período'}
+                                {' · '}
+                                <span className="font-semibold text-brand-text">{billable.size}</span> tildada{billable.size === 1 ? '' : 's'} en total
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleAll(true)}
+                                    disabled={filteredOrders.length === 0}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-text hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    Tildar {search ? 'filtradas' : 'todas'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => toggleAll(false)}
+                                    disabled={filteredOrders.length === 0}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-text hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    Destildar {search ? 'filtradas' : 'todas'}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {orders.length === 0 ? (
+                    {filteredOrders.length === 0 ? (
                         <div className="p-10 text-center text-sm text-brand-text-muted">
-                            No hay órdenes en este mes.
+                            {orders.length === 0
+                                ? 'No hay órdenes en este mes.'
+                                : 'No hay órdenes que coincidan con la búsqueda.'}
                         </div>
                     ) : (
                         <ul className="divide-y divide-gray-100">
-                            {orders.map((o) => {
+                            {filteredOrders.map((o) => {
                                 const checked = billable.has(o.id);
                                 const isInitiallyCancelled = ! o.is_billable;
                                 return (
@@ -252,6 +321,129 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
                     </div>
                 </div>
             </form>
+
+            {confirmOpen && (
+                <ConfirmModal
+                    onCancel={() => setConfirmOpen(false)}
+                    onConfirm={confirmSave}
+                    processing={processing}
+                    toCancel={pendingChanges.toCancel}
+                    toReactivate={pendingChanges.toReactivate}
+                    currentRevenue={currentStats.revenue}
+                    newRevenue={liveStats.revenue}
+                />
+            )}
         </AuthenticatedLayout>
+    );
+}
+
+function ConfirmModal({ onCancel, onConfirm, processing, toCancel, toReactivate, currentRevenue, newRevenue }) {
+    const delta = newRevenue - currentRevenue;
+    const deltaLabel =
+        delta > 0 ? `+${fmtMoney(delta)}` : delta < 0 ? `-${fmtMoney(Math.abs(delta))}` : fmtMoney(0);
+    const deltaClass = delta > 0 ? 'text-emerald-600' : delta < 0 ? 'text-rose-600' : 'text-brand-text-muted';
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={onCancel}
+        >
+            <div
+                className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+            >
+                <div className="px-5 pt-5 pb-3 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-brand-text">Confirmar cambios</h3>
+                    <p className="mt-1 text-xs text-brand-text-muted">
+                        Esta acción ajusta las métricas del mes y modifica el stock de las prendas involucradas.
+                    </p>
+                </div>
+
+                <div className="px-5 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+                    {toCancel.length > 0 && (
+                        <ChangeBlock
+                            tone="rose"
+                            title={`Se cancelarán ${toCancel.length} orden${toCancel.length === 1 ? '' : 'es'}`}
+                            note="Se devuelve el stock de los talles comprados."
+                            orders={toCancel}
+                        />
+                    )}
+                    {toReactivate.length > 0 && (
+                        <ChangeBlock
+                            tone="emerald"
+                            title={`Se reactivarán ${toReactivate.length} orden${toReactivate.length === 1 ? '' : 'es'}`}
+                            note="Se descuenta nuevamente el stock de los talles."
+                            orders={toReactivate}
+                        />
+                    )}
+
+                    <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                        <div className="flex items-center justify-between text-xs text-brand-text-muted">
+                            <span>Facturado actual</span>
+                            <span className="font-semibold text-brand-text">{fmtMoney(currentRevenue)}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-xs text-brand-text-muted">
+                            <span>Facturado nuevo</span>
+                            <span className="font-semibold text-brand-text">{fmtMoney(newRevenue)}</span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between text-sm">
+                            <span className="font-semibold text-brand-text">Variación</span>
+                            <span className={'font-bold ' + deltaClass}>{deltaLabel}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={processing}
+                        className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-brand-text hover:bg-gray-100 disabled:opacity-50"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={processing}
+                        className="rounded-lg bg-brand-cta px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-cta/90 disabled:opacity-50"
+                    >
+                        {processing ? 'Guardando...' : 'Confirmar'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ChangeBlock({ tone, title, note, orders }) {
+    const tones = {
+        rose:    { border: 'border-rose-200', bg: 'bg-rose-50/60', title: 'text-rose-700' },
+        emerald: { border: 'border-emerald-200', bg: 'bg-emerald-50/60', title: 'text-emerald-700' },
+    };
+    const t = tones[tone] ?? tones.rose;
+    const preview = orders.slice(0, 5);
+    const extra = orders.length - preview.length;
+
+    return (
+        <div className={`rounded-xl border ${t.border} ${t.bg} px-4 py-3`}>
+            <p className={`text-sm font-bold ${t.title}`}>{title}</p>
+            <p className="text-xs text-brand-text-muted mt-0.5">{note}</p>
+            <ul className="mt-2 space-y-1">
+                {preview.map((o) => (
+                    <li key={o.id} className="flex items-center justify-between text-xs text-brand-text">
+                        <span className="truncate">
+                            #{o.id} · {o.first_name} {o.last_name}
+                        </span>
+                        <span className="font-semibold shrink-0 ml-2">{fmtMoney(o.total)}</span>
+                    </li>
+                ))}
+                {extra > 0 && (
+                    <li className="text-[11px] text-brand-text-muted italic">y {extra} más...</li>
+                )}
+            </ul>
+        </div>
     );
 }

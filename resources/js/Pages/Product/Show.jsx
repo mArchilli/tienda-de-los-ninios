@@ -372,14 +372,16 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
 
                                 <div className="space-y-3 pt-1">
                                     <div className="flex items-end gap-3">
-                                        <div className="shrink-0">
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
-                                                Cantidad
-                                            </p>
-                                            <div className="mt-3">
-                                                <QuantityStepper value={qty} onChange={setQty} max={maxQty} />
+                                        {selectedSize && (
+                                            <div className="shrink-0">
+                                                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
+                                                    Cantidad
+                                                </p>
+                                                <div className="mt-3">
+                                                    <QuantityStepper value={qty} onChange={setQty} max={maxQty} />
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
                                         <button
                                             type="button"

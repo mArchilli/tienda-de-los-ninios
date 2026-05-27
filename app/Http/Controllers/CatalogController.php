@@ -22,7 +22,8 @@ class CatalogController extends Controller
             ])
             ->values();
 
-        $products = Product::orderBy('name')
+        $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
+            ->orderBy('name')
             ->get(['id', 'name', 'price', 'images', 'is_featured'])
             ->map(fn ($p) => [
                 'id'          => $p->id,

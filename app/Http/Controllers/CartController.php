@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Size;
 use App\Services\StockService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -304,7 +305,7 @@ class CartController extends Controller
 
         $order = DB::transaction(function () use ($data, $view, $stock) {
             $order = Order::create([
-                'user_id'         => auth()->id(),
+                'user_id'         => Auth::check() ? Auth::id() : null,
                 'total'           => $view['subtotal'],
                 'status'          => Order::STATUS_PENDING,
                 'shipping_status' => Order::SHIPPING_STATUS_PENDING,
