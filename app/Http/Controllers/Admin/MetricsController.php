@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Combo;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\StockService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -251,5 +252,78 @@ class MetricsController extends Controller
             'revenue'      => round((float) (clone $base)->sum('total'), 2),
             'orders_count' => (int) (clone $base)->count(),
         ];
+    }
+
+    public function orders(Request $request)
+    {
+        $month = $this->parseMonth($request->query('month'));
+        $start = (clone $month)->startOfMonth();
+        $end   = (clone $month)->endOfMonth();
+
+        $orders = Order::with('items')
+            ->whereBetween('created_at', [$start, $end])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Order $o) => [
+                'id'           => $o->id,
+                'first_name'   => $o->first_name,
+                'last_name'    => $o->last_name,
+                'email'        => $o->email,
+                'total'        => (float) $o->total,
+                'items_count'  => (int) $o->items->sum('quantity'),
+                'status'       => $o->status,
+                'is_billable'  => $o->status !== Order::STATUS_CANCELLED,
+                'created_at'   => optional($o->created_at)->toIso8601String(),
+            ])
+            ->values();
+
+        return Inertia::render('Admin/Metrics/Orders', [
+            'month'        => $month->format('Y-m'),
+            'monthLabel'   => $this->monthLabel($month),
+            'orders'       => $orders,
+            'currentStats' => $this->monthStats($month),
+        ]);
+    }
+
+    public function updateOrders(Request $request, StockService $stock)
+    {
+        $data = $request->validate([
+            'month'                => ['required', 'regex:/^\d{4}-\d{2}$/'],
+            'billable_order_ids'   => ['present', 'array'],
+            'billable_order_ids.*' => ['integer'],
+        ]);
+
+        $month = $this->parseMonth($data['month']);
+        $start = (clone $month)->startOfMonth();
+        $end   = (clone $month)->endOfMonth();
+
+        $billable = array_map('intval', $data['billable_order_ids']);
+
+        DB::transaction(function () use ($start, $end, $billable, $stock) {
+            $orders = Order::with('items')
+                ->whereBetween('created_at', [$start, $end])
+                ->get();
+
+            foreach ($orders as $order) {
+                $shouldBeBillable = in_array($order->id, $billable, true);
+                $isCancelled = $order->status === Order::STATUS_CANCELLED;
+
+                if ($shouldBeBillable && $isCancelled) {
+                    foreach ($order->items as $item) {
+                        $stock->adjustForOrderItem($item, -1);
+                    }
+                    $order->update(['status' => Order::STATUS_PENDING]);
+                } elseif (! $shouldBeBillable && ! $isCancelled) {
+                    foreach ($order->items as $item) {
+                        $stock->adjustForOrderItem($item, +1);
+                    }
+                    $order->update(['status' => Order::STATUS_CANCELLED]);
+                }
+            }
+        });
+
+        return redirect()
+            ->route('admin.metrics.orders', ['month' => $data['month']])
+            ->with('success', 'Métricas actualizadas.');
     }
 }

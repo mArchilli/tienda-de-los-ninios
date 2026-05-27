@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useMemo } from 'react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ function pctDelta(curr, prev) {
 
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ title, value, sub, delta, accent = 'primary', icon }) {
+function KpiCard({ title, value, sub, delta, accent = 'primary', icon, action }) {
     const accents = {
         primary:   'bg-brand-primary-surface text-brand-primary',
         cta:       'bg-brand-cta-surface text-brand-cta',
@@ -51,12 +51,15 @@ function KpiCard({ title, value, sub, delta, accent = 'primary', icon }) {
                 </span>
             </div>
 
-            {delta && (
-                <div className="mt-3 flex items-center gap-1.5">
-                    <DeltaBadge delta={delta} />
-                    <span className="text-xs text-brand-text-muted">vs. mes anterior</span>
-                </div>
-            )}
+            <div className="mt-3 flex items-center justify-between gap-2">
+                {delta ? (
+                    <div className="flex items-center gap-1.5">
+                        <DeltaBadge delta={delta} />
+                        <span className="text-xs text-brand-text-muted">vs. mes anterior</span>
+                    </div>
+                ) : <span />}
+                {action}
+            </div>
         </div>
     );
 }
@@ -304,6 +307,17 @@ export default function MetricsIndex({
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m-9-4h18" />
                             </svg>
+                        }
+                        action={
+                            <Link
+                                href={route('admin.metrics.orders', { month: selectedMonth })}
+                                className="inline-flex items-center gap-1 rounded-lg border border-brand-cta/30 bg-brand-cta-surface px-2.5 py-1 text-[11px] font-bold text-brand-cta hover:bg-brand-cta hover:text-white transition-colors"
+                            >
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Editar
+                            </Link>
                         }
                     />
                     <KpiCard

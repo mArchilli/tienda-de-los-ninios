@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Size;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -299,7 +300,9 @@ class CartController extends Controller
             ]);
         }
 
-        $order = DB::transaction(function () use ($data, $view) {
+        $stock = app(StockService::class);
+
+        $order = DB::transaction(function () use ($data, $view, $stock) {
             $order = Order::create([
                 'user_id'         => auth()->id(),
                 'total'           => $view['subtotal'],
@@ -321,7 +324,7 @@ class CartController extends Controller
 
             foreach ($view['items'] as $item) {
                 if (($item['type'] ?? null) === 'combo') {
-                    OrderItem::create([
+                    $orderItem = OrderItem::create([
                         'order_id'   => $order->id,
                         'product_id' => null,
                         'quantity'   => $item['quantity'],
@@ -336,7 +339,7 @@ class CartController extends Controller
                         ],
                     ]);
                 } else {
-                    OrderItem::create([
+                    $orderItem = OrderItem::create([
                         'order_id'   => $order->id,
                         'product_id' => $item['product_id'] ?? null,
                         'quantity'   => $item['quantity'],
@@ -345,6 +348,8 @@ class CartController extends Controller
                         'combo_data' => null,
                     ]);
                 }
+
+                $stock->adjustForOrderItem($orderItem, -1);
             }
 
             return $order;

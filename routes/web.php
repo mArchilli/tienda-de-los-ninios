@@ -106,6 +106,8 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::delete('/combos/{combo}', [ComboController::class, 'destroy'])->name('combos.destroy');
 
     Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');
+    Route::get('/metrics/orders', [MetricsController::class, 'orders'])->name('metrics.orders');
+    Route::patch('/metrics/orders', [MetricsController::class, 'updateOrders'])->name('metrics.orders.update');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
