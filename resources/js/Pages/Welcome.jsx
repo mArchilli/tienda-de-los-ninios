@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import Hero from '@/Components/Storefront/Hero';
+import About from '@/Components/Storefront/About';
+import FAQ from '@/Components/Storefront/FAQ';
 import PriceRangeSection from '@/Components/Storefront/PriceRangeSection';
 import FeaturedCombos from '@/Components/Storefront/FeaturedCombos';
 import TrustBanner from '@/Components/Storefront/TrustBanner';
@@ -14,11 +16,13 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
 
             <div className="home-angular">
                 <Hero image={heroImage} />
+                <About />
                 <FeaturedCombos combos={featuredCombos} />
                 <PriceRangeSection />
                 <TrustBanner />
                 <CategoryShortcuts />
                 <FeaturedProducts products={featuredProducts} />
+                <FAQ />
             </div>
         </StorefrontLayout>
     );

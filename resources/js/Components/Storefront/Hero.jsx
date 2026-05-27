@@ -108,7 +108,7 @@ export default function Hero() {
             <div className="store-shell relative z-10 pb-6 pt-3 sm:pb-8 sm:pt-4 lg:pb-10 lg:pt-6 xl:pb-12">
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
                     {FEATURES.map((feature) => (
-                        <div key={feature.title} className="home-surface flex min-h-[92px] flex-col items-center justify-center gap-2 bg-white/84 px-3 py-3 text-center backdrop-blur-sm shadow-sm sm:min-h-[98px] sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5">
+                        <div key={feature.title} className="flex min-h-[92px] flex-col items-center justify-center gap-2 px-3 py-3 text-center sm:min-h-[98px] sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center text-brand-cta sm:h-11 sm:w-11">
                                 {feature.icon}
                             </div>

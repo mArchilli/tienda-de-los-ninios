@@ -3,25 +3,31 @@ import Logo from './Logo';
 
 const NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
+    { label: 'Sobre nosotros', href: '/#about', activeBase: '/' },
+    { label: 'Combos', href: '/catalogo?tipo=combos' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
 ];
 
 function isActive(currentUrl, itemHref) {
-    if (itemHref === '/') return currentUrl === '/';
-    return currentUrl === itemHref || currentUrl.startsWith(itemHref + '/');
+    const currentBase = currentUrl.split('?')[0];
+    const hrefBase = itemHref.split('?')[0].split('#')[0];
+
+    if (itemHref.includes('?')) return currentUrl === itemHref;
+    if (hrefBase === '/') return currentBase === '/';
+    return currentBase === hrefBase || currentBase.startsWith(hrefBase + '/');
 }
 
-function IconButton({ children, label, badge, as: Tag = 'button', ...props }) {
+function CartIconButton({ children, label, badge, as: Tag = 'button', ...props }) {
     return (
         <Tag
             type={Tag === 'button' ? 'button' : undefined}
             aria-label={label}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary/20 bg-white/80 text-brand-text shadow-sm transition-colors hover:border-brand-secondary/35 hover:text-brand-primary"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-cta text-white shadow-sm transition-colors hover:bg-brand-cta-dark"
             {...props}
         >
             {children}
             {badge !== undefined && badge > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-cta px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-text px-1 text-[10px] font-bold text-white">
                     {badge}
                 </span>
             )}
@@ -34,7 +40,7 @@ function DesktopNav({ url }) {
         <nav className="hidden lg:block">
             <ul className="flex items-center gap-7">
                 {NAV_ITEMS.map((item) => {
-                    const active = isActive(url, item.href);
+                    const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
                     return (
                         <li key={item.label}>
                             <Link
@@ -63,7 +69,7 @@ export default function Header({ cartCount }) {
     const count = cartCount ?? props?.cartCount ?? 0;
 
     return (
-        <header className="border-b border-brand-secondary/20 bg-brand-bg/96 backdrop-blur">
+        <header className="border-b border-brand-secondary/20 bg-white">
             <div className="store-shell">
                 <div className="grid min-h-[74px] grid-cols-[1fr_auto] items-center gap-4 py-3 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
                     <div className="hidden lg:flex lg:items-center lg:justify-start">
@@ -75,21 +81,11 @@ export default function Header({ cartCount }) {
                     </Link>
 
                     <div className="flex items-center justify-end gap-2">
-                        <IconButton label="Buscar">
-                            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </IconButton>
-                        <IconButton label="Mi cuenta">
-                            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 14a4 4 0 10-8 0M12 11a3 3 0 100-6 3 3 0 000 6zM4 21c0-3.5 3.5-6 8-6s8 2.5 8 6" />
-                            </svg>
-                        </IconButton>
-                        <IconButton as={Link} href="/carrito" label="Carrito" badge={count}>
-                            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <CartIconButton as={Link} href="/carrito" label="Carrito" badge={count}>
+                            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
                             </svg>
-                        </IconButton>
+                        </CartIconButton>
                     </div>
                 </div>
             </div>

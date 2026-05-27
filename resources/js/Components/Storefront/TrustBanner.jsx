@@ -41,29 +41,27 @@ const ITEMS = [
 
 export default function TrustBanner() {
     return (
-        <section className="bg-brand-bg">
-            <div className="store-shell store-section-bottom">
-                <div className="store-panel bg-brand-secondary-surface/70 px-5 py-7 sm:px-7 lg:px-10 lg:py-9">
-                    <div className="absolute -left-12 bottom-0 h-36 w-36 rounded-full bg-white/30 blur-3xl" />
-                    <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-brand-primary/10 blur-3xl" />
+        <section className="relative overflow-hidden bg-brand-bg">
+            <div className="absolute -left-12 bottom-0 h-36 w-36 rounded-full bg-white/30 blur-3xl" />
+            <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-brand-primary/10 blur-3xl" />
 
-                    <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-                        {ITEMS.map((item) => (
-                            <div key={item.title} className="store-card flex items-start gap-4 bg-brand-primary px-4 py-4 text-white shadow-[0_18px_34px_rgba(255,90,78,0.24)] sm:px-5">
-                                <div className="home-surface flex h-12 w-12 shrink-0 items-center justify-center bg-white/10 text-white shadow-sm ring-1 ring-white/12">
-                                    {item.icon}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-[12px] font-extrabold tracking-[0.18em] text-white">
-                                        {item.title}
-                                    </p>
-                                    <p className="mt-1.5 text-sm leading-relaxed text-white/78">
-                                        {item.sub}
-                                    </p>
-                                </div>
+            <div className="store-shell store-section-bottom relative z-10">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+                    {ITEMS.map((item) => (
+                        <div key={item.title} className="flex items-start gap-4 px-4 py-4 sm:px-5">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center text-brand-cta">
+                                {item.icon}
                             </div>
-                        ))}
-                    </div>
+                            <div className="min-w-0">
+                                <p className="text-[12px] font-extrabold tracking-[0.18em] text-brand-text">
+                                    {item.title}
+                                </p>
+                                <p className="mt-1.5 text-sm leading-relaxed text-brand-text-muted">
+                                    {item.sub}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>

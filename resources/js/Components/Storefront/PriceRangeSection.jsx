@@ -1,59 +1,10 @@
-const RANGES = [
-    {
-        label: 'Combos',
-        title: 'Hasta $30.000',
-        href: '#combos-30k',
-        image: '/images/filtro-combo-inicial.png',
-        overlay: 'bg-[linear-gradient(180deg,rgba(41,50,65,0.18),rgba(41,50,65,0.74))]',
-        iconBg: 'bg-white/14',
-        icon: (
-            <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8h18v13H3zM12 8v13M3 8l2-3h6l1 3M21 8l-2-3h-6l-1 3" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Combos',
-        title: '$30.000 a $50.000',
-        href: '#combos-50k',
-        image: '/images/filtro-combo-intermedio.png',
-        overlay: 'bg-[linear-gradient(180deg,rgba(41,50,65,0.14),rgba(41,50,65,0.72))]',
-        iconBg: 'bg-white/14',
-        icon: (
-            <svg className="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Combos',
-        title: 'Premium',
-        href: '#combos-premium',
-        image: '/images/filtro-combo-premium.png',
-        overlay: 'bg-[linear-gradient(180deg,rgba(41,50,65,0.2),rgba(41,50,65,0.78))]',
-        iconBg: 'bg-white/14',
-        icon: (
-            <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9l3 9h12l3-9-5 3-4-7-4 7-5-3z" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Arm\u00e1',
-        title: 'Tu combo',
-        sub: 'Personalizalo a tu gusto',
-        ctaLabel: 'Crear ahora',
-        href: '/crear-combo',
-        image: '/images/banner-arma-combo.png',
-        overlay: 'bg-[linear-gradient(180deg,rgba(41,50,65,0.18),rgba(41,50,65,0.7))]',
-        iconBg: 'bg-white/14',
-        icon: (
-            <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5h2v14h-2zM5 11h14v2H5z" />
-            </svg>
-        ),
-    },
-];
+const ENTREPRENEUR_COMBO = {
+    label: 'Combos para emprendedores',
+    title: 'Pensado para emprendedores y revendedores',
+    sub: 'Una propuesta de mayor valor, con mejor presentacion y mas presencia para ofrecer en tu negocio.',
+    href: '/catalogo',
+    image: '/images/combo-emprendedor.png',
+};
 
 export default function PriceRangeSection() {
     return (
@@ -64,50 +15,50 @@ export default function PriceRangeSection() {
                     <div className="absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-brand-primary/10 blur-3xl" />
 
                     <h2 className="relative z-10 text-center text-xl font-extrabold tracking-[0.08em] text-brand-text sm:text-2xl lg:text-[1.9rem]">
-                        {'ELEG\u00cd C\u00d3MO QUER\u00c9S REGALAR'}
+                        PENSADO PARA EMPRENDEDORES
                     </h2>
 
-                    <div className="relative z-10 mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-                        {RANGES.map((range) => (
-                            <a
-                                key={range.title}
-                                href={range.href}
-                                className="group store-card flex min-h-[235px] flex-col overflow-hidden transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(31,31,31,0.10)] lg:min-h-[255px]"
-                            >
+                    <div className="relative z-10 mt-8">
+                        <a
+                            href={ENTREPRENEUR_COMBO.href}
+                            className="group flex w-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1.5"
+                        >
+                            <div className="store-card relative min-h-[360px] overflow-hidden sm:min-h-[440px] lg:min-h-[520px]">
                                 <img
-                                    src={range.image}
-                                    alt=""
-                                    aria-hidden="true"
-                                    className="absolute inset-0 h-full w-full object-cover object-center"
+                                    src={ENTREPRENEUR_COMBO.image}
+                                    alt={ENTREPRENEUR_COMBO.label}
+                                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                                 />
-                                <div className={`absolute inset-0 ${range.overlay}`} />
+                                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,246,243,0.95),rgba(248,246,243,0.76)_42%,rgba(248,246,243,0.08))]" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-brand-text/10 via-transparent to-white/10" />
 
-                                <div className="relative z-10 flex h-full flex-col p-6 lg:p-7">
-                                    <div className={`home-surface relative mb-6 flex h-[4.6rem] w-[4.6rem] items-center justify-center ${range.iconBg} border border-white/18 shadow-[0_10px_24px_rgba(41,50,65,0.18)] backdrop-blur-sm`}>
-                                        {range.icon}
+                                <div className="relative z-10 flex h-full max-w-2xl flex-col justify-center px-6 py-8 sm:px-8 lg:px-12">
+                                    <div className="flex h-14 w-14 items-center justify-center text-brand-cta">
+                                        <svg className="h-11 w-11" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 19h16M6 16V9m4 7V5m4 11v-8m4 8v-4" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7l3-3 3 2 4-3" />
+                                        </svg>
                                     </div>
 
-                                    <p className="relative text-[11px] font-bold uppercase tracking-[0.24em] text-white/78">
-                                        {range.label}
+                                    <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.24em] text-brand-cta">
+                                        {ENTREPRENEUR_COMBO.label}
                                     </p>
-                                    <p className="relative mt-3 text-[1.35rem] font-extrabold uppercase leading-tight text-white">
-                                        {range.title}
+                                    <p className="mt-3 max-w-xl text-xl font-extrabold leading-tight text-brand-text sm:text-3xl lg:text-[2.45rem]">
+                                        {ENTREPRENEUR_COMBO.title}
                                     </p>
-                                    {range.sub && (
-                                        <p className="relative mt-3 max-w-[16rem] text-sm leading-relaxed text-white/88">
-                                            {range.sub}
-                                        </p>
-                                    )}
+                                    <p className="mt-4 max-w-lg text-sm leading-relaxed text-brand-text-muted sm:text-base">
+                                        {ENTREPRENEUR_COMBO.sub}
+                                    </p>
 
-                                    <span className="relative mt-auto inline-flex items-center gap-1 pt-6 text-xs font-semibold uppercase tracking-[0.14em] text-white">
-                                        {range.ctaLabel ?? 'Ver opciones'}
+                                    <span className="mt-6 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-cta">
+                                        Ver catalogo
                                         <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
                                         </svg>
                                     </span>
                                 </div>
-                            </a>
-                        ))}
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

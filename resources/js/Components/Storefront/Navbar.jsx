@@ -2,12 +2,18 @@ import { Link, usePage } from '@inertiajs/react';
 
 const NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
+    { label: 'Sobre nosotros', href: '/#about', activeBase: '/' },
+    { label: 'Combos', href: '/catalogo?tipo=combos' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
 ];
 
 function isActive(currentUrl, itemHref) {
-    if (itemHref === '/') return currentUrl === '/';
-    return currentUrl === itemHref || currentUrl.startsWith(itemHref + '/');
+    const currentBase = currentUrl.split('?')[0];
+    const hrefBase = itemHref.split('?')[0].split('#')[0];
+
+    if (itemHref.includes('?')) return currentUrl === itemHref;
+    if (hrefBase === '/') return currentBase === '/';
+    return currentBase === hrefBase || currentBase.startsWith(hrefBase + '/');
 }
 
 export default function Navbar() {
@@ -18,7 +24,7 @@ export default function Navbar() {
             <div className="store-shell">
                 <ul className="flex h-11 items-center justify-center gap-8 overflow-x-auto whitespace-nowrap">
                     {NAV_ITEMS.map((item) => {
-                        const active = isActive(url, item.href);
+                        const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
                         return (
                             <li key={item.label}>
                                 <Link

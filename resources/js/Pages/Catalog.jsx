@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
@@ -98,9 +98,12 @@ function SectionHeading({ title, subtitle }) {
 }
 
 export default function Catalog({ combos = [], products = [], cartCount }) {
+    const { url } = usePage();
     const [sort, setSort] = useState('relevancia');
     const [sortOpen, setSortOpen] = useState(false);
     const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PAGE_SIZE);
+    const query = new URLSearchParams(url.split('?')[1] ?? '');
+    const typeFilter = query.get('tipo');
 
     const sortedCombos = useMemo(() => {
         return [...combos]
@@ -114,14 +117,18 @@ export default function Catalog({ combos = [], products = [], cartCount }) {
             .sort(SORTERS[sort] ?? SORTERS.relevancia);
     }, [products, sort]);
 
+    const showCombos = typeFilter !== 'productos';
+    const showProducts = typeFilter !== 'combos';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
-    const hasMoreProducts = visibleProducts < sortedProducts.length;
+    const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;
 
     const handleLoadMore = () => {
         setVisibleProducts((current) => current + PRODUCTS_PAGE_SIZE);
     };
 
-    const isEmpty = sortedCombos.length === 0 && sortedProducts.length === 0;
+    const isEmpty =
+        (showCombos ? sortedCombos.length === 0 : true) &&
+        (showProducts ? sortedProducts.length === 0 : true);
 
     return (
         <StorefrontLayout cartCount={cartCount}>
@@ -192,7 +199,7 @@ export default function Catalog({ combos = [], products = [], cartCount }) {
                         </div>
                     ) : (
                         <div className="space-y-10 sm:space-y-14">
-                            {sortedCombos.length > 0 && (
+                            {showCombos && sortedCombos.length > 0 && (
                                 <div>
                                     <SectionHeading
                                         title="Combos disponibles"
@@ -206,7 +213,7 @@ export default function Catalog({ combos = [], products = [], cartCount }) {
                                 </div>
                             )}
 
-                            {sortedProducts.length > 0 && (
+                            {showProducts && sortedProducts.length > 0 && (
                                 <div>
                                     <SectionHeading
                                         title="Prendas"
