@@ -7,7 +7,6 @@ import PriceRangeSection from '@/Components/Storefront/PriceRangeSection';
 import FeaturedCombos from '@/Components/Storefront/FeaturedCombos';
 import TrustBanner from '@/Components/Storefront/TrustBanner';
 import CategoryShortcuts from '@/Components/Storefront/CategoryShortcuts';
-import FeaturedProducts from '@/Components/Storefront/FeaturedProducts';
 
 export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount }) {
     return (
@@ -16,12 +15,11 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
 
             <div className="home-angular">
                 <Hero image={heroImage} />
-                <About />
                 <FeaturedCombos combos={featuredCombos} />
                 <PriceRangeSection />
-                <TrustBanner />
                 <CategoryShortcuts />
-                <FeaturedProducts products={featuredProducts} />
+                <About />
+                {/* <TrustBanner /> */}
                 <FAQ />
             </div>
         </StorefrontLayout>

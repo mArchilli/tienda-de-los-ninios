@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     :root {
         --background-main: #F8F6F3;
         --background-soft: #F5F2EE;
