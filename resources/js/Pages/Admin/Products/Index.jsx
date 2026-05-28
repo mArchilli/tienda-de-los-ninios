@@ -765,6 +765,60 @@ function DeleteModal({ open, onClose, product }) {
     );
 }
 
+// ─── Bulk delete modal ────────────────────────────────────────────────────────
+
+function BulkDeleteModal({ open, onClose, selectedIds, onSuccess }) {
+    const [processing, setProcessing] = useState(false);
+    const count = selectedIds.size;
+
+    const submit = () => {
+        setProcessing(true);
+        router.delete(route('admin.products.bulk-destroy'), {
+            data: { ids: [...selectedIds] },
+            onSuccess: () => { onSuccess(); onClose(); },
+            onError: () => setProcessing(false),
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    return (
+        <Modal open={open} onClose={onClose} title="Eliminar prendas">
+            <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
+                    <svg className="h-5 w-5 shrink-0 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-semibold text-red-700">
+                            ¿Eliminar {count} prenda{count !== 1 ? 's' : ''}?
+                        </p>
+                        <p className="text-xs text-red-500 mt-1">
+                            Esta acción no se puede deshacer. Se eliminarán también todas las imágenes del servidor.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-brand-text-muted hover:bg-gray-50 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={submit}
+                        disabled={processing}
+                        className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60"
+                    >
+                        {processing ? <Spinner /> : <Icon name="trash" />}
+                        Eliminar {count} prenda{count !== 1 ? 's' : ''}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
 // ─── Product card ─────────────────────────────────────────────────────────────
 
 function StockBadge({ stock }) {
@@ -789,12 +843,19 @@ function StockBadge({ stock }) {
     );
 }
 
-function ProductCard({ product, onEdit, onDelete }) {
+function ProductCard({ product, onEdit, onDelete, selectionMode = false, selected = false, onToggleSelect }) {
     const stock = totalStock(product);
     const image = product.images?.[0] ?? null;
 
     return (
-        <div className="group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-200 hover:shadow-md hover:border-brand-primary/30 transition-all">
+        <div
+            onClick={selectionMode ? () => onToggleSelect(product.id) : undefined}
+            className={`group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border transition-all ${
+                selectionMode
+                    ? `cursor-pointer select-none ${selected ? 'border-brand-primary shadow-md shadow-brand-primary/20' : 'border-gray-200 hover:border-brand-primary/50'}`
+                    : 'border-gray-200 hover:shadow-md hover:border-brand-primary/30'
+            }`}
+        >
             {/* Image */}
             <div className="relative aspect-[3/4] bg-gray-50">
                 {image ? (
@@ -811,7 +872,17 @@ function ProductCard({ product, onEdit, onDelete }) {
                     <StockBadge stock={stock} />
                 </div>
 
-                {product.is_featured && (
+                {selectionMode ? (
+                    <div className={`absolute top-2 right-2 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        selected ? 'bg-brand-primary border-brand-primary' : 'bg-white/80 border-gray-400'
+                    }`}>
+                        {selected && (
+                            <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {Icons.check}
+                            </svg>
+                        )}
+                    </div>
+                ) : product.is_featured && (
                     <div className="absolute top-2 right-2">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-cta shadow">
                             <svg className="h-3.5 w-3.5 fill-white text-white" viewBox="0 0 24 24" stroke="currentColor" fill="none">
@@ -854,22 +925,24 @@ function ProductCard({ product, onEdit, onDelete }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
-                    <button
-                        onClick={() => onEdit(product)}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
-                    >
-                        <Icon name="pencil" className="h-3.5 w-3.5" />
-                        Editar
-                    </button>
-                    <button
-                        onClick={() => onDelete(product)}
-                        title="Eliminar"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                        <Icon name="trash" className="h-3.5 w-3.5" />
-                    </button>
-                </div>
+                {!selectionMode && (
+                    <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
+                        <button
+                            onClick={() => onEdit(product)}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
+                        >
+                            <Icon name="pencil" className="h-3.5 w-3.5" />
+                            Editar
+                        </button>
+                        <button
+                            onClick={() => onDelete(product)}
+                            title="Eliminar"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        >
+                            <Icon name="trash" className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -940,11 +1013,16 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                         Ordenar
                     </p>
                     <div className="grid grid-cols-2 gap-1.5">
-                        {[{ value: 'asc', label: 'A → Z' }, { value: 'desc', label: 'Z → A' }].map((opt) => (
+                        {[
+                            { value: 'name_asc',  label: 'A → Z' },
+                            { value: 'name_desc', label: 'Z → A' },
+                            { value: 'stock_asc',  label: 'Menos stock' },
+                            { value: 'stock_desc', label: 'Más stock' },
+                        ].map((opt) => (
                             <button
                                 key={opt.value}
                                 onClick={() => onChange('sort', opt.value)}
-                                className={`rounded-lg border py-1.5 text-sm font-medium transition-colors ${
+                                className={`rounded-lg border py-1.5 text-xs font-medium transition-colors ${
                                     localFilters.sort === opt.value
                                         ? 'bg-brand-primary border-brand-primary text-white'
                                         : 'bg-white border-gray-200 text-brand-text hover:border-brand-primary hover:text-brand-primary'
@@ -984,22 +1062,24 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                 <FilterSelect label="Talle"     iconName="size"     value={localFilters.size}     onChange={(v) => onChange('size', v)}     options={sizes}     placeholder="Todos" />
                 <FilterSelect label="Género"    iconName="gender"   value={localFilters.gender}   onChange={(v) => onChange('gender', v)}   options={genders}   placeholder="Todos" />
 
-                {/* Price */}
+                {/* Stock */}
                 <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
                     <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                        <Icon name="money" className="h-3.5 w-3.5 text-brand-cta" />
-                        Precio
+                        <svg className="h-3.5 w-3.5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Stock
                     </p>
-                    <div className="space-y-2">
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-light text-sm pointer-events-none">$</span>
-                            <input type="number" placeholder="Mínimo" value={localFilters.min_price} onChange={(e) => onChange('min_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none" />
-                        </div>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-light text-sm pointer-events-none">$</span>
-                            <input type="number" placeholder="Máximo" value={localFilters.max_price} onChange={(e) => onChange('max_price', e.target.value)} className="w-full rounded-lg border border-gray-200 pl-7 pr-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none" />
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => onChange('stock_zero', localFilters.stock_zero === '1' ? '' : '1')}
+                        className={`w-full rounded-lg border py-1.5 text-sm font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                            localFilters.stock_zero === '1'
+                                ? 'bg-gray-700 border-gray-700 text-white'
+                                : 'bg-white border-gray-200 text-brand-text hover:border-gray-700 hover:text-gray-700'
+                        }`}
+                    >
+                        Sin stock
+                    </button>
                 </div>
             </div>
         </aside>
@@ -1013,20 +1093,37 @@ export default function Index({ products, filters, categories, colors, sizes, ge
 
     const [flashMsg, setFlashMsg] = useState(flash?.success ?? null);
     const [localFilters, setLocalFilters] = useState({
-        search:    filters.search    ?? '',
-        category:  filters.category  ?? '',
-        color:     filters.color     ?? '',
-        size:      filters.size      ?? '',
-        gender:    filters.gender    ?? '',
-        featured:  filters.featured  ?? '',
-        min_price: filters.min_price ?? '',
-        max_price: filters.max_price ?? '',
-        sort:      filters.sort      ?? 'asc',
+        search:     filters.search     ?? '',
+        category:   filters.category   ?? '',
+        color:      filters.color      ?? '',
+        size:       filters.size       ?? '',
+        gender:     filters.gender     ?? '',
+        featured:   filters.featured   ?? '',
+        stock_zero: filters.stock_zero ?? '',
+        sort:       filters.sort       ?? 'name_asc',
     });
 
-    const [createOpen, setCreateOpen]   = useState(false);
-    const [editTarget, setEditTarget]   = useState(null);
+    const [createOpen, setCreateOpen]     = useState(false);
+    const [editTarget, setEditTarget]     = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds]     = useState(new Set());
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+    const toggleSelect = (id) =>
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+
+    const selectAll = () => setSelectedIds(new Set(products.data.map((p) => p.id)));
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+    };
 
     useEffect(() => { if (flash?.success) setFlashMsg(flash.success); }, [flash]);
 
@@ -1040,16 +1137,16 @@ export default function Index({ products, filters, categories, colors, sizes, ge
         const timer = setTimeout(() => applyFilters(localFilters), 400);
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [localFilters.search, localFilters.min_price, localFilters.max_price]);
+    }, [localFilters.search]);
 
     const handleChange = (key, value) => {
         const updated = { ...localFilters, [key]: value };
         setLocalFilters(updated);
-        if (!['search', 'min_price', 'max_price'].includes(key)) applyFilters(updated);
+        if (key !== 'search') applyFilters(updated);
     };
 
     const resetFilters = () => {
-        const empty = { search: '', category: '', color: '', size: '', gender: '', featured: '', min_price: '', max_price: '', sort: 'asc' };
+        const empty = { search: '', category: '', color: '', size: '', gender: '', featured: '', stock_zero: '', sort: 'name_asc' };
         setLocalFilters(empty);
         applyFilters(empty);
     };
@@ -1059,18 +1156,57 @@ export default function Index({ products, filters, categories, colors, sizes, ge
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-bold text-brand-text">Prendas</h1>
+                        <h1 className="text-xl font-bold text-brand-text">
+                            {selectionMode ? 'Selección' : 'Prendas'}
+                        </h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
-                            {products.total} prenda{products.total !== 1 ? 's' : ''} encontradas
+                            {selectionMode
+                                ? `${selectedIds.size} prenda${selectedIds.size !== 1 ? 's' : ''} seleccionada${selectedIds.size !== 1 ? 's' : ''}`
+                                : `${products.total} prenda${products.total !== 1 ? 's' : ''} encontradas`
+                            }
                         </p>
                     </div>
-                    <button
-                        onClick={() => setCreateOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
-                    >
-                        <Icon name="plus" />
-                        Nueva Prenda
-                    </button>
+                    {selectionMode ? (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={selectedIds.size < products.data.length ? selectAll : clearSelection}
+                                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+                            >
+                                {selectedIds.size < products.data.length ? 'Seleccionar todas' : 'Deseleccionar'}
+                            </button>
+                            <button
+                                onClick={() => setBulkDeleteOpen(true)}
+                                disabled={selectedIds.size === 0}
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Icon name="trash" />
+                                Eliminar{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                            </button>
+                            <button
+                                onClick={exitSelectionMode}
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:bg-gray-50 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setSelectionMode(true)}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+                            >
+                                <Icon name="check" />
+                                Seleccionar
+                            </button>
+                            <button
+                                onClick={() => setCreateOpen(true)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                            >
+                                <Icon name="plus" />
+                                Nueva Prenda
+                            </button>
+                        </div>
+                    )}
                 </div>
             }
         >
@@ -1102,6 +1238,9 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                                         product={product}
                                         onEdit={setEditTarget}
                                         onDelete={setDeleteTarget}
+                                        selectionMode={selectionMode}
+                                        selected={selectedIds.has(product.id)}
+                                        onToggleSelect={toggleSelect}
                                     />
                                 ))}
                             </div>
@@ -1154,6 +1293,13 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                 open={deleteTarget !== null}
                 onClose={() => setDeleteTarget(null)}
                 product={deleteTarget}
+            />
+
+            <BulkDeleteModal
+                open={bulkDeleteOpen}
+                onClose={() => setBulkDeleteOpen(false)}
+                selectedIds={selectedIds}
+                onSuccess={exitSelectionMode}
             />
         </AuthenticatedLayout>
     );

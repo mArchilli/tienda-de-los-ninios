@@ -18,7 +18,13 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['categories', 'colors', 'sizes', 'genders']);
+        $stockSubquery = DB::table('product_size')
+            ->selectRaw('COALESCE(SUM(stock), 0)')
+            ->whereColumn('product_id', 'products.id');
+
+        $query = Product::with(['categories', 'colors', 'sizes', 'genders'])
+            ->select('products.*')
+            ->selectSub($stockSubquery, 'total_stock');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -44,22 +50,23 @@ class ProductController extends Controller
             $query->where('is_featured', true);
         }
 
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', $request->min_price);
+        if ($request->filled('stock_zero')) {
+            $query->whereDoesntHave('sizes', fn($q) => $q->where('product_size.stock', '>', 0));
         }
 
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        $sort = $request->input('sort', 'asc');
-        $query->orderBy('name', $sort === 'desc' ? 'desc' : 'asc');
+        $sort = $request->input('sort', 'name_asc');
+        match ($sort) {
+            'name_desc'  => $query->orderBy('name', 'desc'),
+            'stock_asc'  => $query->orderBy('total_stock', 'asc')->orderBy('name', 'asc'),
+            'stock_desc' => $query->orderBy('total_stock', 'desc')->orderBy('name', 'asc'),
+            default      => $query->orderBy('name', 'asc'),
+        };
 
         $products = $query->paginate(12)->withQueryString();
 
         return Inertia::render('Admin/Products/Index', [
             'products'   => $products,
-            'filters'    => $request->only(['search', 'category', 'color', 'size', 'gender', 'featured', 'min_price', 'max_price', 'sort']),
+            'filters'    => $request->only(['search', 'category', 'color', 'size', 'gender', 'featured', 'stock_zero', 'sort']),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
             'colors'     => Color::orderBy('name')->get(['id', 'name']),
             'sizes'      => Size::orderBy('name')->get(['id', 'name']),
@@ -176,6 +183,29 @@ class ProductController extends Controller
         $product->delete();
 
         return back()->with('success', 'Producto eliminado correctamente.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:products,id',
+        ]);
+
+        $products = Product::whereIn('id', $request->ids)->get();
+
+        foreach ($products as $product) {
+            $storedPaths = json_decode($product->getRawOriginal('images'), true) ?? [];
+            foreach ($storedPaths as $path) {
+                @unlink(public_path($path));
+            }
+            $product->delete();
+        }
+
+        $count = count($request->ids);
+        $label = $count === 1 ? 'prenda eliminada' : 'prendas eliminadas';
+
+        return back()->with('success', "{$count} {$label} correctamente.");
     }
 
     private function uploadImages(array $files): array
