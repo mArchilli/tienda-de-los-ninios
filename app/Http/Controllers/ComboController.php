@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Combo;
-use App\Models\Gender;
 use Inertia\Inertia;
 
 class ComboController extends Controller
@@ -16,13 +15,13 @@ class ComboController extends Controller
 
         $combo->load([
             'sizes',
+            'gender',
             'items.category',
             'items.product.sizes',
-            'items.product.genders',
         ]);
 
         // Agrupamos los items por categoría: cada categoría queda con su quantity y la
-        // lista de productos elegibles (con sus talles+stock y géneros).
+        // lista de productos elegibles (con sus talles+stock).
         $categories = $combo->items
             ->groupBy('category_id')
             ->map(function ($items) {
@@ -33,15 +32,14 @@ class ComboController extends Controller
                     'quantity' => (int) $first->quantity,
                     'products' => $items
                         ->map(fn ($item) => [
-                            'id'      => $item->product->id,
-                            'name'    => $item->product->name,
-                            'image'   => $item->product->images[0] ?? null,
-                            'sizes'   => $item->product->sizes->map(fn ($s) => [
+                            'id'    => $item->product->id,
+                            'name'  => $item->product->name,
+                            'image' => $item->product->images[0] ?? null,
+                            'sizes' => $item->product->sizes->map(fn ($s) => [
                                 'id'    => $s->id,
                                 'name'  => $s->name,
                                 'stock' => (int) ($s->pivot->stock ?? 0),
                             ])->values(),
-                            'genders' => $item->product->genders->pluck('id')->values(),
                         ])
                         ->unique('id')
                         ->values(),
@@ -56,10 +54,12 @@ class ComboController extends Controller
                 'description' => $combo->description,
                 'price'       => $combo->price,
                 'image'       => $combo->image ? '/' . ltrim($combo->image, '/') : null,
+                'gender'      => $combo->gender
+                    ? ['id' => $combo->gender->id, 'name' => $combo->gender->name]
+                    : null,
                 'sizes'       => $combo->sizes->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values(),
                 'categories'  => $categories,
             ],
-            'genders' => Gender::orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

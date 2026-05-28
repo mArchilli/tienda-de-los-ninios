@@ -485,9 +485,9 @@ function ImageZone({ preview, onChange, onRemove }) {
 
 // ─── Combo form modal ─────────────────────────────────────────────────────────
 
-const EMPTY_FORM = { name: '', description: '', price: '', is_active: true, is_featured: false };
+const EMPTY_FORM = { name: '', description: '', price: '', is_active: true, is_featured: false, gender_id: '' };
 
-function ComboFormModal({ open, onClose, sizes, combo = null }) {
+function ComboFormModal({ open, onClose, sizes, genders = [], combo = null }) {
     const isEdit = combo !== null;
 
     const [form, setForm] = useState(EMPTY_FORM);
@@ -513,6 +513,7 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                 price:       combo.price,
                 is_active:   combo.is_active,
                 is_featured: combo.is_featured,
+                gender_id:   combo.gender_id ? String(combo.gender_id) : '',
             });
             setImagePreview(combo.image ? '/' + combo.image : null);
             const sizeIds = combo.sizes.map((s) => s.id);
@@ -555,8 +556,11 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
         const controller = new AbortController();
         fetchRef.current = controller;
 
+        const params = { sizes: selectedSizeIds };
+        if (form.gender_id) params.gender = form.gender_id;
+
         axios.get(route('admin.combos.categories-for-sizes'), {
-            params: { sizes: selectedSizeIds },
+            params,
             signal: controller.signal,
         })
         .then((res) => {
@@ -574,7 +578,7 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
         })
         .catch(() => {})
         .finally(() => setCategoriesLoading(false));
-    }, [selectedSizeIds, open]);
+    }, [selectedSizeIds, open, form.gender_id]);
 
     const toggleSize = (id) => {
         setSelectedSizeIds((prev) =>
@@ -619,6 +623,7 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
         fd.append('price',       form.price);
         fd.append('is_active',   form.is_active  ? '1' : '0');
         fd.append('is_featured', form.is_featured ? '1' : '0');
+        if (form.gender_id) fd.append('gender_id', form.gender_id);
 
         if (imageFile) fd.append('image', imageFile);
 
@@ -768,6 +773,53 @@ function ComboFormModal({ open, onClose, sizes, combo = null }) {
                                 Destacar en la tienda
                             </span>
                         </label>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Género <span className="text-brand-text-light text-xs">(Opcional — filtra prendas disponibles)</span>
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setForm((f) => ({ ...f, gender_id: '' }))}
+                                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    !form.gender_id
+                                        ? 'border-brand-primary bg-brand-primary text-white'
+                                        : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
+                                }`}
+                            >
+                                {!form.gender_id && (
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {Icons.check}
+                                    </svg>
+                                )}
+                                Todos
+                            </button>
+                            {genders.map((g) => {
+                                const sel = String(form.gender_id) === String(g.id);
+                                return (
+                                    <button
+                                        key={g.id}
+                                        type="button"
+                                        onClick={() => setForm((f) => ({ ...f, gender_id: String(g.id) }))}
+                                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                            sel
+                                                ? 'border-brand-primary bg-brand-primary text-white'
+                                                : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
+                                        }`}
+                                    >
+                                        {sel && (
+                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                {Icons.check}
+                                            </svg>
+                                        )}
+                                        {g.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {errors.gender_id && <p className="mt-1 text-xs text-red-500">{errors.gender_id}</p>}
                     </div>
 
                     <div>
@@ -994,6 +1046,12 @@ function ComboCard({ combo, onEdit, onDelete }) {
                 <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-brand-text text-sm leading-tight line-clamp-2">{combo.name}</h3>
 
+                    {combo.gender && (
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-brand-cta">
+                            {combo.gender.name}
+                        </p>
+                    )}
+
                     {combo.sizes?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
                             {combo.sizes.map((s) => (
@@ -1039,7 +1097,7 @@ function ComboCard({ combo, onEdit, onDelete }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Index({ combos, sizes, categories, filters }) {
+export default function Index({ combos, sizes, categories, genders = [], filters }) {
     const { flash } = usePage().props;
 
     const [flashMsg, setFlashMsg]         = useState(flash?.success ?? null);
@@ -1270,11 +1328,13 @@ export default function Index({ combos, sizes, categories, filters }) {
                 open={createOpen}
                 onClose={() => setCreateOpen(false)}
                 sizes={sizes}
+                genders={genders}
             />
             <ComboFormModal
                 open={editTarget !== null}
                 onClose={() => setEditTarget(null)}
                 sizes={sizes}
+                genders={genders}
                 combo={editTarget}
             />
             <DeleteModal

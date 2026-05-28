@@ -3,13 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 // ─── Combo / Builder ──────────────────────────────────────────────────────────
-// Vista para construir el combo: el cliente elige talle, género, y luego, por
-// cada categoría del combo, los productos. Cada paso es un acordeón; al
-// completarse se cierra y avanza al siguiente. Final: resumen + agregar al carrito.
-//
-// NOTA: el endpoint de carrito todavía no existe. El botón muestra feedback
-// local. Cuando exista `cart.add` reemplazar `handleAdd` por
-// `router.post(route('cart.add'), { combo_id, size_id, gender_id, picks })`.
+// Vista para construir el combo: el cliente elige talle y luego, por cada
+// categoría del combo, los productos. El género viene definido por el combo
+// mismo (se fija en la creación). Cada paso es un acordeón; al completarse se
+// cierra y avanza al siguiente. Final: resumen + agregar al carrito.
 
 function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR');
@@ -155,9 +152,8 @@ function ProductPickerCard({ product, selected, onToggle }) {
 
 // ─── Página ───────────────────────────────────────────────────────────────────
 
-export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
+export default function ComboShow({ combo, cartCount = 0 }) {
     const [size, setSize] = useState(null);
-    const [gender, setGender] = useState(null);
     const [picks, setPicks] = useState({});           // { [categoryId]: number[] }
     const [activeStep, setActiveStep] = useState('size');
     const [feedback, setFeedback] = useState(null);
@@ -167,7 +163,6 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
     // Reset al cambiar de combo (Inertia mantiene el componente)
     useEffect(() => {
         setSize(null);
-        setGender(null);
         setPicks({});
         setActiveStep('size');
         setFeedback(null);
@@ -175,40 +170,34 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
 
     // ─── Derivados ────────────────────────────────────────────────────────────
 
-    // Productos disponibles por categoría según talle + género + stock
+    // Productos disponibles por categoría según talle + stock. El género ya está
+    // pre-filtrado al crear el combo.
     const availableByCategory = useMemo(() => {
         const map = {};
-        if (!size || !gender) return map;
+        if (!size) return map;
         for (const cat of combo.categories) {
-            map[cat.id] = cat.products.filter((p) => {
-                const hasStock  = p.sizes.some((s) => s.id === size && s.stock > 0);
-                const hasGender = p.genders.includes(gender);
-                return hasStock && hasGender;
-            });
+            map[cat.id] = cat.products.filter((p) =>
+                p.sizes.some((s) => s.id === size && s.stock > 0)
+            );
         }
         return map;
-    }, [size, gender, combo.categories]);
+    }, [size, combo.categories]);
 
     const isCategoryComplete = (cat) =>
         (picks[cat.id]?.length ?? 0) >= cat.quantity;
 
     const allCategoriesComplete = combo.categories.every(isCategoryComplete);
-    const allComplete = !!size && !!gender && allCategoriesComplete;
+    const allComplete = !!size && allCategoriesComplete;
 
     // ─── Auto-advance ─────────────────────────────────────────────────────────
 
-    // Al elegir talle → género
+    // Al elegir talle → primera categoría (o resumen si no hay categorías)
     useEffect(() => {
-        if (size && activeStep === 'size') setActiveStep('gender');
-    }, [size]);
-
-    // Al elegir género → primera categoría (o resumen si no hay categorías)
-    useEffect(() => {
-        if (gender && activeStep === 'gender') {
+        if (size && activeStep === 'size') {
             const first = combo.categories[0];
             setActiveStep(first ? `cat-${first.id}` : 'summary');
         }
-    }, [gender]);
+    }, [size]);
 
     // Al completar la categoría activa → siguiente
     useEffect(() => {
@@ -252,12 +241,6 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
         setPicks({});                    // las picks dependen del talle
     };
 
-    const pickGender = (gid) => {
-        if (gid === gender) return;
-        setGender(gid);
-        setPicks({});                    // las picks dependen del género
-    };
-
     const togglePick = (cat, productId) => {
         setPicks((prev) => {
             const current = prev[cat.id] ?? [];
@@ -284,11 +267,10 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
     const handleAdd = () => {
         if (!allComplete) return;
         router.post('/carrito/combo', {
-            combo_id:  combo.id,
-            size_id:   size,
-            gender_id: gender,
+            combo_id: combo.id,
+            size_id:  size,
             picks,
-            quantity:  1,
+            quantity: 1,
         }, {
             preserveScroll: true,
             preserveState:  true,
@@ -303,12 +285,11 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
 
     // ─── Render ───────────────────────────────────────────────────────────────
 
-    const sizeLabel   = size   ? combo.sizes.find((s) => s.id === size)?.name      : null;
-    const genderLabel = gender ? genders.find((g) => g.id === gender)?.name        : null;
+    const sizeLabel   = size ? combo.sizes.find((s) => s.id === size)?.name : null;
+    const genderLabel = combo.gender?.name ?? null;
 
-    const sizeCanOpen   = true;
-    const genderCanOpen = !!size;
-    const catCanOpen    = !!size && !!gender;
+    const sizeCanOpen = true;
+    const catCanOpen  = !!size;
 
     return (
         <StorefrontLayout cartCount={cartCount}>
@@ -428,13 +409,25 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
                             </div>
                         )}
 
+                        {/* Género del combo */}
+                        {combo.gender && (
+                            <div className="mt-6">
+                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
+                                    Género
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 bg-brand-cta/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-brand-cta">
+                                    {combo.gender.name}
+                                </span>
+                            </div>
+                        )}
+
                         {/* Pasos / banner inferior */}
                         <div className="mt-7 flex items-center gap-3 border-l-2 border-brand-cta bg-brand-secondary-light/60 px-4 py-3">
                             <svg className="h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             <p className="text-sm text-brand-text">
-                                Armá tu combo en <span className="font-bold">{2 + combo.categories.length} pasos</span>: elegí talle, género y los productos de cada categoría.
+                                Armá tu combo en <span className="font-bold">{1 + combo.categories.length} pasos</span>: elegí talle y los productos de cada categoría.
                             </p>
                         </div>
                     </div>
@@ -473,50 +466,19 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
                         )}
                     </div>
 
-                    {/* 2. Género */}
-                    <div ref={(el) => (stepRefs.current['gender'] = el)}>
-                        <StepHeader
-                            index={2}
-                            title="Género"
-                            status={genderLabel}
-                            completed={!!gender}
-                            open={activeStep === 'gender'}
-                            onToggle={() => genderCanOpen && toggleStep('gender')}
-                            disabled={!genderCanOpen}
-                        />
-                        {activeStep === 'gender' && (
-                            <div className="pb-6">
-                                {genders.length === 0 ? (
-                                    <p className="text-sm text-brand-text-muted italic">No hay géneros configurados.</p>
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {genders.map((g) => (
-                                            <ChipButton
-                                                key={g.id}
-                                                label={g.name}
-                                                active={gender === g.id}
-                                                onClick={() => pickGender(g.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 3..N. Categorías */}
+                    {/* 2..N. Categorías */}
                     {combo.categories.map((cat, i) => {
                         const stepKey  = `cat-${cat.id}`;
                         const products = availableByCategory[cat.id] ?? [];
                         const picked   = picks[cat.id] ?? [];
                         const status   = catCanOpen
                             ? `${picked.length} de ${cat.quantity} seleccionado${cat.quantity === 1 ? '' : 's'}`
-                            : 'Elegí talle y género primero';
+                            : 'Elegí el talle primero';
 
                         return (
                             <div key={cat.id} ref={(el) => (stepRefs.current[stepKey] = el)}>
                                 <StepHeader
-                                    index={3 + i}
+                                    index={2 + i}
                                     title={cat.name}
                                     status={status}
                                     completed={isCategoryComplete(cat)}
@@ -529,7 +491,7 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
                                         {products.length === 0 ? (
                                             <div className="rounded-sm border border-dashed border-brand-secondary bg-brand-secondary-light px-4 py-6 text-center">
                                                 <p className="text-sm text-brand-text-muted italic">
-                                                    No hay productos disponibles para esta categoría con el talle y género elegidos.
+                                                    No hay productos disponibles para esta categoría con el talle elegido.
                                                 </p>
                                             </div>
                                         ) : (
@@ -583,10 +545,12 @@ export default function ComboShow({ combo, genders = [], cartCount = 0 }) {
                                 <dt className="text-brand-text-muted">Talle</dt>
                                 <dd className="font-semibold text-brand-text">{sizeLabel ?? '—'}</dd>
                             </div>
-                            <div className="flex justify-between gap-3">
-                                <dt className="text-brand-text-muted">Género</dt>
-                                <dd className="font-semibold text-brand-text">{genderLabel ?? '—'}</dd>
-                            </div>
+                            {genderLabel && (
+                                <div className="flex justify-between gap-3">
+                                    <dt className="text-brand-text-muted">Género</dt>
+                                    <dd className="font-semibold text-brand-text">{genderLabel}</dd>
+                                </div>
+                            )}
 
                             {combo.categories.map((cat) => {
                                 const picked = picks[cat.id] ?? [];

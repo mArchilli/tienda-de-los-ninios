@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Combo;
 use App\Models\ComboItem;
+use App\Models\Gender;
 use App\Models\Product;
 use App\Models\Size;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class ComboController extends Controller
         $search     = $request->input('search', '');
         $categoryId = $request->input('category') ? (int) $request->input('category') : null;
 
-        $combos = Combo::with(['sizes', 'items.category', 'items.product'])
+        $combos = Combo::with(['sizes', 'gender', 'items.category', 'items.product'])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($categoryId, fn($q) => $q->whereHas('items', fn($sq) => $sq->where('category_id', $categoryId)))
             ->latest()
@@ -33,28 +34,36 @@ class ComboController extends Controller
             'combos'     => $combos,
             'sizes'      => Size::orderBy('name')->get(['id', 'name']),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'genders'    => Gender::orderBy('name')->get(['id', 'name']),
             'filters'    => ['search' => $search, 'category' => $categoryId ? (string) $categoryId : ''],
         ]);
     }
 
     public function categoriesWithProducts(Request $request)
     {
-        $sizeIds = array_values(array_filter((array) $request->input('sizes', []), 'is_numeric'));
+        $sizeIds  = array_values(array_filter((array) $request->input('sizes', []), 'is_numeric'));
+        $genderId = $request->input('gender') ? (int) $request->input('gender') : null;
 
         if (empty($sizeIds)) {
             return response()->json([]);
         }
 
-        $categories = Category::whereHas('products', function ($q) use ($sizeIds) {
+        $categories = Category::whereHas('products', function ($q) use ($sizeIds, $genderId) {
             $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
                 ->where('product_size.stock', '>', 0));
+            if ($genderId) {
+                $q->whereHas('genders', fn ($gq) => $gq->where('genders.id', $genderId));
+            }
         })
-        ->with(['products' => function ($q) use ($sizeIds) {
+        ->with(['products' => function ($q) use ($sizeIds, $genderId) {
             $q->whereHas('sizes', fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
                 ->where('product_size.stock', '>', 0))
               ->with(['sizes' => fn ($sq) => $sq->whereIn('sizes.id', $sizeIds)
                   ->where('product_size.stock', '>', 0)])
               ->orderBy('name');
+            if ($genderId) {
+                $q->whereHas('genders', fn ($gq) => $gq->where('genders.id', $genderId));
+            }
         }])
         ->orderBy('name')
         ->get(['id', 'name']);
@@ -153,6 +162,7 @@ class ComboController extends Controller
             'is_active'                    => 'boolean',
             'is_featured'                  => 'boolean',
             'image'                        => 'nullable|image|max:5120',
+            'gender_id'                    => 'nullable|exists:genders,id',
             'sizes'                        => 'nullable|array',
             'sizes.*'                      => 'exists:sizes,id',
             'categories'                   => 'nullable|array',
@@ -176,6 +186,7 @@ class ComboController extends Controller
             'is_active'   => $request->boolean('is_active'),
             'is_featured' => $request->boolean('is_featured'),
             'image'       => $imagePath,
+            'gender_id'   => $request->input('gender_id') ?: null,
         ]);
 
         $combo->sizes()->sync($request->input('sizes', []));
@@ -203,6 +214,7 @@ class ComboController extends Controller
             'is_active'                    => 'boolean',
             'is_featured'                  => 'boolean',
             'image'                        => 'nullable|image|max:5120',
+            'gender_id'                    => 'nullable|exists:genders,id',
             'sizes'                        => 'nullable|array',
             'sizes.*'                      => 'exists:sizes,id',
             'categories'                   => 'nullable|array',
@@ -230,6 +242,7 @@ class ComboController extends Controller
             'is_active'   => $request->boolean('is_active'),
             'is_featured' => $request->boolean('is_featured'),
             'image'       => $imagePath,
+            'gender_id'   => $request->input('gender_id') ?: null,
         ]);
 
         $combo->sizes()->sync($request->input('sizes', []));

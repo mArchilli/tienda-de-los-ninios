@@ -191,19 +191,19 @@ class CartController extends Controller
         $data = $request->validate([
             'combo_id'  => ['required', 'integer', 'exists:combos,id'],
             'size_id'   => ['required', 'integer', 'exists:sizes,id'],
-            'gender_id' => ['required', 'integer', 'exists:genders,id'],
             'picks'     => ['required', 'array'],
             'picks.*'   => ['array'],
             'picks.*.*' => ['integer', 'exists:products,id'],
             'quantity'  => ['nullable', 'integer', 'min:1', 'max:99'],
         ]);
 
-        $combo  = Combo::findOrFail($data['combo_id']);
+        $combo  = Combo::with('gender')->findOrFail($data['combo_id']);
         $size   = Size::find($data['size_id']);
-        $gender = Gender::find($data['gender_id']);
+        $gender = $combo->gender;
 
         $picksHash = md5(json_encode($data['picks']));
-        $key       = 'c-' . $combo->id . '-' . $data['size_id'] . '-' . $data['gender_id'] . '-' . $picksHash;
+        $genderKey = $gender ? $gender->id : 'na';
+        $key       = 'c-' . $combo->id . '-' . $data['size_id'] . '-' . $genderKey . '-' . $picksHash;
 
         $cart = $this->getCart();
         $qty  = (int) ($data['quantity'] ?? 1);
@@ -218,8 +218,8 @@ class CartController extends Controller
                 'image'       => $combo->image ? '/' . ltrim($combo->image, '/') : null,
                 'size_id'     => $size->id,
                 'size_name'   => $size->name,
-                'gender_id'   => $gender->id,
-                'gender_name' => $gender->name,
+                'gender_id'   => $gender?->id,
+                'gender_name' => $gender?->name,
                 'picks'       => $data['picks'],
                 'price'       => (float) $combo->price,
                 'quantity'    => $qty,
