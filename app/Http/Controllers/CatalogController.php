@@ -13,7 +13,10 @@ class CatalogController extends Controller
     public function index()
     {
         $allCategories = Category::orderBy('name')->pluck('name')->values();
-        $allSizes = Size::orderBy('name')->pluck('name')->values();
+        $allSizes = Size::whereHas('products', fn ($q) => $q->where('product_size.stock', '>', 0))
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
 
         $combos = Combo::where('is_active', true)
             ->with(['sizes:id,name', 'items.product.genders:id,name'])
@@ -39,7 +42,11 @@ class CatalogController extends Controller
             ->values();
 
         $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
-            ->with(['sizes:id,name', 'genders:id,name', 'categories:id,name'])
+            ->with([
+                'sizes'      => fn ($q) => $q->where('product_size.stock', '>', 0),
+                'genders:id,name',
+                'categories:id,name',
+            ])
             ->orderBy('updated_at', 'desc')
             ->get(['id', 'name', 'price', 'images', 'is_featured', 'updated_at'])
             ->map(fn ($p) => [
