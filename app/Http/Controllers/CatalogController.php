@@ -35,8 +35,8 @@ class CatalogController extends Controller
 
         $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
             ->with(['sizes:id,name', 'genders:id,name'])
-            ->orderBy('name')
-            ->get(['id', 'name', 'price', 'images', 'is_featured'])
+            ->orderBy('updated_at', 'desc')
+            ->get(['id', 'name', 'price', 'images', 'is_featured', 'updated_at'])
             ->map(fn ($p) => [
                 'id'          => $p->id,
                 'name'        => $p->name,
