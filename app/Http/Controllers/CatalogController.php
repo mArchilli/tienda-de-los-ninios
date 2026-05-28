@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Combo;
 use App\Models\Product;
+use App\Models\Size;
 use Inertia\Inertia;
 
 class CatalogController extends Controller
 {
     public function index()
     {
+        $allCategories = Category::orderBy('name')->pluck('name')->values();
+        $allSizes = Size::orderBy('name')->pluck('name')->values();
+
         $combos = Combo::where('is_active', true)
             ->with(['sizes:id,name', 'items.product.genders:id,name'])
             ->orderBy('name')
@@ -34,7 +39,7 @@ class CatalogController extends Controller
             ->values();
 
         $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
-            ->with(['sizes:id,name', 'genders:id,name'])
+            ->with(['sizes:id,name', 'genders:id,name', 'categories:id,name'])
             ->orderBy('updated_at', 'desc')
             ->get(['id', 'name', 'price', 'images', 'is_featured', 'updated_at'])
             ->map(fn ($p) => [
@@ -45,12 +50,15 @@ class CatalogController extends Controller
                 'is_featured' => (bool) $p->is_featured,
                 'genders'     => $p->genders->pluck('name')->values(),
                 'sizes'       => $p->sizes->pluck('name')->values(),
+                'categories'  => $p->categories->pluck('name')->values(),
             ])
             ->values();
 
         return Inertia::render('Catalog', [
-            'combos'   => $combos,
-            'products' => $products,
+            'combos'        => $combos,
+            'products'      => $products,
+            'allSizes'      => $allSizes,
+            'allCategories' => $allCategories,
         ]);
     }
 }
