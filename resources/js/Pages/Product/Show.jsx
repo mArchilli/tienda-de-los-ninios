@@ -1,5 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 function fmt(price) {
@@ -8,21 +11,9 @@ function fmt(price) {
 
 function ImageGallery({ images, name }) {
     const [active, setActive] = useState(0);
-    const [zoomOpen, setZoomOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(-1);
     const list = images?.length ? images : [null];
-
-    useEffect(() => {
-        if (!zoomOpen) return undefined;
-
-        const handleKeyDown = (event) => {
-            if (event.key === 'Escape') {
-                setZoomOpen(false);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [zoomOpen]);
+    const slides = list.filter(Boolean).map((src) => ({ src, alt: name }));
 
     return (
         <>
@@ -59,7 +50,7 @@ function ImageGallery({ images, name }) {
                     <div className="order-1 overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.78))] shadow-[0_20px_44px_rgba(61,90,128,0.10)] lg:order-2">
                         <button
                             type="button"
-                            onClick={() => list[active] && setZoomOpen(true)}
+                            onClick={() => list[active] && setLightboxIndex(active)}
                             disabled={!list[active]}
                             className="relative block w-full text-left disabled:cursor-default"
                             aria-label={list[active] ? 'Ver imagen ampliada' : 'Imagen no disponible'}
@@ -89,37 +80,26 @@ function ImageGallery({ images, name }) {
                 </div>
             </div>
 
-            {zoomOpen && list[active] && (
-                <div
-                    className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgba(16,24,40,0.88)] px-3 py-6 sm:px-6"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={`Vista ampliada de ${name}`}
-                    onClick={() => setZoomOpen(false)}
-                >
-                    <button
-                        type="button"
-                        onClick={() => setZoomOpen(false)}
-                        className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center bg-white/92 text-brand-text shadow-md transition-colors hover:bg-white"
-                        aria-label="Cerrar imagen ampliada"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 6l12 12M18 6L6 18" />
-                        </svg>
-                    </button>
-
-                    <div
-                        className="relative max-h-full w-full max-w-6xl overflow-hidden bg-white shadow-[0_28px_80px_rgba(0,0,0,0.28)]"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <img
-                            src={list[active]}
-                            alt={name}
-                            className="max-h-[85vh] w-full object-contain bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.92))]"
-                        />
-                    </div>
-                </div>
-            )}
+            <Lightbox
+                open={lightboxIndex >= 0}
+                index={lightboxIndex < 0 ? 0 : lightboxIndex}
+                close={() => setLightboxIndex(-1)}
+                slides={slides}
+                plugins={[Zoom]}
+                on={{ view: ({ index }) => setActive(index) }}
+                zoom={{
+                    maxZoomPixelRatio: 3,
+                    zoomInMultiplier: 2,
+                    doubleTapDelay: 300,
+                    doubleClickDelay: 300,
+                    scrollToZoom: true,
+                }}
+                carousel={{ finite: slides.length <= 1 }}
+                controller={{ closeOnBackdropClick: true }}
+                styles={{
+                    container: { backgroundColor: 'rgba(16, 24, 40, 0.92)' },
+                }}
+            />
         </>
     );
 }
@@ -193,9 +173,6 @@ function RelatedCard({ item }) {
                     <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                         {fmt(item.price)}
                     </p>
-                    <span className="mt-4 inline-flex h-10 w-full items-center justify-center bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
-                        Ver producto
-                    </span>
                 </div>
             </article>
         </Link>
@@ -298,7 +275,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                         {product.name}
                                     </h1>
 
-                                    <div className="mt-5 border border-brand-primary/35 bg-white/95 px-4 py-4 shadow-[0_14px_30px_rgba(61,90,128,0.10)] sm:px-5">
+                                    <div className="mt-5">
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                                             Precio
                                         </p>
@@ -308,7 +285,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                     </div>
 
                                     {product.description && (
-                                        <div className="mt-5 border border-brand-primary/35 bg-brand-primary-surface/45 px-4 py-4 sm:px-5">
+                                        <div className="mt-5">
                                             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-text">
                                                 Descripcion
                                             </p>
@@ -320,7 +297,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                 </div>
 
                                 {product.colors?.length > 0 && (
-                                    <div className="border border-brand-primary/35 bg-white/95 px-4 py-4 sm:px-5">
+                                    <div>
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
                                             Color
                                         </p>
@@ -337,7 +314,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                     </div>
                                 )}
 
-                                <div className="border border-brand-primary/35 bg-white/95 px-4 py-4 sm:px-5">
+                                <div className="rounded-[1.25rem] border border-brand-primary/35 bg-white/95 px-4 py-4 sm:px-5">
                                     <div className="flex items-center justify-between gap-3">
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
                                             Talle
@@ -360,7 +337,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                                     type="button"
                                                     onClick={() => !out && setSizeId(size.id)}
                                                     disabled={out}
-                                                    className={`w-full border px-3 py-2.5 text-center text-sm font-semibold transition-all ${
+                                                    className={`w-full rounded-[0.75rem] border px-3 py-2.5 text-center text-sm font-semibold transition-all ${
                                                         active
                                                             ? 'border-brand-primary bg-brand-primary text-white shadow-[0_12px_24px_rgba(61,90,128,0.24)]'
                                                             : out
