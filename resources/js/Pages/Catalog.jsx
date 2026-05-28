@@ -99,9 +99,6 @@ function ProductCard({ item }) {
                     <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-brand-cta sm:text-[17px]">
                         {fmt(item.price)}
                     </p>
-                    <span className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-[0.9rem] bg-brand-cta px-4 text-sm font-bold uppercase tracking-wide text-white transition-colors group-hover:bg-brand-cta-dark">
-                        {item.type === 'combo' ? 'Armar combo' : 'Ver producto'}
-                    </span>
                 </div>
             </article>
         </Link>
