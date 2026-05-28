@@ -11,7 +11,23 @@ function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
 }
 
-export default function Confirmation({ order, whatsapp_url, whatsapp_message }) {
+function PicksList({ picksDisplay }) {
+    if (!picksDisplay?.length) return null;
+    return (
+        <div className="mt-1 space-y-0.5 border-l-2 border-brand-primary/20 pl-2.5">
+            {picksDisplay.map((group, i) => (
+                <div key={i} className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[11px]">
+                    <span className="font-bold uppercase tracking-[0.08em] text-brand-text-muted shrink-0">
+                        {group.category_name}:
+                    </span>
+                    <span className="text-brand-text">{group.products.join(', ')}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+export default function Confirmation({ order, items = [], whatsapp_url, whatsapp_message }) {
     const [opened, setOpened] = useState(false);
     const openedRef = useRef(false);
 
@@ -57,6 +73,43 @@ export default function Confirmation({ order, whatsapp_url, whatsapp_message }) 
                             tocá el botón de abajo.
                         </p>
                     </div>
+
+                    {items.length > 0 && (
+                        <div className="mt-6 rounded-xl border border-brand-secondary/30 bg-white px-4 py-3 text-left">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-text-muted mb-3">
+                                Detalle del pedido
+                            </p>
+                            <ul className="divide-y divide-brand-secondary/30">
+                                {items.map((it, i) => (
+                                    <li key={i} className="flex items-start gap-3 py-2.5">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <p className="text-sm font-bold text-brand-text">{it.name}</p>
+                                                {it.type === 'combo' && (
+                                                    <span className="inline-flex items-center border border-brand-primary/20 bg-brand-secondary-surface px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-text-muted">
+                                                        Combo
+                                                    </span>
+                                                )}
+                                                {it.gender_name && (
+                                                    <span className="inline-flex items-center border border-brand-cta/20 bg-brand-cta-surface px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-brand-cta">
+                                                        {it.gender_name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {it.size_name && (
+                                                <p className="mt-0.5 text-xs text-brand-text-muted">Talle: {it.size_name}</p>
+                                            )}
+                                            <PicksList picksDisplay={it.picks_display} />
+                                        </div>
+                                        <div className="shrink-0 text-right text-xs">
+                                            <p className="text-brand-text-muted">x{it.quantity}</p>
+                                            <p className="font-bold text-brand-primary">{fmt(it.subtotal)}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     <button
                         type="button"

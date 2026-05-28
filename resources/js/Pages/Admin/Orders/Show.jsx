@@ -1,6 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -84,7 +87,7 @@ function Row({ label, value }) {
 
 // ─── Thumbnail ────────────────────────────────────────────────────────────────
 
-function Thumb({ src, alt }) {
+function Thumb({ src, alt, onClick }) {
     if (!src) {
         return (
             <div className="h-28 w-28 shrink-0 rounded-xl bg-brand-primary-surface flex items-center justify-center">
@@ -96,20 +99,36 @@ function Thumb({ src, alt }) {
         );
     }
     return (
-        <img
-            src={src}
-            alt={alt}
-            className="h-28 w-28 shrink-0 rounded-xl object-cover bg-white border border-gray-100"
-        />
+        <button
+            type="button"
+            onClick={onClick}
+            className="group relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white"
+            aria-label="Ver imagen ampliada"
+        >
+            <img
+                src={src}
+                alt={alt}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 flex items-end justify-center rounded-xl bg-black/0 pb-2 opacity-0 transition-all duration-200 group-hover:bg-black/20 group-hover:opacity-100">
+                <span className="rounded bg-black/70 px-2 py-0.5 text-[9px] font-semibold text-white">
+                    Ampliar
+                </span>
+            </span>
+        </button>
     );
 }
 
 // ─── Item de prenda (producto simple) ─────────────────────────────────────────
 
-function ProductItem({ item }) {
+function ProductItem({ item, onImageClick }) {
     return (
         <li className="flex gap-4 py-4">
-            <Thumb src={item.image} alt={item.name} />
+            <Thumb
+                src={item.image}
+                alt={item.name}
+                onClick={item.image ? () => onImageClick([{ src: item.image, alt: item.name }], 0) : undefined}
+            />
             <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                     <div>
@@ -127,6 +146,11 @@ function ProductItem({ item }) {
                     {item.size    && <span>Talle: <strong className="text-brand-text">{item.size}</strong></span>}
                     <span>Cantidad: <strong className="text-brand-text">{item.quantity}</strong></span>
                 </div>
+                {item.description && (
+                    <p className="mt-2 text-xs leading-relaxed text-brand-text-muted line-clamp-3">
+                        {item.description}
+                    </p>
+                )}
             </div>
         </li>
     );
@@ -134,16 +158,40 @@ function ProductItem({ item }) {
 
 // ─── Item de combo ────────────────────────────────────────────────────────────
 
-function ComboItem({ item }) {
+function ComboItem({ item, onImageClick }) {
+    const pickSlides = (item.picks ?? [])
+        .filter((p) => p.image)
+        .map((p) => ({ src: p.image, alt: p.name }));
+
     return (
         <li className="py-4">
             <div className="flex gap-4">
-                <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-16 w-16 shrink-0 rounded-xl object-cover bg-white border border-gray-100"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                {item.image ? (
+                    <button
+                        type="button"
+                        onClick={() => onImageClick([{ src: item.image, alt: item.name }], 0)}
+                        className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white"
+                        aria-label="Ver imagen ampliada"
+                    >
+                        <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <span className="absolute inset-0 flex items-end justify-center rounded-xl bg-black/0 pb-1 opacity-0 transition-all duration-200 group-hover:bg-black/20 group-hover:opacity-100">
+                            <span className="rounded bg-black/70 px-1.5 py-0.5 text-[8px] font-semibold text-white">
+                                Ampliar
+                            </span>
+                        </span>
+                    </button>
+                ) : (
+                    <div className="h-16 w-16 shrink-0 rounded-xl bg-brand-cta-surface flex items-center justify-center">
+                        <svg className="h-7 w-7 text-brand-cta/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+                        </svg>
+                    </div>
+                )}
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                         <div>
@@ -162,6 +210,11 @@ function ComboItem({ item }) {
                         {item.gender && <span>Género: <strong className="text-brand-text">{item.gender}</strong></span>}
                         <span>Cantidad: <strong className="text-brand-text">{item.quantity}</strong></span>
                     </div>
+                    {item.description && (
+                        <p className="mt-2 text-xs leading-relaxed text-brand-text-muted line-clamp-3">
+                            {item.description}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -172,25 +225,45 @@ function ComboItem({ item }) {
                         Prendas incluidas
                     </p>
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                        {item.picks.map((pick, idx) => (
-                            <li key={idx} className="flex flex-col items-center gap-2 text-center">
-                                {pick.image ? (
-                                    <img
-                                        src={pick.image}
-                                        alt={pick.name}
-                                        className="h-44 w-44 rounded-xl object-cover bg-white border border-brand-cta/20 shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="h-44 w-44 rounded-xl bg-brand-cta-surface flex items-center justify-center">
-                                        <svg className="h-8 w-8 text-brand-cta/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-                                        </svg>
-                                    </div>
-                                )}
-                                <span className="text-xs font-medium text-brand-text leading-tight">{pick.name}</span>
-                            </li>
-                        ))}
+                        {item.picks.map((pick, idx) => {
+                            const slideIdx = pickSlides.findIndex((s) => s.src === pick.image);
+                            return (
+                                <li key={idx} className="flex flex-col items-center gap-2 text-center">
+                                    {pick.image ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => onImageClick(pickSlides, slideIdx >= 0 ? slideIdx : 0)}
+                                            className="group relative overflow-hidden rounded-xl border border-brand-cta/20 shadow-sm"
+                                            aria-label={`Ver ${pick.name}`}
+                                        >
+                                            <img
+                                                src={pick.image}
+                                                alt={pick.name}
+                                                className="h-44 w-44 object-cover bg-white transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                            <span className="absolute inset-0 flex items-end justify-center rounded-xl bg-black/0 pb-2 opacity-0 transition-all duration-200 group-hover:bg-black/20 group-hover:opacity-100">
+                                                <span className="rounded bg-black/70 px-2 py-0.5 text-[9px] font-semibold text-white">
+                                                    Ampliar
+                                                </span>
+                                            </span>
+                                        </button>
+                                    ) : (
+                                        <div className="h-44 w-44 rounded-xl bg-brand-cta-surface flex items-center justify-center border border-brand-cta/20">
+                                            <svg className="h-8 w-8 text-brand-cta/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                    <span className="text-xs font-medium text-brand-text leading-tight">{pick.name}</span>
+                                    {pick.description && (
+                                        <span className="text-[11px] leading-snug text-brand-text-muted line-clamp-2">
+                                            {pick.description}
+                                        </span>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}
@@ -204,6 +277,10 @@ export default function OrdersShow({ order }) {
     const flash = usePage().props.flash;
     const [flashMessage, setFlashMessage] = useState(flash?.success ?? null);
     const [processing, setProcessing]     = useState(false);
+    const [lightbox, setLightbox]         = useState({ slides: [], index: -1 });
+
+    const openLightbox  = (slides, index = 0) => setLightbox({ slides, index });
+    const closeLightbox = () => setLightbox({ slides: [], index: -1 });
 
     useEffect(() => {
         if (flash?.success) setFlashMessage(flash.success);
@@ -237,7 +314,12 @@ export default function OrdersShow({ order }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
                             </Link>
-                            <h1 className="text-xl font-bold text-brand-text">Pedido #{order.id}</h1>
+                            <h1 className="text-xl font-bold text-brand-text">
+                                {order.first_name} {order.last_name}
+                            </h1>
+                            <span className="text-sm text-brand-text-muted font-normal">
+                                #{order.id}
+                            </span>
                             <span
                                 className={
                                     'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ' +
@@ -277,7 +359,7 @@ export default function OrdersShow({ order }) {
                 </div>
             }
         >
-            <Head title={`Pedido #${order.id}`} />
+            <Head title={`${order.first_name} ${order.last_name} · Pedido #${order.id}`} />
 
             <div className="p-6 space-y-5">
                 <FlashBanner message={flashMessage} onDismiss={() => setFlashMessage(null)} />
@@ -289,8 +371,8 @@ export default function OrdersShow({ order }) {
                             <ul className="divide-y divide-gray-100">
                                 {order.items.map((it) =>
                                     it.type === 'combo'
-                                        ? <ComboItem key={it.id} item={it} />
-                                        : <ProductItem key={it.id} item={it} />
+                                        ? <ComboItem key={it.id} item={it} onImageClick={openLightbox} />
+                                        : <ProductItem key={it.id} item={it} onImageClick={openLightbox} />
                                 )}
                             </ul>
                         </Card>
@@ -334,6 +416,17 @@ export default function OrdersShow({ order }) {
                     </aside>
                 </div>
             </div>
+            <Lightbox
+                open={lightbox.index >= 0}
+                index={lightbox.index < 0 ? 0 : lightbox.index}
+                close={closeLightbox}
+                slides={lightbox.slides}
+                plugins={[Zoom]}
+                zoom={{ maxZoomPixelRatio: 3, scrollToZoom: true }}
+                carousel={{ finite: lightbox.slides.length <= 1 }}
+                controller={{ closeOnBackdropClick: true }}
+                styles={{ container: { backgroundColor: 'rgba(16, 24, 40, 0.92)' } }}
+            />
         </AuthenticatedLayout>
     );
 }

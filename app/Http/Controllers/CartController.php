@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Combo;
 use App\Models\Gender;
 use App\Models\Order;
@@ -90,21 +91,60 @@ class CartController extends Controller
             'subtotal'   => (float) $i['price'] * (int) $i['quantity'],
         ], $cart['products'] ?? []));
 
-        $combos = array_values(array_map(fn ($i) => [
-            'key'         => $i['key'],
-            'type'        => 'combo',
-            'combo_id'    => $i['combo_id'],
-            'name'        => $i['name'],
-            'image'       => $i['image'],
-            'size_id'     => $i['size_id'] ?? null,
-            'size_name'   => $i['size_name'] ?? null,
-            'gender_id'   => $i['gender_id'] ?? null,
-            'gender_name' => $i['gender_name'] ?? null,
-            'picks'       => $i['picks'] ?? [],
-            'price'       => (float) $i['price'],
-            'quantity'    => (int) $i['quantity'],
-            'subtotal'    => (float) $i['price'] * (int) $i['quantity'],
-        ], $cart['combos'] ?? []));
+        // Pre-load category and product names for all combo picks in one query each.
+        $allCategoryIds = [];
+        $allProductIds  = [];
+        foreach ($cart['combos'] ?? [] as $i) {
+            foreach ($i['picks'] ?? [] as $catId => $productIds) {
+                $allCategoryIds[] = (int) $catId;
+                foreach ((array) $productIds as $pid) {
+                    $allProductIds[] = (int) $pid;
+                }
+            }
+        }
+        $categoryNames = $allCategoryIds
+            ? Category::whereIn('id', array_unique($allCategoryIds))->pluck('name', 'id')
+            : collect();
+        $productNames  = $allProductIds
+            ? Product::whereIn('id', array_unique($allProductIds))->pluck('name', 'id')
+            : collect();
+
+        $combos = array_values(array_map(function ($i) use ($categoryNames, $productNames) {
+            $picksDisplay = [];
+            foreach ($i['picks'] ?? [] as $catId => $productIds) {
+                $catName = $categoryNames[(int) $catId] ?? null;
+                $prods   = [];
+                foreach ((array) $productIds as $pid) {
+                    $name = $productNames[(int) $pid] ?? null;
+                    if ($name) {
+                        $prods[] = $name;
+                    }
+                }
+                if ($catName || $prods) {
+                    $picksDisplay[] = [
+                        'category_name' => $catName ?? "Categoría {$catId}",
+                        'products'      => $prods,
+                    ];
+                }
+            }
+
+            return [
+                'key'          => $i['key'],
+                'type'         => 'combo',
+                'combo_id'     => $i['combo_id'],
+                'name'         => $i['name'],
+                'image'        => $i['image'],
+                'size_id'      => $i['size_id'] ?? null,
+                'size_name'    => $i['size_name'] ?? null,
+                'gender_id'    => $i['gender_id'] ?? null,
+                'gender_name'  => $i['gender_name'] ?? null,
+                'picks'        => $i['picks'] ?? [],
+                'picks_display'=> $picksDisplay,
+                'price'        => (float) $i['price'],
+                'quantity'     => (int) $i['quantity'],
+                'subtotal'     => (float) $i['price'] * (int) $i['quantity'],
+            ];
+        }, $cart['combos'] ?? []));
 
         $items    = array_merge($products, $combos);
         $subtotal = array_sum(array_column($items, 'subtotal'));
@@ -378,6 +418,61 @@ class CartController extends Controller
             return redirect()->route('home');
         }
 
+        // Resolve category/product names for combo picks in one batch query each.
+        $allCategoryIds = [];
+        $allProductIds  = [];
+        foreach ($order->items as $item) {
+            if ($item->combo_data && ! empty($item->combo_data['picks'])) {
+                foreach ($item->combo_data['picks'] as $catId => $productIds) {
+                    $allCategoryIds[] = (int) $catId;
+                    foreach ((array) $productIds as $pid) {
+                        $allProductIds[] = (int) $pid;
+                    }
+                }
+            }
+        }
+        $categoryNames = $allCategoryIds
+            ? Category::whereIn('id', array_unique($allCategoryIds))->pluck('name', 'id')
+            : collect();
+        $productNames  = $allProductIds
+            ? Product::whereIn('id', array_unique($allProductIds))->pluck('name', 'id')
+            : collect();
+
+        $items = $order->items->map(function ($item) use ($categoryNames, $productNames) {
+            $isCombo      = ! is_null($item->combo_data);
+            $picksDisplay = [];
+
+            if ($isCombo && ! empty($item->combo_data['picks'])) {
+                foreach ($item->combo_data['picks'] as $catId => $productIds) {
+                    $catName = $categoryNames[(int) $catId] ?? "Categoría {$catId}";
+                    $prods   = [];
+                    foreach ((array) $productIds as $pid) {
+                        $name = $productNames[(int) $pid] ?? null;
+                        if ($name) {
+                            $prods[] = $name;
+                        }
+                    }
+                    $picksDisplay[] = [
+                        'category_name' => $catName,
+                        'products'      => $prods,
+                    ];
+                }
+            }
+
+            return [
+                'type'          => $isCombo ? 'combo' : 'product',
+                'name'          => $isCombo
+                    ? ($item->combo_data['name'] ?? 'Combo')
+                    : ($item->product?->name ?? 'Producto'),
+                'size_name'     => $item->size ?? null,
+                'gender_name'   => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
+                'quantity'      => (int) $item->quantity,
+                'price'         => (float) $item->price,
+                'subtotal'      => (float) $item->price * (int) $item->quantity,
+                'picks_display' => $picksDisplay,
+            ];
+        })->values()->all();
+
         $message     = $this->buildWhatsappMessage($order);
         $number      = preg_replace('/\D+/', '', (string) config('services.whatsapp.business_number'));
         $whatsappUrl = $number
@@ -394,6 +489,7 @@ class CartController extends Controller
                 'phone'           => $order->phone,
                 'shipping_method' => $order->shipping_method,
             ],
+            'items'            => $items,
             'whatsapp_url'     => $whatsappUrl,
             'whatsapp_number'  => $number,
             'whatsapp_message' => $message,

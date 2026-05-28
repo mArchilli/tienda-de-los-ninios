@@ -98,6 +98,21 @@ function CartLine({ item }) {
                     )}
                 </div>
 
+                {item.type === 'combo' && item.picks_display?.length > 0 && (
+                    <div className="mt-2.5 space-y-1 border-l-2 border-brand-primary/20 pl-2.5">
+                        {item.picks_display.map((group, i) => (
+                            <div key={i} className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[11px]">
+                                <span className="font-bold uppercase tracking-[0.08em] text-brand-text-muted shrink-0">
+                                    {group.category_name}:
+                                </span>
+                                <span className="text-brand-text">
+                                    {group.products.join(', ')}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 <div className="mt-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-primary">Precio</p>
                     <p className="text-sm font-semibold text-brand-text">{fmt(item.price)}</p>
