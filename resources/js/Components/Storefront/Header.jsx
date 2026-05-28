@@ -4,8 +4,6 @@ import Logo from './Logo';
 
 const NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
-    { label: 'Sobre nosotros', href: '/#about', activeBase: '/' },
-    { label: 'Combos', href: '/catalogo?tipo=combos' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
 ];
 
