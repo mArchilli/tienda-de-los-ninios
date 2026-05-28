@@ -85,7 +85,7 @@ export default function Hero() {
                             <h1 className="font-extrabold leading-[0.9] text-brand-text">
                                 <span className="block text-[3.65rem] sm:text-7xl lg:text-[5.1rem] xl:text-[5.55rem]">COMBOS</span>
                                 <span className="mt-1.5 block text-[3rem] text-brand-cta sm:text-6xl lg:text-[4.55rem] xl:text-[4.95rem]">
-                                    PARA REGALAR
+                                    PARA ARMAR
                                     <svg className="ml-2 inline-block h-7 w-7 -translate-y-1 text-brand-cta sm:h-8 sm:w-8" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 21s-7-4.35-7-10a4.5 4.5 0 018-2.83A4.5 4.5 0 0119 11c0 5.65-7 10-7 10z" />
                                     </svg>
@@ -93,10 +93,9 @@ export default function Hero() {
                             </h1>
 
                             <p className="mt-4 max-w-xl text-base leading-relaxed text-brand-text-muted sm:text-lg lg:text-[1.03rem]">
-                                {'Arm\u00e1 el regalo perfecto para cada ocasi\u00f3n.'}
+                                {'Elegi el combo diseñado para vos.'}
                                 <br />
-                                {'Vos eleg\u00eds, nosotros lo armamos con mucho amor'}
-                                <span className="text-brand-cta">{' \u2661'}</span>
+                                {'Vos eleg\u00eds las prendas, nosotros lo armamos.'}
                             </p>
 
                             <div className="mt-8 flex flex-wrap gap-3 sm:mt-6 sm:gap-3.5">
@@ -105,12 +104,6 @@ export default function Hero() {
                                     className="home-button inline-flex items-center justify-center bg-brand-cta px-6 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-7 sm:py-3.5 sm:text-sm"
                                 >
                                     Ver combos
-                                </a>
-                                <a
-                                    href="/crear-combo"
-                                    className="home-button inline-flex items-center justify-center border-2 border-brand-primary bg-white/95 px-6 py-3 text-xs font-bold uppercase tracking-wide text-brand-primary transition-colors hover:bg-brand-primary hover:text-white sm:px-7 sm:py-3.5 sm:text-sm"
-                                >
-                                    {'Arm\u00e1 tu combo'}
                                 </a>
                             </div>
                         </div>
