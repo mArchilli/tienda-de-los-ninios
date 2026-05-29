@@ -17,7 +17,7 @@ function ImageGallery({ images, name }) {
 
     return (
         <>
-            <div className="store-panel p-3 sm:p-4 lg:p-5">
+            <div className="px-1 sm:px-2 lg:px-0">
                 <div className="grid gap-4 lg:grid-cols-[86px_minmax(0,1fr)] xl:grid-cols-[94px_minmax(0,1fr)] xl:gap-4">
                     <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[560px] lg:flex-col lg:overflow-y-auto lg:overflow-x-visible lg:pr-1">
                         {list.map((src, index) => (
@@ -25,19 +25,19 @@ function ImageGallery({ images, name }) {
                                 key={index}
                                 type="button"
                                 onClick={() => setActive(index)}
-                                className={`group relative shrink-0 overflow-hidden border bg-white transition-all duration-200 lg:w-full ${
+                                className={`group relative shrink-0 overflow-hidden rounded-[1.1rem] border bg-white/70 transition-all duration-200 lg:w-full ${
                                     active === index
-                                        ? 'border-brand-primary shadow-[0_14px_28px_rgba(61,90,128,0.18)]'
-                                        : 'border-brand-primary/35 hover:border-brand-primary hover:bg-brand-primary-surface/30'
+                                        ? 'border-brand-primary shadow-[0_14px_28px_rgba(61,90,128,0.16)]'
+                                        : 'border-brand-primary/25 hover:border-brand-primary hover:bg-white'
                                 }`}
                                 aria-label={`Imagen ${index + 1}`}
                             >
-                                <div className="aspect-[4/5] w-20 sm:w-24 lg:w-full">
+                                <div className="aspect-[4/5] w-20 bg-white sm:w-24 lg:w-full">
                                     {src ? (
                                         <img
                                             src={src}
                                             alt=""
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                                            className="h-full w-full object-contain p-1.5 transition-transform duration-500 group-hover:scale-[1.02]"
                                         />
                                     ) : (
                                         <div className="h-full w-full bg-brand-primary-surface" />
@@ -47,7 +47,7 @@ function ImageGallery({ images, name }) {
                         ))}
                     </div>
 
-                    <div className="order-1 overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(235,240,247,0.78))] shadow-[0_20px_44px_rgba(61,90,128,0.10)] lg:order-2">
+                    <div className="order-1 lg:order-2">
                         <button
                             type="button"
                             onClick={() => list[active] && setLightboxIndex(active)}
@@ -55,15 +55,15 @@ function ImageGallery({ images, name }) {
                             className="relative block w-full text-left disabled:cursor-default"
                             aria-label={list[active] ? 'Ver imagen ampliada' : 'Imagen no disponible'}
                         >
-                            <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] xl:max-w-[500px]">
+                            <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-[1.6rem] border border-brand-cta/45 bg-white xl:max-w-[500px]">
                                 {list[active] ? (
                                     <>
                                         <img
                                             src={list[active]}
                                             alt={name}
-                                            className="h-full w-full object-cover"
+                                            className="h-full w-full object-contain"
                                         />
-                                        <span className="absolute bottom-3 right-3 inline-flex items-center bg-brand-cta px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">
+                                        <span className="absolute bottom-3 right-3 inline-flex items-center rounded-full bg-brand-cta px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">
                                             Tocar para ampliar
                                         </span>
                                     </>
@@ -115,13 +115,13 @@ function QuantityStepper({ value, onChange, max }) {
                 onClick={dec}
                 disabled={value <= 1}
                 aria-label="Disminuir"
-                className="flex h-11 w-11 items-center justify-center border border-brand-primary/35 bg-white text-brand-primary shadow-sm transition-colors hover:bg-brand-primary-surface disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-primary/35 bg-white text-brand-primary shadow-sm transition-colors hover:bg-brand-primary-surface disabled:cursor-not-allowed disabled:opacity-30"
             >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14" />
                 </svg>
             </button>
-            <span className="flex h-11 min-w-[3rem] items-center justify-center border border-brand-primary/35 bg-white px-4 text-sm font-bold text-brand-text shadow-sm">
+            <span className="flex h-11 min-w-[3rem] items-center justify-center rounded-full border border-brand-primary/35 bg-white px-4 text-sm font-bold text-brand-text shadow-sm">
                 {value}
             </span>
             <button
@@ -129,7 +129,7 @@ function QuantityStepper({ value, onChange, max }) {
                 onClick={inc}
                 disabled={max ? value >= max : false}
                 aria-label="Aumentar"
-                className="flex h-11 w-11 items-center justify-center border border-brand-primary/35 bg-white text-brand-primary shadow-sm transition-colors hover:bg-brand-primary-surface disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-primary/35 bg-white text-brand-primary shadow-sm transition-colors hover:bg-brand-primary-surface disabled:cursor-not-allowed disabled:opacity-30"
             >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v14M5 12h14" />
@@ -142,13 +142,13 @@ function QuantityStepper({ value, onChange, max }) {
 function RelatedCard({ item }) {
     return (
         <Link href={`/producto/${item.id}`} className="group block h-full">
-            <article className="flex h-full flex-col overflow-hidden border border-brand-primary/35 bg-white shadow-[0_14px_32px_rgba(41,50,65,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_22px_42px_rgba(41,50,65,0.12)]">
-                <div className="relative aspect-[4/5] overflow-hidden bg-brand-primary-surface/35">
+            <article className="store-card flex h-full flex-col border-brand-primary/35 p-3 transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-white">
                     {item.image ? (
                         <img
                             src={item.image}
                             alt={item.name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                            className="absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
                             loading="lazy"
                         />
                     ) : (
@@ -160,10 +160,19 @@ function RelatedCard({ item }) {
                     )}
 
                     {item.is_featured && (
-                        <span className="absolute left-3 top-3 rounded-full border border-white/85 bg-white/92 px-2.5 py-1 text-[9px] font-extrabold tracking-[0.18em] text-brand-text shadow-sm">
-                            NEW IN
+                        <span className="absolute left-3 top-3 rounded-md bg-brand-cta px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
+                            New
                         </span>
                     )}
+
+                    <span
+                        aria-hidden="true"
+                        className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-brand-cta shadow-md transition-transform duration-300 group-hover:scale-110"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </span>
                 </div>
 
                 <div className="flex flex-1 flex-col px-4 py-4 sm:px-5 sm:py-5">
@@ -234,7 +243,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                 <div className="store-shell relative pt-1 pb-4 sm:pt-2 sm:pb-5 lg:pt-3 lg:pb-6 xl:pt-4 xl:pb-7">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
                         <nav>
-                            <div className="inline-flex flex-wrap items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur sm:text-[11px]">
+                            <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur sm:text-[11px]">
                                 <Link href="/" className="transition-colors hover:text-brand-primary">
                                     Inicio
                                 </Link>
@@ -250,7 +259,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                         </nav>
                         <Link
                             href="/catalogo"
-                            className="inline-flex items-center gap-2 border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm backdrop-blur transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta sm:text-[11px]"
+                            className="inline-flex items-center gap-2 rounded-full border border-brand-primary/35 bg-white/88 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm backdrop-blur transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta sm:text-[11px]"
                         >
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -264,7 +273,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
 
                         <div className="store-panel px-5 py-5 sm:px-6 sm:py-6 lg:px-6 lg:py-6">
                             <div className="flex flex-col gap-5">
-                                <div>
+                                <div className="rounded-[1.4rem] border border-brand-cta/40 bg-white/96 px-4 py-4 sm:px-5 sm:py-5">
                                     {product.categories?.[0] && (
                                         <span className="inline-flex rounded-full bg-brand-primary-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary">
                                             {product.categories[0].name}
@@ -294,25 +303,24 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                             </p>
                                         </div>
                                     )}
-                                </div>
-
-                                {product.colors?.length > 0 && (
-                                    <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
-                                            Color
-                                        </p>
-                                        <div className="mt-3 flex flex-wrap gap-2.5">
-                                            {product.colors.map((color) => (
-                                                <span
-                                                    key={color.id}
-                                                    className="text-sm font-medium text-brand-text"
-                                                >
-                                                    {color.name}
-                                                </span>
-                                            ))}
+                                    {product.colors?.length > 0 && (
+                                        <div className="mt-5">
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-text">
+                                                Color
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap gap-2.5">
+                                                {product.colors.map((color) => (
+                                                    <span
+                                                        key={color.id}
+                                                        className="text-sm font-medium text-brand-text"
+                                                    >
+                                                        {color.name}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
 
                                 <div className="rounded-[1.25rem] border border-brand-primary/35 bg-white/95 px-4 py-4 sm:px-5">
                                     <div className="flex items-center justify-between gap-3">
@@ -375,7 +383,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                             type="button"
                                             onClick={handleAdd}
                                             disabled={sizesInStock.length === 0}
-                                            className="home-button inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 bg-brand-cta px-5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="home-button inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-brand-cta px-5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
@@ -390,7 +398,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                                         </span>
                                     )}
 
-                                    <div className="flex items-start gap-3 border border-brand-primary/35 bg-brand-primary-surface/35 px-4 py-3">
+                                    <div className="flex items-start gap-3 rounded-[1.25rem] border border-brand-primary/35 bg-brand-primary-surface/35 px-4 py-3">
                                         <svg className="mt-0.5 h-5 w-5 shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6M11 19h2M4 6h11v8H4zM15 9h2.5l2.5 2.5V14h-5zM7 17a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm10 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
                                         </svg>
@@ -419,17 +427,12 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
                     {related.length > 0 && (
                         <section className="mt-14 sm:mt-16 lg:mt-20">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                                <div>
-                                    <span className="inline-flex rounded-full bg-brand-primary-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary">
-                                        Descubre mas
-                                    </span>
-                                    <h2 className="mt-3 text-2xl font-extrabold tracking-[-0.02em] text-brand-text sm:text-[2rem]">
-                                        Productos relacionados
-                                    </h2>
-                                </div>
+                                <h2 className="home-section-title">
+                                    PRODUCTOS RELACIONADOS
+                                </h2>
                             </div>
 
-                            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-4">
+                            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
                                 {related.map((item) => (
                                     <RelatedCard key={item.id} item={item} />
                                 ))}

@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
+import CartIcon from './CartIcon';
 
 const NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
@@ -125,9 +126,7 @@ export default function Header({ cartCount }) {
 
                     <div className="flex items-center justify-end gap-2">
                         <CartIconButton as={Link} href="/carrito" label="Carrito" badge={count}>
-                            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
-                            </svg>
+                            <CartIcon className="h-[18px] w-[18px]" />
                         </CartIconButton>
                     </div>
                 </div>

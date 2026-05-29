@@ -18,7 +18,7 @@ export default function Navbar() {
     const { url } = usePage();
 
     return (
-        <nav className="border-b border-brand-secondary/20 bg-brand-bg lg:hidden">
+        <nav className="border-b border-brand-cta/45 bg-brand-bg lg:hidden">
             <div className="store-shell">
                 <ul className="flex h-11 items-center justify-center gap-8 overflow-x-auto whitespace-nowrap">
                     {NAV_ITEMS.map((item) => {

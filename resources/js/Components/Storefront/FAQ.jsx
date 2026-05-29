@@ -51,11 +51,11 @@ const WHATSAPP_MESSAGE = encodeURIComponent('Hola! Tengo una duda sobre la tiend
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
 function FaqItem({ item, featured = false }) {
-    const label = item.question.replace(/^\u00bf/, '').replace(/\?$/, '');
+    const label = item.question.startsWith('¿') ? item.question : `¿${item.question.replace(/\?$/, '')}?`;
 
     return (
         <details
-            className={`home-surface group border border-brand-secondary/60 bg-white transition-colors open:border-brand-cta ${
+            className={`home-surface group border border-brand-cta/35 bg-white transition-colors open:border-brand-cta ${
                 featured ? 'shadow-[0_18px_42px_rgba(31,31,31,0.07)]' : 'shadow-[0_12px_30px_rgba(31,31,31,0.05)]'
             }`}
             open={featured}
@@ -66,7 +66,7 @@ function FaqItem({ item, featured = false }) {
                         {item.number}
                     </span>
                     <h3 className="text-left text-lg font-extrabold leading-tight text-brand-text sm:text-[1.35rem]">
-                        {`${item.number}. ${label}`}
+                        {label}
                     </h3>
                 </div>
                 <span className="home-media flex h-10 w-10 shrink-0 items-center justify-center border border-brand-cta/45 text-brand-cta transition-colors group-open:border-brand-cta group-open:text-brand-cta">
@@ -76,7 +76,7 @@ function FaqItem({ item, featured = false }) {
                 </span>
             </summary>
 
-            <div className="border-t border-brand-secondary/40 px-5 py-5 sm:px-6">
+            <div className="border-t border-brand-cta/25 px-5 py-5 sm:px-6">
                 <div className="space-y-3 text-sm leading-relaxed text-brand-text-muted sm:text-[15px]">
                     {item.answer.map((line) => (
                         <p key={line}>{line}</p>
@@ -113,7 +113,7 @@ export default function FAQ() {
                         ))}
                     </div>
 
-                    <div className="relative z-10 mt-8 text-sm leading-relaxed text-brand-text-muted sm:text-base">
+                    <div className="relative z-10 mt-8 rounded-[1.25rem] border border-brand-cta/35 bg-white/90 px-5 py-4 text-sm leading-relaxed text-brand-text-muted sm:text-base">
                         <p>
                             Tenes otra duda que no este resuelta?{' '}
                             <a

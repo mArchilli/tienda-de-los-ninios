@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import CartIcon from './CartIcon';
 
 function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
@@ -142,13 +143,11 @@ export default function CartButton() {
         <div ref={wrapRef} className="fixed bottom-24 right-6 z-50">
             {/* Floating panel */}
             {open && (
-                <div className="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] sm:w-80 overflow-hidden border border-brand-secondary/30 bg-white shadow-2xl animate-fade-in rounded-none">
+                <div className="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] overflow-hidden rounded-[1.6rem] border border-brand-cta/35 bg-white shadow-[0_28px_56px_rgba(41,50,65,0.18)] animate-fade-in sm:w-80">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3.5 sm:py-3 border-b border-brand-secondary/15 bg-gradient-to-r from-brand-primary-surface to-brand-secondary-surface">
+                    <div className="flex items-center justify-between border-b border-brand-cta/20 bg-gradient-to-r from-brand-primary-surface to-brand-cta-surface px-4 py-3.5 sm:py-3">
                         <div className="flex items-center gap-2">
-                            <svg className="h-5 w-5 sm:h-4 sm:w-4 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
-                            </svg>
+                            <CartIcon className="h-5 w-5 text-brand-primary sm:h-4 sm:w-4" />
                             <h2 className="text-base sm:text-sm font-bold text-brand-primary">Mi Carrito</h2>
                             {count > 0 && (
                                 <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand-cta px-1.5 text-[10px] font-bold text-white">
@@ -159,7 +158,7 @@ export default function CartButton() {
                         <button
                             onClick={() => setOpen(false)}
                             aria-label="Cerrar"
-                            className="flex h-9 w-9 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white/70 text-brand-text-muted hover:bg-white hover:text-brand-text transition-colors"
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-cta/25 bg-white/80 text-brand-text-muted transition-colors hover:border-brand-cta hover:bg-white hover:text-brand-cta sm:h-6 sm:w-6"
                         >
                             <svg className="h-4 w-4 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -171,9 +170,7 @@ export default function CartButton() {
                     <div className="max-h-80 sm:max-h-64 overflow-y-auto">
                         {isEmpty ? (
                             <div className="px-4 py-10 sm:py-8 text-center">
-                                <svg className="h-12 w-12 sm:h-10 sm:w-10 text-brand-secondary/40 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
-                                </svg>
+                                <CartIcon className="mx-auto h-12 w-12 text-brand-secondary/40 sm:h-10 sm:w-10" strokeWidth={1.5} />
                                 <p className="mt-2 text-sm sm:text-xs font-semibold text-brand-text-muted">Tu carrito está vacío</p>
                                 <Link
                                     href="/catalogo"
@@ -192,7 +189,7 @@ export default function CartButton() {
 
                     {/* Footer */}
                     {!isEmpty && (
-                        <div className="border-t border-brand-secondary/15 px-4 py-4 sm:py-3 bg-brand-bg/60 space-y-3 sm:space-y-2.5">
+                        <div className="space-y-3 border-t border-brand-cta/20 bg-brand-bg/60 px-4 py-4 sm:space-y-2.5 sm:py-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-brand-text-muted uppercase tracking-wider">Subtotal</span>
                                 <span className="text-base sm:text-sm font-bold text-brand-primary">{fmt(cart.subtotal)}</span>
@@ -201,14 +198,14 @@ export default function CartButton() {
                                 <Link
                                     href="/carrito"
                                     onClick={() => setOpen(false)}
-                                    className="flex items-center justify-center rounded-full border border-brand-primary/40 bg-white py-3 sm:py-2 text-sm sm:text-xs font-semibold text-brand-primary hover:bg-brand-primary-surface transition"
+                                    className="flex items-center justify-center rounded-full border border-brand-cta/40 bg-white py-3 text-sm font-semibold text-brand-cta transition hover:bg-brand-cta-surface sm:py-2 sm:text-xs"
                                 >
                                     Ver carrito
                                 </Link>
                                 <Link
                                     href="/checkout"
                                     onClick={() => setOpen(false)}
-                                    className="flex items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary-dark py-3 sm:py-2 text-sm sm:text-xs font-bold text-white hover:opacity-95 transition"
+                                    className="flex items-center justify-center rounded-full bg-brand-cta py-3 text-sm font-bold text-white transition-colors hover:bg-brand-cta-dark sm:py-2 sm:text-xs"
                                 >
                                     Checkout
                                 </Link>
@@ -224,9 +221,7 @@ export default function CartButton() {
                 aria-label={count > 0 ? `Carrito (${count} items)` : 'Carrito'}
                 className="relative flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-transform hover:scale-110 active:scale-95 bg-brand-primary"
             >
-                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />
-                </svg>
+                <CartIcon className="h-7 w-7 text-white" />
                 {count > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand-cta px-1 text-[10px] font-bold text-white shadow">
                         {count}

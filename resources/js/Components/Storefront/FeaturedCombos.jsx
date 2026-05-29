@@ -60,7 +60,7 @@ export default function FeaturedCombos({ combos }) {
     return (
         <section id="combos" className="bg-brand-bg">
             <div className="store-shell store-section">
-                <div className="store-panel px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
+                <div className="relative px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
                     <div className="absolute -left-20 top-0 h-48 w-48 rounded-full bg-brand-secondary/20 blur-3xl" />
                     <div className="absolute -right-16 bottom-0 h-52 w-52 rounded-full bg-brand-cta/10 blur-3xl" />
 

@@ -62,7 +62,7 @@ export default function FeaturedProducts({ products }) {
     return (
         <section className="bg-brand-bg">
             <div className="store-shell store-section-bottom">
-                <div className="store-panel px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
+                <div className="relative px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
                     <div className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-brand-primary/10 blur-3xl" />
                     <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-brand-secondary/20 blur-3xl" />
 

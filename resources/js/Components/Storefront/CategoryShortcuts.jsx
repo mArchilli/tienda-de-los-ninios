@@ -10,7 +10,7 @@ const CATEGORIES = [
 
 function CircleSlot({ label, image }) {
     return (
-        <div className="home-media flex h-24 w-24 items-center justify-center border border-brand-secondary/50 bg-white/75 shadow-[0_12px_28px_rgba(31,31,31,0.04)] sm:h-28 sm:w-28 lg:h-32 lg:w-32">
+        <div className="flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28 lg:h-32 lg:w-32">
             <img
                 src={image}
                 alt={`Filtro ${label.toLowerCase()}`}
@@ -38,7 +38,7 @@ export default function CategoryShortcuts() {
                                 <Link
                                     key={category.label}
                                     href={category.href}
-                                    className="home-surface group relative flex flex-col items-center border border-brand-secondary/45 bg-white/60 px-3 py-4 shadow-[0_12px_28px_rgba(31,31,31,0.04)] transition duration-300 hover:-translate-y-1 hover:border-brand-primary/25"
+                                    className="group relative flex flex-col items-center rounded-[1.3rem] border border-brand-cta/40 px-3 py-4 transition duration-300 hover:-translate-y-1 hover:border-brand-cta"
                                 >
                                     <div className="relative">
                                         <CircleSlot label={category.label} image={category.image} />
