@@ -28,6 +28,11 @@ const Icon = {
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
         </svg>
     ),
+    Emprendedor: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+        </svg>
+    ),
     Categorias: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
@@ -193,6 +198,7 @@ export default function AuthenticatedLayout({ header, children }) {
         { href: route('admin.metrics.index'), active: route().current('admin.metrics.*'), icon: Icon.Metricas, label: 'Métricas' },
         { href: route('admin.products.index'), active: route().current('admin.products.*'), icon: Icon.Prendas, label: 'Prendas' },
         { href: route('admin.combos.index'), active: route().current('admin.combos.*'), icon: Icon.Combos, label: 'Combos' },
+        { href: route('admin.combos-emprendedor.index'), active: route().current('admin.combos-emprendedor.*'), icon: Icon.Emprendedor, label: 'Combos Emprendedor' },
         { href: route('admin.categories.index'), active: route().current('admin.categories.*'), icon: Icon.Categorias, label: 'Categorías' },
         { href: route('admin.colors.index'), active: route().current('admin.colors.*'), icon: Icon.Colores, label: 'Colores' },
         { href: route('admin.sizes.index'), active: route().current('admin.sizes.*'), icon: Icon.Talles, label: 'Talles' },

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ComboController;
+use App\Http\Controllers\Admin\ComboEmprendedorController;
 use App\Http\Controllers\Admin\MetricsController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -12,6 +13,7 @@ use App\Models\Combo;
 use App\Models\Product;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
+use App\Http\Controllers\ComboEmprendedorController as StorefrontComboEmprendedorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController as StorefrontProductController;
@@ -57,10 +59,12 @@ Route::get('/', function () {
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/producto/{product}', [StorefrontProductController::class, 'show'])->name('product.show');
 Route::get('/combo/{combo}', [StorefrontComboController::class, 'show'])->name('combo.show');
+Route::get('/combo-emprendedor/{combo}', [StorefrontComboEmprendedorController::class, 'show'])->name('combo-emprendedor.show');
 
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
 Route::post('/carrito/producto', [CartController::class, 'addProduct'])->name('cart.add-product');
 Route::post('/carrito/combo', [CartController::class, 'addCombo'])->name('cart.add-combo');
+Route::post('/carrito/combo-emprendedor', [CartController::class, 'addComboEmprendedor'])->name('cart.add-combo-emprendedor');
 Route::patch('/carrito/{key}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/carrito/{key}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
@@ -105,6 +109,12 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
     Route::post('/combos/{combo}', [ComboController::class, 'update'])->name('combos.update');
     Route::delete('/combos/{combo}', [ComboController::class, 'destroy'])->name('combos.destroy');
+
+    Route::get('/combos-emprendedor/products-for-genders', [ComboEmprendedorController::class, 'productsForGenders'])->name('combos-emprendedor.products-for-genders');
+    Route::get('/combos-emprendedor', [ComboEmprendedorController::class, 'index'])->name('combos-emprendedor.index');
+    Route::post('/combos-emprendedor', [ComboEmprendedorController::class, 'store'])->name('combos-emprendedor.store');
+    Route::post('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'update'])->name('combos-emprendedor.update');
+    Route::delete('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'destroy'])->name('combos-emprendedor.destroy');
 
     Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');
     Route::get('/metrics/orders', [MetricsController::class, 'orders'])->name('metrics.orders');

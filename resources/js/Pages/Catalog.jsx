@@ -46,7 +46,15 @@ function fmt(price) {
 }
 
 function ProductCard({ item }) {
-    const href = item.type === 'combo' ? `/combo/${item.id}` : `/producto/${item.id}`;
+    const href =
+        item.type === 'combo'             ? `/combo/${item.id}` :
+        item.type === 'combo-emprendedor' ? `/combo-emprendedor/${item.id}` :
+        `/producto/${item.id}`;
+
+    const badgeLabel =
+        item.type === 'combo'             ? 'Combo' :
+        item.type === 'combo-emprendedor' ? 'Emprendedor' :
+        null;
 
     return (
         <Link href={href} className="group block h-full">
@@ -73,9 +81,9 @@ function ProductCard({ item }) {
                         </span>
                     )}
 
-                    {item.type === 'combo' && (
+                    {badgeLabel && (
                         <span className="absolute right-3 top-3 rounded-md bg-brand-text px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
-                            Combo
+                            {badgeLabel}
                         </span>
                     )}
 
@@ -375,7 +383,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
     );
 }
 
-export default function Catalog({ combos = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
+export default function Catalog({ combos = [], combosEmprendedor = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
     const { url } = usePage();
     const [sort, setSort] = useState('relevancia');
     const [sortOpen, setSortOpen] = useState(false);
@@ -441,6 +449,13 @@ export default function Catalog({ combos = [], products = [], cartCount, allSize
             .sort(SORTERS[sort] ?? SORTERS.relevancia);
     }, [combos, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
 
+    const sortedCombosEmprendedor = useMemo(() => {
+        return [...combosEmprendedor]
+            .map((combo) => ({ ...combo, type: 'combo-emprendedor' }))
+            .filter(filterItem)
+            .sort(SORTERS[sort] ?? SORTERS.relevancia);
+    }, [combosEmprendedor, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
+
     const sortedProducts = useMemo(() => {
         return [...products]
             .map((product) => ({ ...product, type: 'product' }))
@@ -449,6 +464,7 @@ export default function Catalog({ combos = [], products = [], cartCount, allSize
     }, [products, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
 
     const showCombos = typeFilter !== 'productos';
+    const showCombosEmprendedor = typeFilter !== 'productos';
     const showProducts = typeFilter !== 'combos';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
     const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;
@@ -487,6 +503,7 @@ export default function Catalog({ combos = [], products = [], cartCount, allSize
 
     const isEmpty =
         (showCombos ? sortedCombos.length === 0 : true) &&
+        (showCombosEmprendedor ? sortedCombosEmprendedor.length === 0 : true) &&
         (showProducts ? sortedProducts.length === 0 : true);
 
     const filtersPanelProps = {
@@ -765,6 +782,20 @@ export default function Catalog({ combos = [], products = [], cartCount, allSize
                                     />
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
                                         {sortedCombos.map((item) => (
+                                            <ProductCard key={`${item.type}-${item.id}`} item={item} />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {showCombosEmprendedor && sortedCombosEmprendedor.length > 0 && (
+                                <div>
+                                    <SectionHeading
+                                        title="Combos Emprendedor"
+                                        subtitle={`${sortedCombosEmprendedor.length} ${sortedCombosEmprendedor.length === 1 ? 'combo' : 'combos'} · Armá tu pack para revender`}
+                                    />
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
+                                        {sortedCombosEmprendedor.map((item) => (
                                             <ProductCard key={`${item.type}-${item.id}`} item={item} />
                                         ))}
                                     </div>

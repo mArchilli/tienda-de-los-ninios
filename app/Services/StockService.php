@@ -12,14 +12,27 @@ class StockService
     {
         if ($sign === 0) return;
 
+        $qty = (int) $item->quantity;
+        if ($qty <= 0) return;
+
+        // Combo Emprendedor: cada pick trae su propio size_id, no hay talle único.
+        if ($item->combo_data && ($item->combo_data['variant'] ?? null) === 'emprendedor') {
+            $picks = $item->combo_data['picks'] ?? [];
+            foreach ($picks as $pick) {
+                $productId = (int) ($pick['product_id'] ?? 0);
+                $sizeId    = (int) ($pick['size_id'] ?? 0);
+                if ($productId <= 0 || $sizeId <= 0) continue;
+                $this->adjustProductSize($productId, $sizeId, $sign * $qty);
+            }
+            return;
+        }
+
+        // Combos tradicionales / productos sueltos: usan el talle del item.
         $sizeName = $item->size;
         if (! $sizeName) return;
 
         $size = Size::where('name', $sizeName)->first();
         if (! $size) return;
-
-        $qty = (int) $item->quantity;
-        if ($qty <= 0) return;
 
         if ($item->combo_data) {
             $picks = $item->combo_data['picks'] ?? [];

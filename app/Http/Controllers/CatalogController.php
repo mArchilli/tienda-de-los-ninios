@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Combo;
+use App\Models\ComboEmprendedor;
 use App\Models\Product;
 use App\Models\Size;
 use Inertia\Inertia;
@@ -41,6 +42,31 @@ class CatalogController extends Controller
             })
             ->values();
 
+        $combosEmprendedor = ComboEmprendedor::where('is_active', true)
+            ->with(['genders:id,name', 'items.product.sizes'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'price', 'image', 'is_featured', 'max_items'])
+            ->map(function ($c) {
+                $sizeNames = $c->items
+                    ->flatMap(fn ($item) => optional($item->product)->sizes ?? collect())
+                    ->filter(fn ($s) => (int) ($s->pivot->stock ?? 0) > 0)
+                    ->pluck('name')
+                    ->unique()
+                    ->values();
+
+                return [
+                    'id'          => $c->id,
+                    'name'        => $c->name,
+                    'price'       => (float) $c->price,
+                    'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
+                    'is_featured' => (bool) $c->is_featured,
+                    'max_items'   => (int) $c->max_items,
+                    'genders'     => $c->genders->pluck('name')->values(),
+                    'sizes'       => $sizeNames,
+                ];
+            })
+            ->values();
+
         $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
             ->with([
                 'sizes'      => fn ($q) => $q->where('product_size.stock', '>', 0),
@@ -62,10 +88,11 @@ class CatalogController extends Controller
             ->values();
 
         return Inertia::render('Catalog', [
-            'combos'        => $combos,
-            'products'      => $products,
-            'allSizes'      => $allSizes,
-            'allCategories' => $allCategories,
+            'combos'             => $combos,
+            'combosEmprendedor'  => $combosEmprendedor,
+            'products'           => $products,
+            'allSizes'           => $allSizes,
+            'allCategories'      => $allCategories,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
+use App\Models\ComboEmprendedor;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -46,33 +47,57 @@ class OrderController extends Controller
     {
         $order->load('items.product');
 
-        // Recopilamos combo_ids y pick product_ids para cargarlos en bulk.
-        $comboIds = [];
-        $pickIds  = [];
+        // Recopilamos ids para bulk-load. Diferenciamos entre combos tradicionales
+        // (picks = {catId: [productId,...]}) y combos emprendedor
+        // (picks = [{product_id, size_id, size_name}, ...]).
+        $traditionalComboIds  = [];
+        $emprendedorComboIds  = [];
+        $pickIds              = [];
+
         foreach ($order->items as $item) {
-            if (! is_null($item->combo_data)) {
-                if (! empty($item->combo_data['combo_id'])) {
-                    $comboIds[] = (int) $item->combo_data['combo_id'];
+            if (is_null($item->combo_data)) continue;
+
+            $variant = $item->combo_data['variant'] ?? 'combo';
+            $comboId = (int) ($item->combo_data['combo_id'] ?? 0);
+
+            if ($variant === 'emprendedor') {
+                if ($comboId) $emprendedorComboIds[] = $comboId;
+                foreach (($item->combo_data['picks'] ?? []) as $pick) {
+                    $pid = (int) ($pick['product_id'] ?? 0);
+                    if ($pid > 0) $pickIds[] = $pid;
                 }
-                if (! empty($item->combo_data['picks'])) {
-                    foreach ($item->combo_data['picks'] as $ids) {
-                        foreach ((array) $ids as $id) {
-                            $pickIds[] = (int) $id;
-                        }
+            } else {
+                if ($comboId) $traditionalComboIds[] = $comboId;
+                foreach (($item->combo_data['picks'] ?? []) as $ids) {
+                    foreach ((array) $ids as $id) {
+                        $pickIds[] = (int) $id;
                     }
                 }
             }
         }
 
-        // Combos indexados por id.
+        // Combos tradicionales indexados por id.
         $combosById = [];
-        if (! empty($comboIds)) {
-            Combo::whereIn('id', array_unique($comboIds))->get()->each(function (Combo $c) use (&$combosById) {
-                $combosById[$c->id] = [
-                    'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
-                    'description' => $c->description ?? null,
-                ];
-            });
+        if (! empty($traditionalComboIds)) {
+            Combo::whereIn('id', array_unique($traditionalComboIds))
+                ->get()->each(function (Combo $c) use (&$combosById) {
+                    $combosById[$c->id] = [
+                        'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
+                        'description' => $c->description ?? null,
+                    ];
+                });
+        }
+
+        // Combos emprendedor indexados por id.
+        $emprendedorById = [];
+        if (! empty($emprendedorComboIds)) {
+            ComboEmprendedor::whereIn('id', array_unique($emprendedorComboIds))
+                ->get()->each(function (ComboEmprendedor $c) use (&$emprendedorById) {
+                    $emprendedorById[$c->id] = [
+                        'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
+                        'description' => $c->description ?? null,
+                    ];
+                });
         }
 
         // Productos de picks indexados por id.
@@ -87,40 +112,57 @@ class OrderController extends Controller
             });
         }
 
-        $items = $order->items->map(function ($item) use ($combosById, $picksById) {
+        $items = $order->items->map(function ($item) use ($combosById, $emprendedorById, $picksById) {
             $isCombo = ! is_null($item->combo_data);
+            $variant = $isCombo ? ($item->combo_data['variant'] ?? 'combo') : null;
 
             $picks = [];
             if ($isCombo && ! empty($item->combo_data['picks'])) {
-                foreach ($item->combo_data['picks'] as $ids) {
-                    foreach ((array) $ids as $id) {
-                        if (isset($picksById[$id])) {
-                            $picks[] = $picksById[$id];
+                if ($variant === 'emprendedor') {
+                    // Agrupamos picks por (product_id + size_name) y contamos cantidad.
+                    $aggregated = [];
+                    foreach ($item->combo_data['picks'] as $pick) {
+                        $pid      = (int) ($pick['product_id'] ?? 0);
+                        $sizeName = $pick['size_name'] ?? null;
+                        if (! isset($picksById[$pid])) continue;
+                        $key = $pid . '|' . ($sizeName ?? '');
+                        if (! isset($aggregated[$key])) {
+                            $aggregated[$key] = $picksById[$pid] + [
+                                'size'     => $sizeName,
+                                'quantity' => 0,
+                            ];
+                        }
+                        $aggregated[$key]['quantity']++;
+                    }
+                    $picks = array_values($aggregated);
+                } else {
+                    foreach ($item->combo_data['picks'] as $ids) {
+                        foreach ((array) $ids as $id) {
+                            if (isset($picksById[$id])) {
+                                $picks[] = $picksById[$id] + ['size' => null, 'quantity' => 1];
+                            }
                         }
                     }
                 }
             }
 
-            $comboId    = $isCombo ? ($item->combo_data['combo_id'] ?? null) : null;
-            $comboImage = ($comboId && isset($combosById[$comboId]))
-                ? $combosById[$comboId]['image']
-                : null;
-
-            $comboDescription = ($comboId && isset($combosById[$comboId]))
-                ? $combosById[$comboId]['description']
-                : null;
+            $comboId = $isCombo ? (int) ($item->combo_data['combo_id'] ?? 0) : 0;
+            $comboMeta = $variant === 'emprendedor'
+                ? ($emprendedorById[$comboId] ?? null)
+                : ($combosById[$comboId] ?? null);
 
             return [
                 'id'          => $item->id,
                 'type'        => $isCombo ? 'combo' : 'product',
+                'variant'     => $variant,
                 'name'        => $isCombo
                     ? ($item->combo_data['name'] ?? 'Combo')
                     : ($item->product?->name ?? 'Producto eliminado'),
                 'description' => $isCombo
-                    ? $comboDescription
+                    ? ($comboMeta['description'] ?? null)
                     : ($item->product?->description ?? null),
                 'image'       => $isCombo
-                    ? $comboImage
+                    ? ($comboMeta['image'] ?? null)
                     : ($item->product?->images[0] ?? null),
                 'quantity'    => (int) $item->quantity,
                 'price'       => (float) $item->price,

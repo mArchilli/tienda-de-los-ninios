@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Combo;
+use App\Models\ComboEmprendedor;
 use App\Models\Gender;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -95,10 +96,16 @@ class CartController extends Controller
         $allCategoryIds = [];
         $allProductIds  = [];
         foreach ($cart['combos'] ?? [] as $i) {
-            foreach ($i['picks'] ?? [] as $catId => $productIds) {
-                $allCategoryIds[] = (int) $catId;
-                foreach ((array) $productIds as $pid) {
-                    $allProductIds[] = (int) $pid;
+            if (($i['variant'] ?? null) === 'emprendedor') {
+                foreach ($i['picks'] ?? [] as $pick) {
+                    $allProductIds[] = (int) ($pick['product_id'] ?? 0);
+                }
+            } else {
+                foreach ($i['picks'] ?? [] as $catId => $productIds) {
+                    $allCategoryIds[] = (int) $catId;
+                    foreach ((array) $productIds as $pid) {
+                        $allProductIds[] = (int) $pid;
+                    }
                 }
             }
         }
@@ -110,27 +117,48 @@ class CartController extends Controller
             : collect();
 
         $combos = array_values(array_map(function ($i) use ($categoryNames, $productNames) {
+            $variant      = $i['variant'] ?? 'combo';
             $picksDisplay = [];
-            foreach ($i['picks'] ?? [] as $catId => $productIds) {
-                $catName = $categoryNames[(int) $catId] ?? null;
-                $prods   = [];
-                foreach ((array) $productIds as $pid) {
-                    $name = $productNames[(int) $pid] ?? null;
-                    if ($name) {
-                        $prods[] = $name;
-                    }
+
+            if ($variant === 'emprendedor') {
+                // Agrupamos picks por nombre de talle: cada talle muestra las prendas elegidas.
+                $bySize = [];
+                foreach ($i['picks'] ?? [] as $pick) {
+                    $sizeName = $pick['size_name'] ?? '—';
+                    $name = $productNames[(int) ($pick['product_id'] ?? 0)] ?? null;
+                    if (! $name) continue;
+                    if (! isset($bySize[$sizeName])) $bySize[$sizeName] = [];
+                    $bySize[$sizeName][] = $name;
                 }
-                if ($catName || $prods) {
+                foreach ($bySize as $sizeName => $prods) {
                     $picksDisplay[] = [
-                        'category_name' => $catName ?? "Categoría {$catId}",
+                        'category_name' => 'Talle ' . $sizeName,
                         'products'      => $prods,
                     ];
+                }
+            } else {
+                foreach ($i['picks'] ?? [] as $catId => $productIds) {
+                    $catName = $categoryNames[(int) $catId] ?? null;
+                    $prods   = [];
+                    foreach ((array) $productIds as $pid) {
+                        $name = $productNames[(int) $pid] ?? null;
+                        if ($name) {
+                            $prods[] = $name;
+                        }
+                    }
+                    if ($catName || $prods) {
+                        $picksDisplay[] = [
+                            'category_name' => $catName ?? "Categoría {$catId}",
+                            'products'      => $prods,
+                        ];
+                    }
                 }
             }
 
             return [
                 'key'          => $i['key'],
                 'type'         => 'combo',
+                'variant'      => $variant,
                 'combo_id'     => $i['combo_id'],
                 'name'         => $i['name'],
                 'image'        => $i['image'],
@@ -273,6 +301,75 @@ class CartController extends Controller
         ]);
     }
 
+    public function addComboEmprendedor(Request $request)
+    {
+        $comboId = (int) $request->input('combo_emprendedor_id');
+        $combo   = ComboEmprendedor::with(['items', 'genders'])->findOrFail($comboId);
+
+        $data = $request->validate([
+            'combo_emprendedor_id' => ['required', 'integer', 'exists:combo_emprendedors,id'],
+            'picks'                => ['required', 'array', 'min:1', 'max:' . $combo->max_items],
+            'picks.*.product_id'   => ['required', 'integer', 'exists:products,id'],
+            'picks.*.size_id'      => ['required', 'integer', 'exists:sizes,id'],
+            'quantity'             => ['nullable', 'integer', 'min:1', 'max:99'],
+        ], [
+            'picks.max' => "Este combo permite hasta {$combo->max_items} prendas.",
+            'picks.min' => 'Elegí al menos una prenda para armar el combo.',
+        ]);
+
+        // Curaduría: todos los productos elegidos deben estar dentro del set permitido.
+        $allowedProductIds = $combo->items->pluck('product_id')->map(fn ($id) => (int) $id)->all();
+        foreach ($data['picks'] as $pick) {
+            if (! in_array((int) $pick['product_id'], $allowedProductIds, true)) {
+                return back()->withErrors([
+                    'picks' => 'Una o más prendas seleccionadas no forman parte del combo.',
+                ]);
+            }
+        }
+
+        $sizeIds   = array_unique(array_map(fn ($p) => (int) $p['size_id'], $data['picks']));
+        $sizeNames = Size::whereIn('id', $sizeIds)->pluck('name', 'id');
+
+        $picks = array_map(fn ($p) => [
+            'product_id' => (int) $p['product_id'],
+            'size_id'    => (int) $p['size_id'],
+            'size_name'  => $sizeNames[(int) $p['size_id']] ?? null,
+        ], $data['picks']);
+
+        $genderNames = $combo->genders->pluck('name')->all();
+
+        $picksHash = md5(json_encode($picks));
+        $key       = 'ce-' . $combo->id . '-' . $picksHash;
+
+        $cart = $this->getCart();
+        $qty  = (int) ($data['quantity'] ?? 1);
+
+        if (isset($cart['combos'][$key])) {
+            $cart['combos'][$key]['quantity'] += $qty;
+        } else {
+            $cart['combos'][$key] = [
+                'key'         => $key,
+                'variant'     => 'emprendedor',
+                'combo_id'    => $combo->id,
+                'name'        => $combo->name,
+                'image'       => $combo->image ? '/' . ltrim($combo->image, '/') : null,
+                'size_id'     => null,
+                'size_name'   => null,
+                'gender_id'   => null,
+                'gender_name' => $genderNames ? implode(' / ', $genderNames) : null,
+                'picks'       => $picks,
+                'price'       => (float) $combo->price,
+                'quantity'    => $qty,
+            ];
+        }
+
+        $this->saveCart($cart);
+
+        return back()->with('flash', [
+            'cart_added' => 'Combo emprendedor agregado al carrito.',
+        ]);
+    }
+
     public function update(Request $request, string $key)
     {
         $data = $request->validate([
@@ -372,6 +469,7 @@ class CartController extends Controller
                         'price'      => $item['price'],
                         'size'       => $item['size_name'] ?? null,
                         'combo_data' => [
+                            'variant'     => $item['variant'] ?? 'combo',
                             'combo_id'    => $item['combo_id'] ?? null,
                             'name'        => $item['name'],
                             'gender_id'   => $item['gender_id'] ?? null,
@@ -423,10 +521,17 @@ class CartController extends Controller
         $allProductIds  = [];
         foreach ($order->items as $item) {
             if ($item->combo_data && ! empty($item->combo_data['picks'])) {
-                foreach ($item->combo_data['picks'] as $catId => $productIds) {
-                    $allCategoryIds[] = (int) $catId;
-                    foreach ((array) $productIds as $pid) {
-                        $allProductIds[] = (int) $pid;
+                $variant = $item->combo_data['variant'] ?? 'combo';
+                if ($variant === 'emprendedor') {
+                    foreach ($item->combo_data['picks'] as $pick) {
+                        $allProductIds[] = (int) ($pick['product_id'] ?? 0);
+                    }
+                } else {
+                    foreach ($item->combo_data['picks'] as $catId => $productIds) {
+                        $allCategoryIds[] = (int) $catId;
+                        foreach ((array) $productIds as $pid) {
+                            $allProductIds[] = (int) $pid;
+                        }
                     }
                 }
             }
@@ -443,19 +548,38 @@ class CartController extends Controller
             $picksDisplay = [];
 
             if ($isCombo && ! empty($item->combo_data['picks'])) {
-                foreach ($item->combo_data['picks'] as $catId => $productIds) {
-                    $catName = $categoryNames[(int) $catId] ?? "Categoría {$catId}";
-                    $prods   = [];
-                    foreach ((array) $productIds as $pid) {
-                        $name = $productNames[(int) $pid] ?? null;
-                        if ($name) {
-                            $prods[] = $name;
-                        }
+                $variant = $item->combo_data['variant'] ?? 'combo';
+
+                if ($variant === 'emprendedor') {
+                    $bySize = [];
+                    foreach ($item->combo_data['picks'] as $pick) {
+                        $sizeName = $pick['size_name'] ?? '—';
+                        $name = $productNames[(int) ($pick['product_id'] ?? 0)] ?? null;
+                        if (! $name) continue;
+                        if (! isset($bySize[$sizeName])) $bySize[$sizeName] = [];
+                        $bySize[$sizeName][] = $name;
                     }
-                    $picksDisplay[] = [
-                        'category_name' => $catName,
-                        'products'      => $prods,
-                    ];
+                    foreach ($bySize as $sizeName => $prods) {
+                        $picksDisplay[] = [
+                            'category_name' => 'Talle ' . $sizeName,
+                            'products'      => $prods,
+                        ];
+                    }
+                } else {
+                    foreach ($item->combo_data['picks'] as $catId => $productIds) {
+                        $catName = $categoryNames[(int) $catId] ?? "Categoría {$catId}";
+                        $prods   = [];
+                        foreach ((array) $productIds as $pid) {
+                            $name = $productNames[(int) $pid] ?? null;
+                            if ($name) {
+                                $prods[] = $name;
+                            }
+                        }
+                        $picksDisplay[] = [
+                            'category_name' => $catName,
+                            'products'      => $prods,
+                        ];
+                    }
                 }
             }
 
@@ -527,13 +651,20 @@ class CartController extends Controller
         $lines[] = '';
         $lines[] = '*Productos*';
 
-        // Pre-cargamos nombres de productos para los picks de combos.
+        // Pre-cargamos nombres de productos para los picks de combos (ambas variantes).
         $pickIds = [];
         foreach ($order->items as $item) {
             if ($item->combo_data && ! empty($item->combo_data['picks'])) {
-                foreach ($item->combo_data['picks'] as $ids) {
-                    foreach ((array) $ids as $id) {
-                        $pickIds[] = (int) $id;
+                $variant = $item->combo_data['variant'] ?? 'combo';
+                if ($variant === 'emprendedor') {
+                    foreach ($item->combo_data['picks'] as $pick) {
+                        $pickIds[] = (int) ($pick['product_id'] ?? 0);
+                    }
+                } else {
+                    foreach ($item->combo_data['picks'] as $ids) {
+                        foreach ((array) $ids as $id) {
+                            $pickIds[] = (int) $id;
+                        }
                     }
                 }
             }
@@ -545,8 +676,10 @@ class CartController extends Controller
 
         foreach ($order->items as $item) {
             $isCombo = ! is_null($item->combo_data);
+            $variant = $isCombo ? ($item->combo_data['variant'] ?? 'combo') : null;
+            $label   = $variant === 'emprendedor' ? 'Combo Emprendedor' : ($isCombo ? 'Combo' : 'Producto');
             $name    = $isCombo
-                ? ($item->combo_data['name'] ?? 'Combo')
+                ? ($item->combo_data['name'] ?? $label)
                 : ($item->product?->name ?? 'Producto');
 
             $details = [];
@@ -559,19 +692,33 @@ class CartController extends Controller
             $detailsStr = $details ? ' (' . implode(' / ', $details) . ')' : '';
 
             $subtotal = (float) $item->price * (int) $item->quantity;
-            $lines[]  = '• ' . $name . $detailsStr . ' x ' . $item->quantity . ' — ' . $fmt($subtotal);
+            $prefix   = $variant === 'emprendedor' ? '[Emprendedor] ' : '';
+            $lines[]  = '• ' . $prefix . $name . $detailsStr . ' x ' . $item->quantity . ' — ' . $fmt($subtotal);
 
             if ($isCombo && ! empty($item->combo_data['picks'])) {
-                $picked = [];
-                foreach ($item->combo_data['picks'] as $ids) {
-                    foreach ((array) $ids as $id) {
-                        if (isset($pickNames[$id])) {
-                            $picked[] = $pickNames[$id];
+                if ($variant === 'emprendedor') {
+                    $bySize = [];
+                    foreach ($item->combo_data['picks'] as $pick) {
+                        $sizeName = $pick['size_name'] ?? '—';
+                        $pid      = (int) ($pick['product_id'] ?? 0);
+                        if (! isset($pickNames[$pid])) continue;
+                        $bySize[$sizeName][] = $pickNames[$pid];
+                    }
+                    foreach ($bySize as $sizeName => $prods) {
+                        $lines[] = '   Talle ' . $sizeName . ': ' . implode(', ', $prods);
+                    }
+                } else {
+                    $picked = [];
+                    foreach ($item->combo_data['picks'] as $ids) {
+                        foreach ((array) $ids as $id) {
+                            if (isset($pickNames[$id])) {
+                                $picked[] = $pickNames[$id];
+                            }
                         }
                     }
-                }
-                if ($picked) {
-                    $lines[] = '   Incluye: ' . implode(', ', $picked);
+                    if ($picked) {
+                        $lines[] = '   Incluye: ' . implode(', ', $picked);
+                    }
                 }
             }
         }

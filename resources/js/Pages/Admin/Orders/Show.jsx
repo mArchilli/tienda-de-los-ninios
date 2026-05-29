@@ -196,7 +196,7 @@ function ComboItem({ item, onImageClick }) {
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <span className="inline-flex items-center rounded-full border border-brand-cta/30 bg-brand-cta-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-cta">
-                                Combo
+                                {item.variant === 'emprendedor' ? 'Combo Emprendedor' : 'Combo'}
                             </span>
                             <p className="mt-1 font-semibold text-brand-text">{item.name}</p>
                         </div>
@@ -255,7 +255,19 @@ function ComboItem({ item, onImageClick }) {
                                             </svg>
                                         </div>
                                     )}
-                                    <span className="text-xs font-medium text-brand-text leading-tight">{pick.name}</span>
+                                    <span className="text-xs font-medium text-brand-text leading-tight">
+                                        {pick.name}
+                                        {pick.quantity > 1 && (
+                                            <span className="ml-1 inline-flex items-center rounded-full bg-brand-cta px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                                ×{pick.quantity}
+                                            </span>
+                                        )}
+                                    </span>
+                                    {pick.size && (
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand-cta">
+                                            Talle {pick.size}
+                                        </span>
+                                    )}
                                     {pick.description && (
                                         <span className="text-[11px] leading-snug text-brand-text-muted line-clamp-2">
                                             {pick.description}
