@@ -6,15 +6,14 @@ const CHANNELS = [
         badge: 'Compra en vivo',
         desc: 'Unite a nuestros lives en TikTok para ver las prendas en vivo, ofertas exclusivas y hacer tus compras.',
         detailTitle: 'Horario de los lives',
-        detail: 'Lunes a sabado de 10 a 13hs y de 16 a 20hs',
+        detail: 'Lunes a s\u00e1bado de 10 a 13hs y de 16 a 20hs',
         cta: 'Ir a TikTok',
         href: 'https://www.tiktok.com/',
         external: true,
         panelClass: 'bg-[linear-gradient(135deg,rgba(255,90,78,0.98),rgba(240,75,64,0.92))]',
         detailClass: 'bg-white/10 border-white/18',
-        iconBg: 'bg-white/16',
         icon: (
-            <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="h-14 w-14 sm:h-14 sm:w-14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M16.5 3c.4 1.9 1.5 3 3.5 3.5v2.7c-1.3 0-2.5-.3-3.5-.9V14a5 5 0 11-5-5c.3 0 .6 0 .9.1v2.8a2.5 2.5 0 10 1.6 2.3V3h2.5z" />
             </svg>
         ),
@@ -31,17 +30,17 @@ function ChannelCard({ channel }) {
     const content = (
         <>
             <div className="flex items-start gap-4 sm:gap-5">
-                <div className={`home-media flex h-16 w-16 shrink-0 items-center justify-center ${channel.iconBg} text-white shadow-sm ring-1 ring-white/16`}>
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center text-white sm:h-20 sm:w-20">
                     {channel.icon}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 text-left">
                     <div className="flex flex-wrap items-center gap-3">
                         <h3 className="text-2xl font-extrabold text-white sm:text-[2rem]">{channel.title}</h3>
                         <span className="inline-flex items-center rounded-full bg-white/14 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/88">
                             {channel.badge}
                         </span>
                     </div>
-                    <p className="mt-4 max-w-xl text-base leading-relaxed text-white/92">
+                    <p className="mt-4 max-w-xl text-left text-base leading-relaxed text-white/92">
                         {channel.desc}
                     </p>
                 </div>
@@ -109,19 +108,20 @@ export default function About() {
                         <div className="px-1 py-2 sm:px-2">
                             <div className="max-w-2xl space-y-6 text-lg leading-relaxed text-brand-text-muted">
                                 <p>
-                                    Somos Hernan y Franco, dos hermanos detras de La Tienda de los Ninos
+                                    {'Hola! somos Hern\u00e1n y Franco, dos hermanos detr\u00e1s de La Tienda de los Ni\u00f1os.'}
                                 </p>
                                 <p>
-                                    Arrancamos con un local fisico en Mariano Acosta y hoy somos una tienda virtual donde
-                                    podes comprar ropa de nino hasta el talle 16, armar tus propios combos y recibir todo
-                                    en cualquier parte del pais.
+                                    {'Empezamos con un local f\u00edsico en Mariano Acosta y hoy somos una tienda virtual especializada en ropa para ni\u00f1o, ni\u00f1a, beb\u00e9 y beba, desde talle reci\u00e9n nacido hasta talle 16.'}
                                 </p>
                                 <p>
-                                    Ademas, todos los dias mostramos prendas y novedades en nuestros lives de TikTok.
+                                    {'Somos pioneros en la venta por lives de TikTok, una forma cercana y din\u00e1mica de mostrarte las prendas en tiempo real, responder tus dudas y ayudarte a elegir mejor. Todos los d\u00edas compartimos novedades, ingresos, ofertas y combinaciones para que puedas comprar desde donde est\u00e9s, de 10 a 13hs y de 16 a 20hs.'}
+                                </p>
+                                <p>
+                                    {'Entr\u00e1 a nuestros lives de TikTok, descubr\u00ed las nuevas prendas y compr\u00e1 de una manera m\u00e1s c\u00f3moda, r\u00e1pida y entretenida.'}
                                 </p>
                             </div>
 
-                            <div className="mt-8 max-w-[42rem]">
+                            <div className="mt-8 hidden max-w-[42rem] lg:block">
                                 {CHANNELS.map((channel) => (
                                     <ChannelCard key={channel.title} channel={channel} />
                                 ))}
@@ -134,6 +134,12 @@ export default function About() {
                                 alt="Sobre nosotros"
                                 className="h-full w-full object-cover"
                             />
+                        </div>
+
+                        <div className="lg:hidden">
+                            {CHANNELS.map((channel) => (
+                                <ChannelCard key={channel.title} channel={channel} />
+                            ))}
                         </div>
                     </div>
                 </div>

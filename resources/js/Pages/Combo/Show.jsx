@@ -20,7 +20,9 @@ function StepHeader({ index, title, status, completed, open, onToggle, disabled 
             type="button"
             onClick={onToggle}
             disabled={disabled}
-            className={`w-full flex items-center justify-between py-4 text-left ${
+            className={`flex w-full items-center justify-between rounded-[1.2rem] border border-brand-cta/20 px-5 py-4 text-left transition-colors ${
+                open ? 'bg-brand-cta/10' : 'bg-transparent'
+            } ${
                 disabled ? 'opacity-40 cursor-not-allowed' : ''
             }`}
         >
@@ -30,8 +32,8 @@ function StepHeader({ index, title, status, completed, open, onToggle, disabled 
                         completed
                             ? 'bg-brand-cta text-white'
                             : open
-                                ? 'bg-brand-text text-white'
-                                : 'bg-brand-secondary-surface text-brand-text'
+                                ? 'bg-brand-cta text-white'
+                                : 'border border-brand-cta/35 bg-brand-cta/10 text-brand-cta'
                     }`}
                 >
                     {completed ? (
@@ -42,9 +44,9 @@ function StepHeader({ index, title, status, completed, open, onToggle, disabled 
                         index
                     )}
                 </span>
-                <span className="text-sm font-bold uppercase tracking-[0.18em] text-brand-text">{title}</span>
+                <span className="text-sm font-bold uppercase tracking-[0.18em] text-brand-cta">{title}</span>
                 {status && (
-                    <span className="text-xs text-brand-text-muted normal-case tracking-normal font-normal">
+                    <span className="inline-flex items-center rounded-full border border-brand-cta/20 bg-brand-cta/10 px-2.5 py-1 text-xs text-brand-cta/85 normal-case tracking-normal font-normal">
                         · {status}
                     </span>
                 )}
@@ -66,10 +68,10 @@ function ChipButton({ label, active, onClick }) {
         <button
             type="button"
             onClick={onClick}
-            className={`min-w-[64px] h-10 px-4 text-sm font-semibold border transition-colors ${
+            className={`min-w-[64px] h-10 rounded-full px-4 text-sm font-semibold border shadow-sm transition-colors ${
                 active
-                    ? 'bg-brand-text text-white border-brand-text'
-                    : 'bg-white text-brand-text border-brand-text/30 hover:border-brand-text'
+                    ? 'bg-brand-cta text-white border-brand-cta'
+                    : 'bg-white text-brand-cta border-brand-cta/35 hover:border-brand-cta'
             }`}
         >
             {label}
@@ -83,7 +85,7 @@ function ProductPickerCard({ product, selected, onToggle }) {
             type="button"
             onClick={onToggle}
             aria-pressed={selected}
-            className={`group relative flex h-full w-full flex-col overflow-hidden bg-white text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 ${
+            className={`group relative flex h-full w-full flex-col overflow-hidden rounded-[1.55rem] bg-white text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 ${
                 selected
                     ? 'border-2 border-brand-cta shadow-[0_14px_30px_rgba(255,90,78,0.18)] -translate-y-0.5'
                     : 'border border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:-translate-y-0.5 hover:border-brand-cta/50 hover:shadow-[0_14px_28px_rgba(41,50,65,0.10)]'
@@ -298,7 +300,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
                 {/* Breadcrumb + volver */}
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                    <nav className="text-[11px] uppercase tracking-[0.18em] text-brand-text-muted">
+                    <nav className="inline-flex flex-wrap items-center rounded-full border border-brand-cta/45 bg-white/88 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur">
                         <Link href="/" className="hover:text-brand-text transition-colors">Inicio</Link>
                         <span className="mx-2 text-brand-text-light">/</span>
                         <Link href="/catalogo" className="hover:text-brand-text transition-colors">Catálogo</Link>
@@ -307,7 +309,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                     </nav>
                     <Link
                         href="/catalogo"
-                        className="inline-flex items-center gap-2 border border-brand-secondary bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta"
+                        className="inline-flex items-center gap-2 rounded-full border border-brand-cta/45 bg-white/88 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm backdrop-blur transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta"
                     >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -319,7 +321,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                 {/* Hero del combo */}
                 <header className="grid grid-cols-1 lg:grid-cols-[minmax(0,460px)_1fr] gap-8 lg:gap-14 items-start">
                     {/* Imagen — se muestra completa (object-contain) sobre fondo crema */}
-                    <div className="relative overflow-hidden bg-brand-secondary-light border border-brand-secondary/60 shadow-[0_18px_40px_rgba(41,50,65,0.08)]">
+                    <div className="relative overflow-hidden rounded-[1.9rem] bg-brand-secondary-light border border-brand-cta/30 shadow-[0_18px_40px_rgba(41,50,65,0.08)]">
                         <div className="aspect-[4/5] w-full">
                             {combo.image ? (
                                 <img
@@ -335,7 +337,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                 </div>
                             )}
                         </div>
-                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 bg-brand-text px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
+                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-brand-text px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
@@ -344,100 +346,111 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                     </div>
 
                     {/* Detalles */}
-                    <div className="flex flex-col">
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-brand-cta font-bold">
-                            Combo · Armalo a tu medida
-                        </p>
-                        <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-text leading-[1.05]">
-                            {combo.name}
-                        </h1>
-
-                        {/* Precio destacado */}
-                        <div className="mt-5 flex items-baseline gap-3">
-                            <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-cta leading-none">
-                                {fmt(combo.price)}
-                            </span>
-                            <span className="text-xs uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
-                                Precio final
-                            </span>
-                        </div>
-
-                        {combo.description && (
-                            <p className="mt-5 text-base leading-relaxed text-brand-text-muted whitespace-pre-line max-w-xl">
-                                {combo.description}
+                    <div className="flex flex-col gap-4">
+                        <div className="rounded-[1.9rem] border border-brand-cta/25 bg-white p-6 shadow-[0_18px_36px_rgba(41,50,65,0.06)] sm:p-7">
+                            <p className="text-[11px] uppercase tracking-[0.24em] text-brand-cta font-bold">
+                                Combo · Armalo a tu medida
                             </p>
-                        )}
+                            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-text leading-[1.05]">
+                                {combo.name}
+                            </h1>
 
-                        {/* Incluye — chips de categorías */}
-                        {combo.categories.length > 0 && (
-                            <div className="mt-7">
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text font-bold mb-3">
-                                    Tu combo incluye
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {combo.categories.map((cat) => (
-                                        <span
-                                            key={cat.id}
-                                            className="inline-flex items-center gap-2 bg-white border border-brand-secondary px-3.5 py-2 text-sm font-semibold text-brand-text shadow-[0_4px_10px_rgba(41,50,65,0.04)]"
-                                        >
-                                            <span className="flex h-5 min-w-[20px] items-center justify-center bg-brand-cta px-1.5 text-[11px] font-bold text-white">
-                                                ×{cat.quantity}
-                                            </span>
-                                            {cat.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Talles disponibles */}
-                        {combo.sizes.length > 0 && (
-                            <div className="mt-6">
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
-                                    Talles disponibles
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {combo.sizes.map((s) => (
-                                        <span
-                                            key={s.id}
-                                            className="inline-flex h-8 min-w-[36px] items-center justify-center bg-brand-secondary-light border border-brand-secondary px-2.5 text-xs font-bold text-brand-text"
-                                        >
-                                            {s.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Género del combo */}
-                        {combo.gender && (
-                            <div className="mt-6">
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
-                                    Género
-                                </p>
-                                <span className="inline-flex items-center gap-1.5 bg-brand-cta/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-brand-cta">
-                                    {combo.gender.name}
+                            {/* Precio destacado */}
+                            <div className="mt-5 flex items-baseline gap-3">
+                                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-cta leading-none">
+                                    {fmt(combo.price)}
+                                </span>
+                                <span className="text-xs uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
+                                    Precio final
                                 </span>
                             </div>
-                        )}
 
-                        {/* Pasos / banner inferior */}
-                        <div className="mt-7 flex items-center gap-3 border-l-2 border-brand-cta bg-brand-secondary-light/60 px-4 py-3">
+                            {combo.description && (
+                                <p className="mt-5 text-base leading-relaxed text-brand-text-muted whitespace-pre-line max-w-xl">
+                                    {combo.description}
+                                </p>
+                            )}
+
+                            {/* Incluye — chips de categorías */}
+                            {combo.categories.length > 0 && (
+                                <div className="mt-7">
+                                    <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text font-bold mb-3">
+                                        Tu combo incluye
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {combo.categories.map((cat) => (
+                                            <span
+                                                key={cat.id}
+                                                className="inline-flex items-center gap-2 rounded-full bg-white border border-brand-secondary px-3.5 py-2 text-sm font-semibold text-brand-text shadow-[0_4px_10px_rgba(41,50,65,0.04)]"
+                                            >
+                                                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand-cta px-1.5 text-[11px] font-bold text-white">
+                                                    ×{cat.quantity}
+                                                </span>
+                                                {cat.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Talles disponibles */}
+                            {combo.sizes.length > 0 && (
+                                <div className="mt-6">
+                                    <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
+                                        Talles disponibles
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {combo.sizes.map((s) => (
+                                            <span
+                                                key={s.id}
+                                                className="inline-flex h-8 min-w-[36px] items-center justify-center rounded-full bg-brand-secondary-light border border-brand-secondary px-2.5 text-xs font-bold text-brand-text"
+                                            >
+                                                {s.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Género del combo */}
+                            {combo.gender && (
+                                <div className="mt-6">
+                                    <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
+                                        Género
+                                    </p>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cta/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-brand-cta">
+                                        {combo.gender.name}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-brand-cta/45 bg-white px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.10)]">
                             <svg className="h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
-                            <p className="text-sm text-brand-text">
-                                Armá tu combo en <span className="font-bold">{1 + combo.categories.length} pasos</span>: elegí talle y los productos de cada categoría.
+                            <p className="text-sm leading-relaxed text-brand-text">
+                                Armá tu combo en <span className="font-bold text-brand-cta">{1 + combo.categories.length} pasos</span>: elegí talle y los productos de cada categoría.
+                            </p>
+                        </div>
+
+                        <div className="flex items-start gap-3 rounded-[1.4rem] border border-brand-cta/45 bg-brand-primary-surface/35 px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.08)]">
+                            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6M11 19h2M4 6h11v8H4zM15 9h2.5l2.5 2.5V14h-5zM7 17a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm10 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+                            </svg>
+                            <p className="text-sm leading-relaxed text-brand-text">
+                                <span className="font-extrabold text-brand-text">A TODO EL PAIS:</span>{' '}
+                                Envios a todo el pais por Correo Argentino y Andreani
                             </p>
                         </div>
                     </div>
                 </header>
 
                 {/* Pasos */}
-                <section className="mt-10 border-y border-brand-secondary/20 divide-y divide-brand-secondary/20">
+                <section className="mt-10 space-y-4">
 
                     {/* 1. Talle */}
-                    <div ref={(el) => (stepRefs.current['size'] = el)}>
+                    <div ref={(el) => (stepRefs.current['size'] = el)} className="rounded-[1.6rem] border border-brand-cta/45 bg-white p-1.5 shadow-[0_18px_34px_rgba(255,90,78,0.10)]">
                         <StepHeader
                             index={1}
                             title="Talle"
@@ -447,7 +460,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                             onToggle={() => sizeCanOpen && toggleStep('size')}
                         />
                         {activeStep === 'size' && (
-                            <div className="pb-6">
+                            <div className="px-5 pb-6">
                                 {combo.sizes.length === 0 ? (
                                     <p className="text-sm text-brand-text-muted italic">Este combo no tiene talles disponibles.</p>
                                 ) : (
@@ -476,7 +489,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                             : 'Elegí el talle primero';
 
                         return (
-                            <div key={cat.id} ref={(el) => (stepRefs.current[stepKey] = el)}>
+                            <div key={cat.id} ref={(el) => (stepRefs.current[stepKey] = el)} className="rounded-[1.6rem] border border-brand-cta/45 bg-white p-1.5 shadow-[0_18px_34px_rgba(255,90,78,0.10)]">
                                 <StepHeader
                                     index={2 + i}
                                     title={cat.name}
@@ -487,9 +500,9 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                     disabled={!catCanOpen}
                                 />
                                 {activeStep === stepKey && (
-                                    <div className="pb-6">
+                                    <div className="px-5 pb-6">
                                         {products.length === 0 ? (
-                                            <div className="rounded-sm border border-dashed border-brand-secondary bg-brand-secondary-light px-4 py-6 text-center">
+                                            <div className="rounded-[1.15rem] border border-dashed border-brand-cta/45 bg-brand-secondary-light px-4 py-6 text-center">
                                                 <p className="text-sm text-brand-text-muted italic">
                                                     No hay productos disponibles para esta categoría con el talle elegido.
                                                 </p>
@@ -501,7 +514,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                                         Elegí <span className="font-semibold text-brand-text">{cat.quantity}</span> {cat.quantity === 1 ? 'producto' : 'productos'} de esta categoría.
                                                     </p>
                                                     <span
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
                                                             isCategoryComplete(cat)
                                                                 ? 'bg-brand-cta/10 text-brand-cta'
                                                                 : 'bg-brand-secondary-light text-brand-text-muted'
@@ -537,7 +550,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                 {/* Resumen + CTA */}
                 <section className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8" ref={(el) => (stepRefs.current['summary'] = el)}>
                     <div />
-                    <aside className="bg-white border border-brand-secondary/30 p-6 lg:sticky lg:top-32 self-start">
+                    <aside className="self-start rounded-[1.8rem] border border-brand-secondary/30 bg-white p-6 shadow-[0_18px_36px_rgba(41,50,65,0.08)] lg:sticky lg:top-32">
                         <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-brand-text">Resumen</h2>
 
                         <dl className="mt-4 space-y-2 text-sm">
@@ -577,7 +590,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                             type="button"
                             onClick={handleAdd}
                             disabled={!allComplete}
-                            className="mt-5 w-full h-12 inline-flex items-center justify-center gap-2 bg-brand-cta text-white text-sm font-bold uppercase tracking-[0.18em] hover:bg-brand-cta-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-cta text-white text-sm font-bold uppercase tracking-[0.18em] transition-colors hover:bg-brand-cta-dark disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 7h14l-1.5 10.5A2 2 0 0115.52 19H8.48a2 2 0 01-1.98-1.5L5 7zM9 7V5a3 3 0 016 0v2" />

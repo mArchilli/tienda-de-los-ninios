@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import TopBar from '@/Components/Storefront/TopBar';
 import Header from '@/Components/Storefront/Header';
 import Footer from '@/Components/Storefront/Footer';
@@ -9,16 +10,18 @@ import CartButton from '@/Components/Storefront/CartButton';
 // Todo el sitio público debería envolverse aquí para mantener coherencia visual.
 
 export default function StorefrontLayout({ children, cartCount = 0 }) {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     return (
         <div className="storefront-theme min-h-screen bg-brand-bg text-brand-text font-sans">
             <div className="sticky top-0 z-40">
-                <TopBar />
-                <Header cartCount={cartCount} />
+                {!mobileMenuOpen && <TopBar />}
+                <Header cartCount={cartCount} onMobileMenuChange={setMobileMenuOpen} />
             </div>
             <main className="overflow-x-hidden">{children}</main>
             <Footer />
-            <CartButton />
-            <WhatsAppButton />
+            {!mobileMenuOpen && <CartButton />}
+            {!mobileMenuOpen && <WhatsAppButton />}
         </div>
     );
 }

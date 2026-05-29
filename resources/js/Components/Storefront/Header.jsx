@@ -3,10 +3,13 @@ import { useEffect, useState } from 'react';
 import Logo from './Logo';
 import CartIcon from './CartIcon';
 
-const NAV_ITEMS = [
+const MOBILE_NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
+    { label: 'Carrito', href: '/carrito' },
 ];
+
+const DESKTOP_NAV_ITEMS = MOBILE_NAV_ITEMS.filter((item) => item.href !== '/carrito');
 
 function isActive(currentUrl, itemHref) {
     const currentBase = currentUrl.split('?')[0];
@@ -27,7 +30,7 @@ function CartIconButton({ children, label, badge, as: Tag = 'button', ...props }
         >
             {children}
             {badge !== undefined && badge > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-text px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-cta px-1 text-[10px] font-bold text-white">
                     {badge}
                 </span>
             )}
@@ -39,7 +42,7 @@ function DesktopNav({ url }) {
     return (
         <nav className="hidden lg:block">
             <ul className="flex items-center gap-7">
-                {NAV_ITEMS.map((item) => {
+                {DESKTOP_NAV_ITEMS.map((item) => {
                     const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
                     return (
                         <li key={item.label}>
@@ -84,7 +87,7 @@ function MobileMenuButton({ open, onClick }) {
     );
 }
 
-export default function Header({ cartCount }) {
+export default function Header({ cartCount, onMobileMenuChange }) {
     const { props, url } = usePage();
     const count = cartCount ?? props?.cartCount ?? 0;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -100,13 +103,16 @@ export default function Header({ cartCount }) {
             document.body.style.overflow = '';
         }
 
+        onMobileMenuChange?.(mobileMenuOpen);
+
         return () => {
             document.body.style.overflow = '';
+            onMobileMenuChange?.(false);
         };
-    }, [mobileMenuOpen]);
+    }, [mobileMenuOpen, onMobileMenuChange]);
 
     return (
-        <header className="border-b border-brand-secondary/20 bg-white/95 backdrop-blur-sm">
+        <header className="border-b border-brand-cta/45 bg-white/95 backdrop-blur-sm">
             <div className="store-shell">
                 <div className="grid min-h-[74px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
                     <div className="flex items-center justify-start lg:hidden">
@@ -133,44 +139,50 @@ export default function Header({ cartCount }) {
             </div>
 
             {mobileMenuOpen && (
-                <div className="lg:hidden">
+                <div className="fixed inset-0 z-50 flex min-h-screen flex-col bg-brand-cta lg:hidden">
                     <button
                         type="button"
                         aria-label="Cerrar menu"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="fixed inset-0 z-40 bg-brand-text/30 backdrop-blur-[1px]"
-                    />
+                        className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/55 bg-white/10 text-white transition-colors hover:bg-white/15"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
 
-                    <div className="fixed inset-x-0 top-[74px] z-50 px-3">
-                        <div className="overflow-hidden rounded-[1.15rem] border border-brand-secondary/50 bg-white shadow-[0_24px_48px_rgba(31,31,31,0.12)]">
-                            <nav aria-label="Menu principal movil" className="px-3 py-3">
-                                <ul className="space-y-1">
-                                    {NAV_ITEMS.map((item) => {
-                                        const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
+                    <nav aria-label="Menu principal movil" className="flex flex-1 items-start justify-center px-6 pb-10 pt-24">
+                        <div className="flex w-full max-w-sm flex-col items-center">
+                            <Link href="/" className="mb-10" onClick={() => setMobileMenuOpen(false)}>
+                                <Logo className="scale-[0.98] text-white sm:scale-100" />
+                            </Link>
 
-                                        return (
-                                            <li key={item.label}>
-                                                <Link
-                                                    href={item.href}
-                                                    className={`flex items-center justify-between rounded-[0.9rem] px-4 py-3 text-sm font-semibold transition-colors ${
-                                                        active
-                                                            ? 'bg-brand-primary-surface text-brand-primary'
-                                                            : 'text-brand-text hover:bg-brand-secondary-light'
-                                                    }`}
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                >
-                                                    <span>{item.label}</span>
-                                                    <svg className="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </Link>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </nav>
+                            <ul className="flex w-full flex-col gap-4">
+                                {MOBILE_NAV_ITEMS.map((item) => {
+                                    const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
+
+                                    return (
+                                        <li key={item.label}>
+                                            <Link
+                                                href={item.href}
+                                                className={`flex items-center justify-between rounded-[1.6rem] border px-6 py-4 text-base font-semibold uppercase tracking-[0.18em] transition-colors ${
+                                                    active
+                                                        ? 'border-white bg-white text-brand-cta'
+                                                        : 'border-white/45 bg-white/10 text-white hover:bg-white/16'
+                                                }`}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <span>{item.label}</span>
+                                                <svg className="h-5 w-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
                         </div>
-                    </div>
+                    </nav>
                 </div>
             )}
         </header>
