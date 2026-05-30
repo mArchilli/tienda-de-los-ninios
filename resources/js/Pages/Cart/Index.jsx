@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 function fmt(price) {
@@ -70,9 +70,18 @@ function ItemThumb({ src, alt }) {
 function CartLine({ item }) {
     const [qty, setQty] = useState(item.quantity);
 
+    const maxQty = typeof item.max_quantity === 'number' ? item.max_quantity : 99;
+    const outOfStock = maxQty <= 0;
+    const insufficient = !outOfStock && qty > maxQty;
+
+    useEffect(() => {
+        setQty(item.quantity);
+    }, [item.quantity]);
+
     const updateQty = (next) => {
-        setQty(next);
-        router.patch(`/carrito/${item.key}`, { quantity: next }, {
+        const clamped = Math.min(Math.max(1, next), Math.max(1, maxQty));
+        setQty(clamped);
+        router.patch(`/carrito/${item.key}`, { quantity: clamped }, {
             preserveScroll: true,
             preserveState: true,
         });
@@ -82,8 +91,10 @@ function CartLine({ item }) {
         router.delete(`/carrito/${item.key}`, { preserveScroll: true });
     };
 
+    const hasStockIssue = outOfStock || insufficient;
+
     return (
-        <div className="rounded-[1.4rem] border border-brand-primary/25 bg-white p-4 shadow-[0_16px_34px_rgba(41,50,65,0.07)] sm:p-5">
+        <div className={`rounded-[1.4rem] border bg-white p-4 shadow-[0_16px_34px_rgba(41,50,65,0.07)] sm:p-5 ${hasStockIssue ? 'border-brand-cta/60 ring-1 ring-brand-cta/40' : 'border-brand-primary/25'}`}>
             <div className="flex items-start gap-4">
                 <ItemThumb src={item.image} alt={item.name} />
 
@@ -134,11 +145,24 @@ function CartLine({ item }) {
                 </div>
             </div>
 
+            {hasStockIssue && (
+                <div className="mt-3 flex items-start gap-2 rounded-[0.9rem] border border-brand-cta/35 bg-brand-cta-surface px-3 py-2 text-[12px] font-semibold text-brand-cta">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    <span>
+                        {outOfStock
+                            ? 'Sin stock disponible en el talle seleccionado. Eliminá este ítem o probá otro talle.'
+                            : `Solo quedan ${maxQty} unidad${maxQty === 1 ? '' : 'es'} disponibles. Ajustá la cantidad para continuar.`}
+                    </span>
+                </div>
+            )}
+
             <div className="mt-4 flex flex-col gap-4 border-t border-brand-primary/12 pt-4 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex flex-col items-start">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">Cantidad</p>
                     <div className="mt-1">
-                        <QuantityStepper value={qty} onChange={updateQty} />
+                        <QuantityStepper value={qty} onChange={updateQty} max={Math.max(1, maxQty)} />
                     </div>
                 </div>
 
@@ -177,6 +201,11 @@ export default function CartIndex({ cart }) {
     const items = cart?.items ?? [];
     const subtotal = cart?.subtotal ?? 0;
     const isEmpty = items.length === 0;
+
+    const hasStockIssue = items.some((item) => {
+        const max = typeof item.max_quantity === 'number' ? item.max_quantity : 99;
+        return max <= 0 || item.quantity > max;
+    });
 
     const clear = () => {
         if (confirm('Vaciar el carrito?')) {
@@ -248,12 +277,30 @@ export default function CartIndex({ cart }) {
                                 </div>
                             </div>
 
-                            <Link
-                                href="/checkout"
-                                className="block w-full rounded-full bg-brand-cta py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-brand-cta-dark"
-                            >
-                                Continuar compra
-                            </Link>
+                            {hasStockIssue ? (
+                                <button
+                                    type="button"
+                                    disabled
+                                    aria-disabled="true"
+                                    className="block w-full cursor-not-allowed rounded-full bg-brand-cta/40 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-white"
+                                    title="Ajustá las cantidades sin stock antes de continuar."
+                                >
+                                    Continuar compra
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/checkout"
+                                    className="block w-full rounded-full bg-brand-cta py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-brand-cta-dark"
+                                >
+                                    Continuar compra
+                                </Link>
+                            )}
+
+                            {hasStockIssue && (
+                                <p className="text-center text-[11px] font-semibold text-brand-cta">
+                                    Hay ítems sin stock suficiente. Revisá las cantidades antes de seguir.
+                                </p>
+                            )}
 
                             <button
                                 type="button"

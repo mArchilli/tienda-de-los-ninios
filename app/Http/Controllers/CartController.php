@@ -47,26 +47,28 @@ class CartController extends Controller
     {
         $cart     = session('cart', ['products' => [], 'combos' => []]);
         $products = array_values(array_map(fn ($i) => [
-            'key'         => $i['key'],
-            'type'        => 'product',
-            'name'        => $i['name'],
-            'image'       => $i['image'],
-            'size_name'   => $i['size_name'] ?? null,
-            'price'       => (float) $i['price'],
-            'quantity'    => (int) $i['quantity'],
-            'subtotal'    => (float) $i['price'] * (int) $i['quantity'],
+            'key'          => $i['key'],
+            'type'         => 'product',
+            'name'         => $i['name'],
+            'image'        => $i['image'],
+            'size_name'    => $i['size_name'] ?? null,
+            'price'        => (float) $i['price'],
+            'quantity'     => (int) $i['quantity'],
+            'subtotal'     => (float) $i['price'] * (int) $i['quantity'],
+            'max_quantity' => self::maxQuantityFor($i),
         ], $cart['products'] ?? []));
 
         $combos = array_values(array_map(fn ($i) => [
-            'key'         => $i['key'],
-            'type'        => 'combo',
-            'name'        => $i['name'],
-            'image'       => $i['image'],
-            'size_name'   => $i['size_name'] ?? null,
-            'gender_name' => $i['gender_name'] ?? null,
-            'price'       => (float) $i['price'],
-            'quantity'    => (int) $i['quantity'],
-            'subtotal'    => (float) $i['price'] * (int) $i['quantity'],
+            'key'          => $i['key'],
+            'type'         => 'combo',
+            'name'         => $i['name'],
+            'image'        => $i['image'],
+            'size_name'    => $i['size_name'] ?? null,
+            'gender_name'  => $i['gender_name'] ?? null,
+            'price'        => (float) $i['price'],
+            'quantity'     => (int) $i['quantity'],
+            'subtotal'     => (float) $i['price'] * (int) $i['quantity'],
+            'max_quantity' => self::maxQuantityFor($i),
         ], $cart['combos'] ?? []));
 
         $items = array_merge($products, $combos);
@@ -75,6 +77,96 @@ class CartController extends Controller
             'items'    => $items,
             'subtotal' => array_sum(array_column($items, 'subtotal')),
         ];
+    }
+
+    /**
+     * Calcula la cantidad máxima disponible para un ítem del carrito en base
+     * al stock actual en `product_size`. Para combos se toma el mínimo de
+     * stock entre todas las prendas elegidas, dividido por la cantidad de
+     * veces que cada prenda aparece en el armado.
+     *
+     * Devuelve 99 (tope superior) cuando el ítem no tiene talle (productos
+     * sin variantes) y por lo tanto no hay restricción de stock por talle.
+     */
+    public static function maxQuantityFor(array $raw): int
+    {
+        $hardCap = 99;
+
+        // Producto suelto
+        if (! isset($raw['variant']) && isset($raw['product_id'])) {
+            $sizeId = (int) ($raw['size_id'] ?? 0);
+            if ($sizeId <= 0) {
+                return $hardCap;
+            }
+            $stock = (int) DB::table('product_size')
+                ->where('product_id', (int) $raw['product_id'])
+                ->where('size_id', $sizeId)
+                ->value('stock');
+            return max(0, min($hardCap, $stock));
+        }
+
+        $variant = $raw['variant'] ?? 'combo';
+
+        // Combo emprendedor: cada pick trae su propio (product_id, size_id)
+        if ($variant === 'emprendedor') {
+            $needs = [];
+            foreach (($raw['picks'] ?? []) as $pick) {
+                $pid = (int) ($pick['product_id'] ?? 0);
+                $sid = (int) ($pick['size_id'] ?? 0);
+                if ($pid <= 0 || $sid <= 0) continue;
+                $key = $pid . ':' . $sid;
+                $needs[$key] = ($needs[$key] ?? 0) + 1;
+            }
+            if (empty($needs)) return $hardCap;
+
+            $stocks = DB::table('product_size')
+                ->where(function ($q) use ($needs) {
+                    foreach (array_keys($needs) as $key) {
+                        [$pid, $sid] = explode(':', $key);
+                        $q->orWhere(function ($qq) use ($pid, $sid) {
+                            $qq->where('product_id', (int) $pid)
+                               ->where('size_id', (int) $sid);
+                        });
+                    }
+                })
+                ->get(['product_id', 'size_id', 'stock'])
+                ->mapWithKeys(fn ($r) => [$r->product_id . ':' . $r->size_id => (int) $r->stock]);
+
+            $max = $hardCap;
+            foreach ($needs as $key => $count) {
+                $stock     = (int) ($stocks[$key] ?? 0);
+                $available = intdiv($stock, max(1, $count));
+                $max       = min($max, max(0, $available));
+            }
+            return $max;
+        }
+
+        // Combo tradicional: todas las prendas elegidas comparten el talle del combo
+        $sizeId = (int) ($raw['size_id'] ?? 0);
+        if ($sizeId <= 0) return $hardCap;
+
+        $needs = [];
+        foreach (($raw['picks'] ?? []) as $catId => $productIds) {
+            foreach ((array) $productIds as $pid) {
+                $pid = (int) $pid;
+                if ($pid <= 0) continue;
+                $needs[$pid] = ($needs[$pid] ?? 0) + 1;
+            }
+        }
+        if (empty($needs)) return $hardCap;
+
+        $stocks = DB::table('product_size')
+            ->whereIn('product_id', array_keys($needs))
+            ->where('size_id', $sizeId)
+            ->pluck('stock', 'product_id');
+
+        $max = $hardCap;
+        foreach ($needs as $pid => $count) {
+            $stock     = (int) ($stocks[$pid] ?? 0);
+            $available = intdiv($stock, max(1, $count));
+            $max       = min($max, max(0, $available));
+        }
+        return $max;
     }
 
     protected function buildView(array $cart): array
@@ -90,6 +182,7 @@ class CartController extends Controller
             'price'      => (float) $i['price'],
             'quantity'   => (int) $i['quantity'],
             'subtotal'   => (float) $i['price'] * (int) $i['quantity'],
+            'max_quantity' => self::maxQuantityFor($i),
         ], $cart['products'] ?? []));
 
         // Pre-load category and product names for all combo picks in one query each.
@@ -171,6 +264,7 @@ class CartController extends Controller
                 'price'        => (float) $i['price'],
                 'quantity'     => (int) $i['quantity'],
                 'subtotal'     => (float) $i['price'] * (int) $i['quantity'],
+                'max_quantity' => self::maxQuantityFor($i),
             ];
         }, $cart['combos'] ?? []));
 
@@ -377,13 +471,26 @@ class CartController extends Controller
         ]);
 
         $cart = $this->getCart();
+        $raw  = $cart['products'][$key] ?? $cart['combos'][$key] ?? null;
+
+        if (! $raw) {
+            return back()->withErrors(['key' => 'Item no encontrado.']);
+        }
+
+        $newQty = (int) $data['quantity'];
+        $max    = self::maxQuantityFor($raw);
+
+        if ($newQty > $max) {
+            $message = $max <= 0
+                ? 'Este producto ya no tiene stock disponible en el talle elegido.'
+                : "Solo quedan {$max} unidad" . ($max === 1 ? '' : 'es') . ' disponible' . ($max === 1 ? '' : 's') . ' para este ítem.';
+            return back()->withErrors(['cart' => $message]);
+        }
 
         if (isset($cart['products'][$key])) {
-            $cart['products'][$key]['quantity'] = (int) $data['quantity'];
-        } elseif (isset($cart['combos'][$key])) {
-            $cart['combos'][$key]['quantity'] = (int) $data['quantity'];
+            $cart['products'][$key]['quantity'] = $newQty;
         } else {
-            return back()->withErrors(['key' => 'Item no encontrado.']);
+            $cart['combos'][$key]['quantity'] = $newQty;
         }
 
         $this->saveCart($cart);
@@ -436,6 +543,15 @@ class CartController extends Controller
             return redirect()->route('cart.index')->withErrors([
                 'cart' => 'Tu carrito está vacío.',
             ]);
+        }
+
+        foreach ($view['items'] as $item) {
+            $max = (int) ($item['max_quantity'] ?? 99);
+            if ((int) $item['quantity'] > $max) {
+                return redirect()->route('cart.index')->withErrors([
+                    'cart' => 'Algunos ítems del carrito ya no tienen stock suficiente. Ajustá las cantidades antes de continuar.',
+                ]);
+            }
         }
 
         $stock = app(StockService::class);

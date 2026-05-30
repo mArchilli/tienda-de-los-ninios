@@ -27,7 +27,7 @@ export default function TopBar() {
             <div className="store-shell">
                 <div className="topbar-marquee h-8">
                     <div className="topbar-marquee-track">
-                        {[...items, ...items].map((item, index) => (
+                        {[...items, ...items, ...items, ...items, ...items, ...items].map((item, index) => (
                             <span
                                 key={index}
                                 className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/88 sm:text-[11px]"

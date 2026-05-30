@@ -6,7 +6,8 @@ function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
 }
 
-function QuantityStepper({ value, onChange }) {
+function QuantityStepper({ value, onChange, max = 99 }) {
+    const effectiveMax = Math.max(1, max);
     return (
         <div className="inline-flex items-center gap-2">
             <button
@@ -25,8 +26,8 @@ function QuantityStepper({ value, onChange }) {
             </span>
             <button
                 type="button"
-                onClick={() => onChange(Math.min(99, value + 1))}
-                disabled={value >= 99}
+                onClick={() => onChange(Math.min(effectiveMax, value + 1))}
+                disabled={value >= effectiveMax}
                 aria-label="Aumentar"
                 className="flex h-9 w-9 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-brand-secondary-surface text-brand-text-muted hover:bg-brand-secondary/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
@@ -41,13 +42,19 @@ function QuantityStepper({ value, onChange }) {
 function CartItem({ item }) {
     const [qty, setQty] = useState(item.quantity);
 
+    const maxQty = typeof item.max_quantity === 'number' ? item.max_quantity : 99;
+    const outOfStock = maxQty <= 0;
+    const insufficient = !outOfStock && qty > maxQty;
+    const hasStockIssue = outOfStock || insufficient;
+
     useEffect(() => {
         setQty(item.quantity);
     }, [item.quantity]);
 
     const updateQty = (next) => {
-        setQty(next);
-        router.patch(`/carrito/${item.key}`, { quantity: next }, {
+        const clamped = Math.min(Math.max(1, next), Math.max(1, maxQty));
+        setQty(clamped);
+        router.patch(`/carrito/${item.key}`, { quantity: clamped }, {
             preserveScroll: true,
             preserveState: true,
         });
@@ -96,9 +103,16 @@ function CartItem({ item }) {
                     )}
                 </div>
                 <div className="flex items-center justify-between mt-2.5 sm:mt-2">
-                    <QuantityStepper value={qty} onChange={updateQty} />
+                    <QuantityStepper value={qty} onChange={updateQty} max={maxQty} />
                     <p className="text-sm sm:text-xs font-bold text-brand-primary">{fmt(item.subtotal)}</p>
                 </div>
+                {hasStockIssue && (
+                    <p className="mt-1.5 text-[11px] sm:text-[10px] font-semibold text-brand-cta">
+                        {outOfStock
+                            ? 'Sin stock disponible'
+                            : `Solo quedan ${maxQty} unidad${maxQty === 1 ? '' : 'es'}`}
+                    </p>
+                )}
             </div>
 
             <button
@@ -138,6 +152,10 @@ export default function CartButton() {
     }, [open]);
 
     const isEmpty = cart.items.length === 0;
+    const hasStockIssue = cart.items.some((item) => {
+        const max = typeof item.max_quantity === 'number' ? item.max_quantity : 99;
+        return max <= 0 || item.quantity > max;
+    });
 
     return (
         <div ref={wrapRef} className="fixed bottom-24 right-6 z-50">
@@ -194,6 +212,11 @@ export default function CartButton() {
                                 <span className="text-xs font-semibold text-brand-text-muted uppercase tracking-wider">Subtotal</span>
                                 <span className="text-base sm:text-sm font-bold text-brand-primary">{fmt(cart.subtotal)}</span>
                             </div>
+                            {hasStockIssue && (
+                                <p className="rounded-md bg-brand-cta-surface px-2.5 py-1.5 text-[11px] font-semibold text-brand-cta">
+                                    Hay ítems sin stock suficiente. Ajustá las cantidades antes de continuar.
+                                </p>
+                            )}
                             <div className="grid grid-cols-2 gap-2">
                                 <Link
                                     href="/carrito"
@@ -202,13 +225,25 @@ export default function CartButton() {
                                 >
                                     Ver carrito
                                 </Link>
-                                <Link
-                                    href="/checkout"
-                                    onClick={() => setOpen(false)}
-                                    className="flex items-center justify-center rounded-full bg-brand-cta py-3 text-sm font-bold text-white transition-colors hover:bg-brand-cta-dark sm:py-2 sm:text-xs"
-                                >
-                                    Checkout
-                                </Link>
+                                {hasStockIssue ? (
+                                    <button
+                                        type="button"
+                                        disabled
+                                        aria-disabled="true"
+                                        title="Ajustá las cantidades sin stock antes de continuar."
+                                        className="flex cursor-not-allowed items-center justify-center rounded-full bg-brand-cta/40 py-3 text-sm font-bold text-white sm:py-2 sm:text-xs"
+                                    >
+                                        Checkout
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href="/checkout"
+                                        onClick={() => setOpen(false)}
+                                        className="flex items-center justify-center rounded-full bg-brand-cta py-3 text-sm font-bold text-white transition-colors hover:bg-brand-cta-dark sm:py-2 sm:text-xs"
+                                    >
+                                        Checkout
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     )}
