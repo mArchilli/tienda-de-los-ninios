@@ -113,7 +113,7 @@ export default function About() {
                                     {'Empezamos con un local f\u00edsico en Mariano Acosta y hoy somos una tienda virtual especializada en ropa para ni\u00f1o, ni\u00f1a, beb\u00e9 y beba, desde talle reci\u00e9n nacido hasta talle 16.'}
                                 </p>
                                 <p>
-                                    {'Somos pioneros en la venta por lives de TikTok, una forma cercana y din\u00e1mica de mostrarte las prendas en tiempo real, responder tus dudas y ayudarte a elegir mejor. Todos los d\u00edas compartimos novedades, ingresos, ofertas y combinaciones para que puedas comprar desde donde est\u00e9s, de 10 a 13hs y de 16 a 20hs.'}
+                                    {'Somos pioneros en la venta por lives de TikTok, una forma cercana y din\u00e1mica de mostrarte las prendas en tiempo real, responder tus dudas y ayudarte a elegir mejor. Todos los d\u00edas compartimos novedades, ingresos, ofertas y combos para que puedas comprar desde donde est\u00e9s.'}
                                 </p>
                                 <p>
                                     {'Entr\u00e1 a nuestros lives de TikTok, descubr\u00ed las nuevas prendas y compr\u00e1 de una manera m\u00e1s c\u00f3moda, r\u00e1pida y entretenida.'}

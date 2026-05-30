@@ -17,13 +17,14 @@ const FAQS = [
     {
         question: '\u00bfCu\u00e1ndo despachan los pedidos?',
         answer: [
-            'Si realizas la compra por la manana te lo despachamos el mismo dia. Si compras por la tarde, al otro dia a primera hora.',
+            'Si realizas la compra por la mañana te lo despachamos el mismo dia. Si compras por la tarde, al otro dia a primera hora.',
         ],
     },
     {
         question: '\u00bfQu\u00e9 talles trabajan?',
         answer: [
-            'Trabajamos del talle recien nacido al talle 16.',
+            'Beb\u00e9: talles 0, 1, 2, 3, 4, 5 y 6.',
+            'Ni\u00f1o/a: talles 4, 6, 8, 10, 12, 14, 16 y 18.',
         ],
     },
     {

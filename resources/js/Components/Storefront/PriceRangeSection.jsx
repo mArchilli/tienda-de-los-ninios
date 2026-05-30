@@ -14,7 +14,7 @@ export default function PriceRangeSection() {
             <div className="store-shell store-section !pt-4 lg:!pt-6">
                 <div className="relative px-2 py-2 sm:px-3 lg:px-4">
 
-                    <h2 className="home-section-title relative z-10 text-center">
+                    <h2 className="home-section-title relative z-10 text-left">
                         PENSADO PARA EMPRENDEDORES
                     </h2>
 

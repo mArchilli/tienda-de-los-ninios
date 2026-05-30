@@ -67,8 +67,7 @@ export default function FeaturedCombos({ combos }) {
                     {/* Header */}
                     <div className="relative z-10 flex items-end justify-between gap-4">
                         <h2 className="home-section-title">
-                            {'LO MÁS ELEGIDO DE ESTA SEMANA'}
-                            <span className="ml-2 text-brand-cta">{'♡'}</span>
+                            {'COMBOS DE ESTA SEMANA'}
                         </h2>
 
                         {/* Arrows: desktop only */}
