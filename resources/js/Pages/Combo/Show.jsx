@@ -377,7 +377,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                     <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text font-bold mb-3">
                                         Tu combo incluye
                                     </p>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-2 mt-5">
                                         {combo.categories.map((cat) => (
                                             <span
                                                 key={cat.id}
@@ -460,11 +460,11 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                             onToggle={() => sizeCanOpen && toggleStep('size')}
                         />
                         {activeStep === 'size' && (
-                            <div className="px-5 pb-6">
+                            <div className="px-5 pb-6 mt-5">
                                 {combo.sizes.length === 0 ? (
                                     <p className="text-sm text-brand-text-muted italic">Este combo no tiene talles disponibles.</p>
                                 ) : (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-2 mt-5">
                                         {combo.sizes.map((s) => (
                                             <ChipButton
                                                 key={s.id}
@@ -500,7 +500,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                     disabled={!catCanOpen}
                                 />
                                 {activeStep === stepKey && (
-                                    <div className="px-5 pb-6">
+                                    <div className="px-5 pb-6 mt-5">
                                         {products.length === 0 ? (
                                             <div className="rounded-[1.15rem] border border-dashed border-brand-cta/45 bg-brand-secondary-light px-4 py-6 text-center">
                                                 <p className="text-sm text-brand-text-muted italic">
