@@ -13,8 +13,6 @@ export default function PriceRangeSection() {
         <section className="bg-brand-bg">
             <div className="store-shell store-section !pt-4 lg:!pt-6">
                 <div className="relative px-2 py-2 sm:px-3 lg:px-4">
-                    <div className="absolute -left-16 top-10 h-40 w-40 rounded-full bg-brand-secondary/20 blur-3xl" />
-                    <div className="absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-brand-primary/10 blur-3xl" />
 
                     <h2 className="home-section-title relative z-10 text-center">
                         PENSADO PARA EMPRENDEDORES

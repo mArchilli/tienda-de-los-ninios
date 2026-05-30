@@ -92,8 +92,6 @@ export default function FAQ() {
         <section id="faq" className="bg-brand-bg">
             <div className="store-shell store-section">
                 <div className="relative">
-                    <div className="absolute -left-10 top-12 h-40 w-40 bg-brand-secondary/18 blur-3xl" />
-                    <div className="absolute right-0 top-0 h-44 w-44 bg-brand-cta/10 blur-3xl" />
 
                     <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-2xl">

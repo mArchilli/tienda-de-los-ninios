@@ -95,8 +95,7 @@ export default function About() {
         <section id="about" className="bg-brand-bg">
             <div className="store-shell store-section">
                 <div className="relative">
-                    <div className="absolute -left-14 top-10 h-44 w-44 bg-brand-cta/10 blur-3xl" />
-                    <div className="absolute -right-10 bottom-8 h-48 w-48 bg-brand-secondary/18 blur-3xl" />
+                    
 
                     <div className="relative z-10">
                         <h2 className="home-section-title">

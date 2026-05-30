@@ -100,7 +100,7 @@
     }
 
     .store-card {
-        @apply relative overflow-hidden rounded-[1.75rem] border border-brand-secondary/70 bg-white shadow-[0_18px_40px_rgba(31,31,31,0.05)] backdrop-blur-sm;
+        @apply relative overflow-hidden rounded-[1.75rem] border border-brand-secondary/70 bg-white backdrop-blur-sm;
     }
 
     .topbar-marquee {

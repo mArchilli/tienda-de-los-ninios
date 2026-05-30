@@ -23,8 +23,7 @@ function CircleSlot({ label, image }) {
 export default function CategoryShortcuts() {
     return (
         <section className="relative overflow-hidden bg-brand-bg">
-            <div className="absolute -left-16 top-8 h-40 w-40 rounded-full bg-brand-secondary/18 blur-3xl" />
-            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-brand-primary/10 blur-3xl" />
+            
 
             <div className="store-shell store-section-bottom relative z-10">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)] lg:gap-8 xl:gap-10">
