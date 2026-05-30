@@ -2,10 +2,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
-// ─── Combo Emprendedor / Builder ──────────────────────────────────────────────
-// Pensado para revendedores: precio fijo, el cliente arma su combo eligiendo
-// prendas (con cantidad por talle) hasta llegar al máximo definido por el admin.
-
 function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR');
 }
@@ -15,19 +11,19 @@ function pickKey(productId, sizeId) {
 }
 
 function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onRemove }) {
-    const atStock   = quantity >= product.stock;
+    const atStock    = quantity >= product.stock;
     const noCapacity = totalRemaining <= 0 && quantity === 0;
-    const canAdd    = !atStock && totalRemaining > 0;
+    const canAdd     = !atStock && totalRemaining > 0;
 
     return (
         <div
-            className={`group relative flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-200 border ${
+            className={`group relative flex h-full w-full flex-col overflow-hidden rounded-[1.55rem] bg-white transition-all duration-300 ${
                 quantity > 0
-                    ? 'border-2 border-brand-cta shadow-[0_14px_30px_rgba(255,90,78,0.18)]'
-                    : 'border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:border-brand-cta/50'
+                    ? 'border-2 border-brand-cta shadow-[0_14px_30px_rgba(255,90,78,0.18)] -translate-y-0.5'
+                    : 'border border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:-translate-y-0.5 hover:border-brand-cta/50 hover:shadow-[0_14px_28px_rgba(41,50,65,0.10)]'
             }`}
         >
-            <div className="relative aspect-[4/5] overflow-hidden bg-brand-secondary-light">
+            <div className="relative aspect-[4/5] overflow-hidden bg-brand-secondary-light rounded-t-[1.4rem]">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -49,7 +45,7 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onR
                     </span>
                 )}
 
-                <span className="absolute top-2.5 left-2.5 inline-flex h-6 items-center bg-brand-text px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+                <span className="absolute top-2.5 left-2.5 inline-flex h-6 items-center rounded-full bg-brand-text px-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
                     Talle {size.name}
                 </span>
 
@@ -68,7 +64,7 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onR
                     </p>
                 )}
                 <p className="mt-1 text-[11px] text-brand-text-muted">
-                    Stock disponible: <span className="font-semibold text-brand-text">{product.stock}</span>
+                    Stock: <span className="font-semibold text-brand-text">{product.stock}</span>
                 </p>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
@@ -77,7 +73,7 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onR
                             type="button"
                             onClick={onAdd}
                             disabled={noCapacity}
-                            className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 bg-brand-cta text-white text-[11px] font-bold uppercase tracking-[0.14em] hover:bg-brand-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-cta text-white text-[11px] font-bold uppercase tracking-[0.14em] hover:bg-brand-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -85,7 +81,7 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onR
                             Agregar
                         </button>
                     ) : (
-                        <div className="flex h-9 w-full items-center justify-between gap-2 border border-brand-cta/40">
+                        <div className="flex h-9 w-full items-center justify-between gap-2 rounded-full border border-brand-cta/40 overflow-hidden">
                             <button
                                 type="button"
                                 onClick={onRemove}
@@ -117,24 +113,22 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onR
 }
 
 // ─── Carousel paginado de chips (mobile) ──────────────────────────────────────
-// Mismo patrón que el FilterCarousel del catálogo: grilla 2×2 con flechas y dots.
-// Recibe items genéricos { id, name } y un prefijo opcional para el label.
 
 function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) {
     const ITEMS_PER_PAGE = 4;
     const [page, setPage] = useState(0);
     const touchStartX = useRef(null);
 
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    const totalPages   = Math.ceil(items.length / ITEMS_PER_PAGE);
     const currentItems = items.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
-    const canPrev = page > 0;
-    const canNext = page < totalPages - 1;
+    const canPrev      = page > 0;
+    const canNext      = page < totalPages - 1;
 
     const goNext = () => { if (canNext) setPage((p) => p + 1); };
     const goPrev = () => { if (canPrev) setPage((p) => p - 1); };
 
     const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd   = (e) => {
         if (touchStartX.current === null) return;
         const delta = touchStartX.current - e.changedTouches[0].clientX;
         if (delta > 40) goNext();
@@ -152,7 +146,7 @@ function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) 
                         type="button"
                         onClick={goPrev}
                         disabled={!canPrev}
-                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-secondary/40 bg-white text-brand-text-muted transition-colors hover:border-brand-cta/50 hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
+                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-cta/35 bg-white text-brand-text-muted transition-colors hover:border-brand-cta hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
                         aria-label="Anterior"
                     >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -173,10 +167,10 @@ function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) 
                                 key={it.id}
                                 type="button"
                                 onClick={() => onToggle(it.id)}
-                                className={`flex h-9 w-full items-center justify-center gap-1 border text-xs font-semibold transition-all ${
+                                className={`flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold transition-all ${
                                     active
                                         ? 'border-brand-cta bg-brand-cta text-white shadow-sm'
-                                        : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/50 hover:text-brand-cta'
+                                        : 'border-brand-cta/35 bg-white text-brand-text hover:border-brand-cta hover:text-brand-cta'
                                 }`}
                             >
                                 {active && (
@@ -198,7 +192,7 @@ function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) 
                         type="button"
                         onClick={goNext}
                         disabled={!canNext}
-                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-secondary/40 bg-white text-brand-text-muted transition-colors hover:border-brand-cta/50 hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
+                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-cta/35 bg-white text-brand-text-muted transition-colors hover:border-brand-cta hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
                         aria-label="Siguiente"
                     >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -216,7 +210,7 @@ function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) 
                             type="button"
                             onClick={() => setPage(i)}
                             className={`h-1.5 rounded-full transition-all ${
-                                i === page ? 'w-4 bg-brand-cta' : 'w-1.5 bg-brand-secondary/40 hover:bg-brand-secondary/60'
+                                i === page ? 'w-4 bg-brand-cta' : 'w-1.5 bg-brand-cta/20 hover:bg-brand-cta/40'
                             }`}
                             aria-label={`Página ${i + 1}`}
                         />
@@ -229,19 +223,14 @@ function FilterChipCarousel({ items, selectedIds, onToggle, labelPrefix = '' }) 
 
 
 export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
-    // picksMap: { "productId-sizeId": { product_id, size_id, size_name, quantity } }
-    const [picksMap, setPicksMap] = useState({});
-    const [feedback, setFeedback] = useState(null);
+    const [picksMap, setPicksMap]   = useState({});
+    const [feedback, setFeedback]   = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
-    // Filtros de búsqueda, talle y categoría para acotar el catálogo.
-    const [search, setSearch] = useState('');
-    const [selectedSizeIds, setSelectedSizeIds] = useState([]);
+    const [search, setSearch]                       = useState('');
+    const [selectedSizeIds, setSelectedSizeIds]     = useState([]);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
-
-    // Categorías expandidas por el usuario (clave: `${sizeId}-${categoryId}`).
-    // Las categorías arrancan colapsadas; se abren con click o con el filtro.
-    const [expandedKeys, setExpandedKeys] = useState(new Set());
+    const [expandedKeys, setExpandedKeys]           = useState(new Set());
 
     useEffect(() => {
         setPicksMap({});
@@ -262,10 +251,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         });
     };
 
-    // Una categoría está abierta si el usuario la abrió manualmente, si está
-    // en el filtro activo (intención explícita) o si hay búsqueda con resultados.
-    // Cuando ya se llegó al máximo, sólo respetamos lo que el usuario abra a mano:
-    // la idea es enfocar la atención en confirmar el combo.
     const isCategoryOpen = (sizeId, categoryId) => {
         const key = `${sizeId}-${categoryId}`;
         if (isMaxed) return expandedKeys.has(key);
@@ -292,7 +277,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         setSelectedCategoryIds([]);
     };
 
-    // Categorías únicas que aparecen en el combo (ordenadas alfabéticamente).
     const availableCategories = useMemo(() => {
         const seen = new Map();
         combo.sizes_groups.forEach((g) => {
@@ -305,7 +289,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
     }, [combo.sizes_groups]);
 
-    // Aplicamos filtros y, dentro de cada talle, agrupamos productos por categoría.
     const filteredGroups = useMemo(() => {
         const q = search.trim().toLowerCase();
         return combo.sizes_groups
@@ -317,16 +300,11 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                     return true;
                 });
 
-                // Subgrupos por categoría dentro del talle.
                 const byCategory = new Map();
                 products.forEach((p) => {
                     const key = p.category_id ?? 0;
                     if (!byCategory.has(key)) {
-                        byCategory.set(key, {
-                            id: key,
-                            name: p.category_name ?? 'Sin categoría',
-                            products: [],
-                        });
+                        byCategory.set(key, { id: key, name: p.category_name ?? 'Sin categoría', products: [] });
                     }
                     byCategory.get(key).products.push(p);
                 });
@@ -338,8 +316,8 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
             .filter((g) => g.products.length > 0);
     }, [combo.sizes_groups, search, selectedSizeIds, selectedCategoryIds]);
 
-    const hasFilters = !!search.trim() || selectedSizeIds.length > 0 || selectedCategoryIds.length > 0;
-    const visibleProductCount = filteredGroups.reduce((s, g) => s + g.products.length, 0);
+    const hasFilters           = !!search.trim() || selectedSizeIds.length > 0 || selectedCategoryIds.length > 0;
+    const visibleProductCount  = filteredGroups.reduce((s, g) => s + g.products.length, 0);
 
     useEffect(() => {
         if (!feedback) return;
@@ -352,15 +330,12 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         [picksMap]
     );
 
-    const remaining = combo.max_items - totalSelected;
-    const isMaxed   = combo.max_items > 0 && totalSelected >= combo.max_items;
-    const canSubmit = totalSelected >= 1 && totalSelected <= combo.max_items && !submitting;
+    const remaining  = combo.max_items - totalSelected;
+    const isMaxed    = combo.max_items > 0 && totalSelected >= combo.max_items;
+    const canSubmit  = totalSelected >= 1 && totalSelected <= combo.max_items && !submitting;
 
-    // Ref al CTA de "Agregar al carrito" para llevar el foco cuando llega al tope.
     const cartButtonRef = useRef(null);
 
-    // Al llegar al máximo: colapsamos categorías expandidas y llevamos el foco/scroll
-    // al botón de agregar al carrito, sin robar el scroll si ya está visible.
     useEffect(() => {
         if (!isMaxed) return;
         setExpandedKeys(new Set());
@@ -376,19 +351,14 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
     const addOne = (product, size) => {
         const key = pickKey(product.id, size.id);
         setPicksMap((prev) => {
-            const existing = prev[key];
-            const currentQty = existing?.quantity ?? 0;
+            const existing    = prev[key];
+            const currentQty  = existing?.quantity ?? 0;
             if (currentQty >= product.stock) return prev;
-            const totalNow = Object.values(prev).reduce((s, p) => s + p.quantity, 0);
+            const totalNow    = Object.values(prev).reduce((s, p) => s + p.quantity, 0);
             if (totalNow >= combo.max_items) return prev;
             return {
                 ...prev,
-                [key]: {
-                    product_id: product.id,
-                    size_id:    size.id,
-                    size_name:  size.name,
-                    quantity:   currentQty + 1,
-                },
+                [key]: { product_id: product.id, size_id: size.id, size_name: size.name, quantity: currentQty + 1 },
             };
         });
     };
@@ -402,10 +372,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                 const { [key]: _omit, ...rest } = prev;
                 return rest;
             }
-            return {
-                ...prev,
-                [key]: { ...existing, quantity: existing.quantity - 1 },
-            };
+            return { ...prev, [key]: { ...existing, quantity: existing.quantity - 1 } };
         });
     };
 
@@ -415,14 +382,10 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         if (!canSubmit) return;
         setSubmitting(true);
 
-        // Expandimos picks: cada unidad va como una entry independiente.
         const picks = [];
         for (const p of Object.values(picksMap)) {
             for (let i = 0; i < p.quantity; i++) {
-                picks.push({
-                    product_id: p.product_id,
-                    size_id:    p.size_id,
-                });
+                picks.push({ product_id: p.product_id, size_id: p.size_id });
             }
         }
 
@@ -445,7 +408,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         });
     };
 
-    // Resumen agrupado por talle para el aside.
     const summaryByPick = Object.values(picksMap);
 
     return (
@@ -455,7 +417,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
                 {/* Breadcrumb */}
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                    <nav className="text-[11px] uppercase tracking-[0.18em] text-brand-text-muted">
+                    <nav className="inline-flex flex-wrap items-center rounded-full border border-brand-cta/45 bg-white/88 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-brand-text-muted shadow-sm backdrop-blur">
                         <Link href="/" className="hover:text-brand-text transition-colors">Inicio</Link>
                         <span className="mx-2 text-brand-text-light">/</span>
                         <Link href="/catalogo" className="hover:text-brand-text transition-colors">Catálogo</Link>
@@ -464,7 +426,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                     </nav>
                     <Link
                         href="/catalogo"
-                        className="inline-flex items-center gap-2 border border-brand-secondary bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta"
+                        className="inline-flex items-center gap-2 rounded-full border border-brand-cta/45 bg-white/88 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text shadow-sm backdrop-blur transition-all hover:-translate-x-0.5 hover:border-brand-cta hover:text-brand-cta"
                     >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -475,7 +437,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
 
                 {/* Hero */}
                 <header className="grid grid-cols-1 lg:grid-cols-[minmax(0,460px)_1fr] gap-8 lg:gap-14 items-start">
-                    <div className="relative overflow-hidden bg-brand-secondary-light border border-brand-secondary/60 shadow-[0_18px_40px_rgba(41,50,65,0.08)]">
+                    <div className="relative overflow-hidden rounded-[1.9rem] bg-brand-secondary-light border border-brand-cta/30 shadow-[0_18px_40px_rgba(41,50,65,0.08)]">
                         <div className="aspect-[4/5] w-full">
                             {combo.image ? (
                                 <img src={combo.image} alt={combo.name} className="h-full w-full object-contain" />
@@ -487,62 +449,74 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                 </div>
                             )}
                         </div>
-                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 bg-brand-text px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
+                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-brand-text px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
                             Combo Emprendedor
                         </span>
                     </div>
 
-                    <div className="flex flex-col">
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-brand-cta font-bold">
-                            Para revendedores · Armá tu pack
-                        </p>
-                        <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-text leading-[1.05]">
-                            {combo.name}
-                        </h1>
-
-                        <div className="mt-5 flex items-baseline gap-3">
-                            <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-cta leading-none">
-                                {fmt(combo.price)}
-                            </span>
-                            <span className="text-xs uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
-                                Precio final
-                            </span>
-                        </div>
-
-                        {combo.description && (
-                            <p className="mt-5 text-base leading-relaxed text-brand-text-muted whitespace-pre-line max-w-xl">
-                                {combo.description}
+                    <div className="flex flex-col gap-4">
+                        <div className="rounded-[1.9rem] border border-brand-cta/25 bg-white p-6 shadow-[0_18px_36px_rgba(41,50,65,0.06)] sm:p-7">
+                            <p className="text-[11px] uppercase tracking-[0.24em] text-brand-cta font-bold">
+                                Para revendedores · Armá tu pack
                             </p>
-                        )}
+                            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-text leading-[1.05]">
+                                {combo.name}
+                            </h1>
 
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
-                            <div className="border border-brand-secondary/60 bg-white px-4 py-3">
-                                <p className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
-                                    Hasta
-                                </p>
-                                <p className="mt-1 text-xl font-extrabold text-brand-text">
-                                    {combo.max_items} prendas
-                                </p>
+                            <div className="mt-5 flex items-baseline gap-3">
+                                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-cta leading-none">
+                                    {fmt(combo.price)}
+                                </span>
+                                <span className="text-xs uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
+                                    Precio final
+                                </span>
                             </div>
-                            <div className="border border-brand-secondary/60 bg-white px-4 py-3">
-                                <p className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
-                                    Géneros incluidos
+
+                            {combo.description && (
+                                <p className="mt-5 text-base leading-relaxed text-brand-text-muted whitespace-pre-line max-w-xl">
+                                    {combo.description}
                                 </p>
-                                <p className="mt-1 text-sm font-bold text-brand-text">
-                                    {combo.genders.length > 0
-                                        ? combo.genders.map((g) => g.name).join(' · ')
-                                        : 'Mixto'}
-                                </p>
+                            )}
+
+                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="rounded-[1.2rem] border border-brand-cta/20 bg-brand-cta/5 px-4 py-3">
+                                    <p className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
+                                        Hasta
+                                    </p>
+                                    <p className="mt-1 text-xl font-extrabold text-brand-text">
+                                        {combo.max_items} prendas
+                                    </p>
+                                </div>
+                                <div className="rounded-[1.2rem] border border-brand-cta/20 bg-brand-cta/5 px-4 py-3">
+                                    <p className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted font-semibold">
+                                        Géneros incluidos
+                                    </p>
+                                    <p className="mt-1 text-sm font-bold text-brand-text">
+                                        {combo.genders.length > 0
+                                            ? combo.genders.map((g) => g.name).join(' · ')
+                                            : 'Mixto'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-7 flex items-center gap-3 border-l-2 border-brand-cta bg-brand-secondary-light/60 px-4 py-3">
+                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-brand-cta/45 bg-white px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.10)]">
                             <svg className="h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             <p className="text-sm text-brand-text">
-                                Elegí hasta <span className="font-bold">{combo.max_items} prendas</span> de cualquier talle disponible.
+                                Elegí hasta <span className="font-bold text-brand-cta">{combo.max_items} prendas</span> de cualquier talle disponible.
                                 Podés repetir el mismo producto en diferentes talles o cantidades.
+                            </p>
+                        </div>
+
+                        <div className="flex items-start gap-3 rounded-[1.4rem] border border-brand-cta/45 bg-brand-primary-surface/35 px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.08)]">
+                            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6M11 19h2M4 6h11v8H4zM15 9h2.5l2.5 2.5V14h-5zM7 17a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm10 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+                            </svg>
+                            <p className="text-sm leading-relaxed text-brand-text">
+                                <span className="font-extrabold text-brand-text">A TODO EL PAIS:</span>{' '}
+                                Envios a todo el pais por Correo Argentino y Andreani
                             </p>
                         </div>
                     </div>
@@ -553,15 +527,15 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                     {/* Prendas agrupadas por talle */}
                     <section className="space-y-6">
                         {combo.sizes_groups.length === 0 ? (
-                            <div className="rounded-sm border border-dashed border-brand-secondary bg-brand-secondary-light px-4 py-12 text-center">
+                            <div className="rounded-[1.4rem] border border-dashed border-brand-cta/30 bg-brand-secondary-light px-4 py-12 text-center">
                                 <p className="text-sm text-brand-text-muted italic">
                                     Este combo no tiene prendas disponibles en este momento.
                                 </p>
                             </div>
                         ) : (
                             <>
-                                {/* Filtros: búsqueda + talles */}
-                                <div className="sticky top-[110px] z-20 -mx-4 sm:-mx-6 lg:mx-0 bg-brand-bg/95 backdrop-blur-sm border-y border-brand-secondary/30 px-4 sm:px-6 lg:px-0 lg:border-x-0 py-4 lg:py-4 space-y-3">
+                                {/* Filtros */}
+                                <div className="sticky top-[110px] z-20 -mx-4 sm:-mx-6 lg:mx-0 bg-brand-bg/95 backdrop-blur-sm border-y border-brand-cta/20 px-4 sm:px-6 lg:px-0 lg:border-x-0 py-4 lg:py-4 space-y-3">
                                     <div className="relative">
                                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 110-16 8 8 0 010 16z" />
@@ -571,7 +545,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                             placeholder="Buscar prenda por nombre..."
-                                            className="h-11 w-full border border-brand-secondary/40 bg-white pl-10 pr-10 text-sm text-brand-text placeholder:text-brand-text-light shadow-sm transition-colors focus:border-brand-cta focus:outline-none focus:ring-2 focus:ring-brand-cta/20"
+                                            className="h-11 w-full rounded-full border border-brand-cta/35 bg-white pl-10 pr-10 text-sm text-brand-text placeholder:text-brand-text-light shadow-sm transition-colors focus:border-brand-cta focus:outline-none focus:ring-2 focus:ring-brand-cta/20"
                                         />
                                         {search && (
                                             <button
@@ -587,7 +561,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                         )}
                                     </div>
 
-                                    {/* Categorías: shortcut para saltar directo a remeras / pantalones / etc. */}
                                     {availableCategories.length > 1 && (
                                         <div>
                                             <div className="flex items-center justify-between gap-2 mb-2">
@@ -612,10 +585,10 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                             key={cat.id}
                                                             type="button"
                                                             onClick={() => toggleCategoryFilter(cat.id)}
-                                                            className={`inline-flex items-center gap-1 h-8 px-3 text-xs font-semibold border transition-colors ${
+                                                            className={`inline-flex items-center gap-1 h-8 px-3 rounded-full text-xs font-semibold border transition-colors ${
                                                                 active
                                                                     ? 'border-brand-cta bg-brand-cta text-white shadow-sm'
-                                                                    : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/60 hover:text-brand-cta'
+                                                                    : 'border-brand-cta/35 bg-white text-brand-text hover:border-brand-cta hover:text-brand-cta'
                                                             }`}
                                                         >
                                                             {active && (
@@ -631,7 +604,6 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                         </div>
                                     )}
 
-                                    {/* Talles */}
                                     <div>
                                         <div className="flex items-center justify-between gap-2 mb-2">
                                             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted">
@@ -665,10 +637,10 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                         key={g.id}
                                                         type="button"
                                                         onClick={() => toggleSizeFilter(g.id)}
-                                                        className={`inline-flex items-center gap-1 h-8 px-3 text-xs font-semibold border transition-colors ${
+                                                        className={`inline-flex items-center gap-1 h-8 px-3 rounded-full text-xs font-semibold border transition-colors ${
                                                             active
                                                                 ? 'border-brand-cta bg-brand-cta text-white shadow-sm'
-                                                                : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/60 hover:text-brand-cta'
+                                                                : 'border-brand-cta/35 bg-white text-brand-text hover:border-brand-cta hover:text-brand-cta'
                                                         }`}
                                                     >
                                                         {active && (
@@ -695,7 +667,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
 
                                 {/* Grupos filtrados (Talle → Categoría → Cards) */}
                                 {filteredGroups.length === 0 ? (
-                                    <div className="rounded-sm border border-dashed border-brand-secondary bg-brand-secondary-light px-4 py-12 text-center">
+                                    <div className="rounded-[1.4rem] border border-dashed border-brand-cta/30 bg-brand-secondary-light px-4 py-12 text-center">
                                         <p className="text-sm text-brand-text-muted italic">
                                             No hay prendas que coincidan con tu búsqueda.
                                         </p>
@@ -710,24 +682,24 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="space-y-12">
+                                    <div className="space-y-8">
                                         {filteredGroups.map((group) => (
-                                            <div key={group.id}>
-                                                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-brand-secondary/30 pb-3">
+                                            <div key={group.id} className="rounded-[1.6rem] border border-brand-cta/45 bg-white p-1.5 shadow-[0_18px_34px_rgba(255,90,78,0.10)]">
+                                                <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-brand-cta/15">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="inline-flex h-9 items-center justify-center bg-brand-text px-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white">
+                                                        <span className="inline-flex h-9 items-center justify-center rounded-full bg-brand-text px-4 text-sm font-extrabold uppercase tracking-[0.14em] text-white">
                                                             Talle {group.name}
                                                         </span>
                                                         <p className="text-xs text-brand-text-muted">
-                                                            {group.products.length} prenda{group.products.length === 1 ? '' : 's'} disponible{group.products.length === 1 ? '' : 's'}
+                                                            {group.products.length} prenda{group.products.length === 1 ? '' : 's'}
                                                         </p>
                                                     </div>
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-text-muted">
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-cta/70">
                                                         Elegí libremente
                                                     </span>
                                                 </div>
 
-                                                <div className="space-y-3">
+                                                <div className="p-3 space-y-2">
                                                     {group.categories.map((cat) => {
                                                         const open = isCategoryOpen(group.id, cat.id);
                                                         const pickedInCat = cat.products.reduce(
@@ -737,23 +709,25 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                         return (
                                                             <div
                                                                 key={`${group.id}-${cat.id}`}
-                                                                className="border border-brand-secondary/30 bg-white overflow-hidden"
+                                                                className={`overflow-hidden rounded-[1.2rem] border transition-colors ${
+                                                                    open ? 'border-brand-cta/20 bg-brand-cta/5' : 'border-brand-cta/15 bg-transparent'
+                                                                }`}
                                                             >
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => toggleExpanded(group.id, cat.id)}
-                                                                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-secondary-light/40"
+                                                                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-cta/5"
                                                                     aria-expanded={open}
                                                                 >
                                                                     <div className="flex items-center gap-2 min-w-0">
-                                                                        <span className="inline-flex items-center bg-brand-cta/10 text-brand-cta px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em]">
+                                                                        <span className="inline-flex items-center rounded-full bg-brand-cta/10 text-brand-cta px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em]">
                                                                             {cat.name}
                                                                         </span>
                                                                         <span className="text-[11px] text-brand-text-muted">
                                                                             {cat.products.length} prenda{cat.products.length === 1 ? '' : 's'}
                                                                         </span>
                                                                         {pickedInCat > 0 && (
-                                                                            <span className="inline-flex items-center gap-1 bg-brand-cta px-2 py-0.5 text-[10px] font-bold text-white">
+                                                                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-cta px-2 py-0.5 text-[10px] font-bold text-white">
                                                                                 <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                                                 </svg>
@@ -773,7 +747,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                                 </button>
 
                                                                 {open && (
-                                                                    <div className="border-t border-brand-secondary/20 px-4 py-4">
+                                                                    <div className="border-t border-brand-cta/10 px-4 py-4">
                                                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-5">
                                                                             {cat.products.map((p) => {
                                                                                 const key = pickKey(p.id, group.id);
@@ -806,7 +780,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                     </section>
 
                     {/* Aside resumen */}
-                    <aside className="bg-white border border-brand-secondary/30 p-6 lg:sticky lg:top-32 self-start">
+                    <aside className="rounded-[1.8rem] border border-brand-secondary/30 bg-white p-6 shadow-[0_18px_36px_rgba(41,50,65,0.08)] lg:sticky lg:top-32 self-start">
                         <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-brand-text">Tu combo</h2>
 
                         {/* Contador */}
@@ -817,9 +791,9 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                 <span className="text-sm font-semibold text-brand-text-muted"> / {combo.max_items}</span>
                             </span>
                         </div>
-                        <div className="mt-2 h-1.5 w-full bg-brand-secondary-light overflow-hidden">
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-brand-secondary-light overflow-hidden">
                             <div
-                                className="h-full bg-brand-cta transition-all"
+                                className="h-full rounded-full bg-brand-cta transition-all"
                                 style={{ width: `${Math.min(100, (totalSelected / combo.max_items) * 100)}%` }}
                             />
                         </div>
@@ -876,7 +850,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                             type="button"
                             onClick={handleAdd}
                             disabled={!canSubmit}
-                            className={`mt-5 w-full h-12 inline-flex items-center justify-center gap-2 bg-brand-cta text-white text-sm font-bold uppercase tracking-[0.18em] hover:bg-brand-cta-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cta/30 ${
+                            className={`mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-cta text-white text-sm font-bold uppercase tracking-[0.18em] transition-all hover:bg-brand-cta-dark disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cta/30 ${
                                 isMaxed ? 'animate-pulse ring-4 ring-brand-cta/30' : ''
                             }`}
                         >
