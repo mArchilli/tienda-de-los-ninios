@@ -1,8 +1,22 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 const PRODUCTS_PAGE_SIZE = 20;
+const PRIORITY_IMAGE_COUNT = 6;
+const SEARCH_DEBOUNCE_MS = 250;
+
+const PlaceholderIcon = (
+    <svg className="h-12 w-12 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+);
+
+const CartIcon = (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+);
 
 const AUDIENCE_FILTERS = [
     { key: 'nino', label: 'Niño',  gender: 'Niños', baby: false },
@@ -45,7 +59,7 @@ function fmt(price) {
     return '$' + Number(price).toLocaleString('es-AR');
 }
 
-function ProductCard({ item }) {
+const ProductCard = memo(function ProductCard({ item, priority = false }) {
     const href =
         item.type === 'combo'             ? `/combo/${item.id}` :
         item.type === 'combo-emprendedor' ? `/combo-emprendedor/${item.id}` :
@@ -57,21 +71,23 @@ function ProductCard({ item }) {
         null;
 
     return (
-        <Link href={href} className="group block h-full">
+        <Link href={href} className="group block h-full" prefetch="hover">
             <article className="store-card flex h-full flex-col border-brand-primary/35 p-3 transition duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-[0_16px_34px_rgba(41,50,65,0.10)]">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-white">
                     {item.image ? (
                         <img
                             src={item.image}
                             alt={item.name}
+                            width="400"
+                            height="500"
                             className="absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
-                            loading="lazy"
+                            loading={priority ? 'eager' : 'lazy'}
+                            decoding="async"
+                            fetchpriority={priority ? 'high' : 'auto'}
                         />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-brand-primary-surface">
-                            <svg className="h-12 w-12 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            {PlaceholderIcon}
                         </div>
                     )}
 
@@ -91,9 +107,7 @@ function ProductCard({ item }) {
                         aria-hidden="true"
                         className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-brand-cta shadow-md transition-transform duration-300 group-hover:scale-110"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
+                        {CartIcon}
                     </span>
                 </div>
 
@@ -108,7 +122,7 @@ function ProductCard({ item }) {
             </article>
         </Link>
     );
-}
+});
 
 const SORTERS = {
     relevancia: (a, b) => Number(b.is_featured) - Number(a.is_featured),
@@ -419,14 +433,47 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         return () => document.removeEventListener('mousedown', handler);
     }, [sortOpen]);
 
-    const query = new URLSearchParams(url.split('?')[1] ?? '');
-    const typeFilter = query.get('tipo');
-    const priceDef = PRICE_RANGES.find((r) => r.key === priceRange);
+    // Debounce de búsqueda — evita re-filtrar en cada tecla
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(t);
+    }, [search]);
 
-    const filterItem = (item) => {
+    const typeFilter = useMemo(() => {
+        const q = new URLSearchParams(url.split('?')[1] ?? '');
+        return q.get('tipo');
+    }, [url]);
+
+    const priceDef = useMemo(
+        () => PRICE_RANGES.find((r) => r.key === priceRange) ?? null,
+        [priceRange]
+    );
+
+    const normalizedSearch = useMemo(
+        () => normalize(debouncedSearch.trim()),
+        [debouncedSearch]
+    );
+
+    // Cachea la asignación de `type` para preservar referencias estables a los items
+    // (permite que React.memo evite re-renderizar tarjetas que no cambiaron).
+    const typedCombos = useMemo(
+        () => combos.map((c) => ({ ...c, type: 'combo' })),
+        [combos]
+    );
+    const typedCombosEmprendedor = useMemo(
+        () => combosEmprendedor.map((c) => ({ ...c, type: 'combo-emprendedor' })),
+        [combosEmprendedor]
+    );
+    const typedProducts = useMemo(
+        () => products.map((p) => ({ ...p, type: 'product' })),
+        [products]
+    );
+
+    const filterItem = useCallback((item) => {
         if (!matchesAudiences(item, audiences)) return false;
         if (onlyFeatured && !item.is_featured) return false;
-        if (search.trim() && !normalize(item.name).includes(normalize(search.trim()))) return false;
+        if (normalizedSearch && !normalize(item.name).includes(normalizedSearch)) return false;
         if (priceDef) {
             const price = Number(item.price);
             if (price < priceDef.min || price > priceDef.max) return false;
@@ -440,28 +487,25 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
             if (!selectedCategories.some((c) => itemCategories.includes(c))) return false;
         }
         return true;
-    };
+    }, [audiences, onlyFeatured, normalizedSearch, priceDef, selectedSizes, selectedCategories]);
 
-    const sortedCombos = useMemo(() => {
-        return [...combos]
-            .map((combo) => ({ ...combo, type: 'combo' }))
-            .filter(filterItem)
-            .sort(SORTERS[sort] ?? SORTERS.relevancia);
-    }, [combos, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
+    // Filtrado y ordenamiento separados — cambiar el sort no fuerza re-filtrar.
+    const filteredCombos = useMemo(() => typedCombos.filter(filterItem), [typedCombos, filterItem]);
+    const filteredCombosEmprendedor = useMemo(() => typedCombosEmprendedor.filter(filterItem), [typedCombosEmprendedor, filterItem]);
+    const filteredProducts = useMemo(() => typedProducts.filter(filterItem), [typedProducts, filterItem]);
 
-    const sortedCombosEmprendedor = useMemo(() => {
-        return [...combosEmprendedor]
-            .map((combo) => ({ ...combo, type: 'combo-emprendedor' }))
-            .filter(filterItem)
-            .sort(SORTERS[sort] ?? SORTERS.relevancia);
-    }, [combosEmprendedor, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
-
-    const sortedProducts = useMemo(() => {
-        return [...products]
-            .map((product) => ({ ...product, type: 'product' }))
-            .filter(filterItem)
-            .sort(SORTERS[sort] ?? SORTERS.relevancia);
-    }, [products, sort, audiences, selectedSizes, selectedCategories, onlyFeatured, search, priceRange]);
+    const sortedCombos = useMemo(
+        () => [...filteredCombos].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        [filteredCombos, sort]
+    );
+    const sortedCombosEmprendedor = useMemo(
+        () => [...filteredCombosEmprendedor].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        [filteredCombosEmprendedor, sort]
+    );
+    const sortedProducts = useMemo(
+        () => [...filteredProducts].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        [filteredProducts, sort]
+    );
 
     const showCombos = typeFilter !== 'productos';
     const showCombosEmprendedor = typeFilter !== 'productos';
@@ -471,40 +515,47 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     const activeFilterCount =
         selectedSizes.length + selectedCategories.length + (onlyFeatured ? 1 : 0) + (priceRange ? 1 : 0);
 
-    const handleLoadMore = () => setVisibleProducts((c) => c + PRODUCTS_PAGE_SIZE);
+    const handleLoadMore = useCallback(() => setVisibleProducts((c) => c + PRODUCTS_PAGE_SIZE), []);
 
-    const toggleAudience = (key) => {
+    const toggleAudience = useCallback((key) => {
         setAudiences((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
-    };
+    }, []);
 
-    const toggleSize = (size) => {
+    const toggleSize = useCallback((size) => {
         setSelectedSizes((prev) => prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]);
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
-    };
+    }, []);
 
-    const toggleCategory = (cat) => {
+    const toggleCategory = useCallback((cat) => {
         setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
-    };
+    }, []);
 
-    const clearFilters = () => {
+    const clearFilters = useCallback(() => {
         setSelectedSizes([]);
         setSelectedCategories([]);
         setOnlyFeatured(false);
         setPriceRange(null);
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
-    };
+    }, []);
 
-    const togglePriceRange = (key) => {
+    const togglePriceRange = useCallback((key) => {
         setPriceRange((prev) => (prev === key ? null : key));
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
-    };
+    }, []);
 
     const isEmpty =
         (showCombos ? sortedCombos.length === 0 : true) &&
         (showCombosEmprendedor ? sortedCombosEmprendedor.length === 0 : true) &&
         (showProducts ? sortedProducts.length === 0 : true);
+
+    // Identifica la primera sección visible para priorizar el LCP (above-the-fold).
+    const firstSection =
+        showCombos && sortedCombos.length > 0 ? 'combos' :
+        showCombosEmprendedor && sortedCombosEmprendedor.length > 0 ? 'emprendedor' :
+        showProducts && sortedProducts.length > 0 ? 'products' :
+        null;
 
     const filtersPanelProps = {
         setFiltersOpen,
@@ -781,8 +832,12 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                         subtitle={`${sortedCombos.length} ${sortedCombos.length === 1 ? 'combo' : 'combos'}`}
                                     />
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
-                                        {sortedCombos.map((item) => (
-                                            <ProductCard key={`${item.type}-${item.id}`} item={item} />
+                                        {sortedCombos.map((item, i) => (
+                                            <ProductCard
+                                                key={`${item.type}-${item.id}`}
+                                                item={item}
+                                                priority={firstSection === 'combos' && i < PRIORITY_IMAGE_COUNT}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -795,8 +850,12 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                         subtitle={`${sortedCombosEmprendedor.length} ${sortedCombosEmprendedor.length === 1 ? 'combo' : 'combos'} · Armá tu pack para revender`}
                                     />
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
-                                        {sortedCombosEmprendedor.map((item) => (
-                                            <ProductCard key={`${item.type}-${item.id}`} item={item} />
+                                        {sortedCombosEmprendedor.map((item, i) => (
+                                            <ProductCard
+                                                key={`${item.type}-${item.id}`}
+                                                item={item}
+                                                priority={firstSection === 'emprendedor' && i < PRIORITY_IMAGE_COUNT}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -809,8 +868,12 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                         subtitle={`${sortedProducts.length} ${sortedProducts.length === 1 ? 'prenda' : 'prendas'}`}
                                     />
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
-                                        {visibleProductList.map((item) => (
-                                            <ProductCard key={`${item.type}-${item.id}`} item={item} />
+                                        {visibleProductList.map((item, i) => (
+                                            <ProductCard
+                                                key={`${item.type}-${item.id}`}
+                                                item={item}
+                                                priority={firstSection === 'products' && i < PRIORITY_IMAGE_COUNT}
+                                            />
                                         ))}
                                     </div>
 
