@@ -16,6 +16,7 @@ class ComboEmprendedorController extends Controller
 
         $combo->load([
             'genders',
+            'categoryLimits.category:id,name',
             'items.product.sizes',
             'items.product.categories',
         ]);
@@ -66,6 +67,14 @@ class ComboEmprendedorController extends Controller
                     'id'   => $g->id,
                     'name' => $g->name,
                 ])->values(),
+                'category_limits' => $combo->categoryLimits
+                    ->map(fn ($cl) => [
+                        'category_id'   => (int) $cl->category_id,
+                        'category_name' => $cl->category?->name,
+                        'max_items'     => (int) $cl->max_items,
+                    ])
+                    ->sortBy('category_name')
+                    ->values(),
                 'sizes_groups' => $bySize,
             ],
         ]);

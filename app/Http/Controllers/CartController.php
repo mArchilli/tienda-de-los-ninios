@@ -398,7 +398,11 @@ class CartController extends Controller
     public function addComboEmprendedor(Request $request)
     {
         $comboId = (int) $request->input('combo_emprendedor_id');
-        $combo   = ComboEmprendedor::with(['items', 'genders'])->findOrFail($comboId);
+        $combo   = ComboEmprendedor::with([
+            'items.product.categories:id,name',
+            'genders',
+            'categoryLimits.category:id,name',
+        ])->findOrFail($comboId);
 
         $data = $request->validate([
             'combo_emprendedor_id' => ['required', 'integer', 'exists:combo_emprendedors,id'],
@@ -418,6 +422,37 @@ class CartController extends Controller
                 return back()->withErrors([
                     'picks' => 'Una o más prendas seleccionadas no forman parte del combo.',
                 ]);
+            }
+        }
+
+        // Límites por categoría: cada producto pertenece a una categoría (la primera).
+        if ($combo->categoryLimits->isNotEmpty()) {
+            $productCategory = [];
+            foreach ($combo->items as $item) {
+                $product = $item->product;
+                if (! $product) continue;
+                $productCategory[(int) $product->id] = $product->categories->first()?->id;
+            }
+
+            $countsByCategory = [];
+            foreach ($data['picks'] as $pick) {
+                $catId = $productCategory[(int) $pick['product_id']] ?? null;
+                if ($catId === null) {
+                    return back()->withErrors([
+                        'picks' => 'Una de las prendas seleccionadas no tiene categoría asignada.',
+                    ]);
+                }
+                $countsByCategory[$catId] = ($countsByCategory[$catId] ?? 0) + 1;
+            }
+
+            foreach ($combo->categoryLimits as $limit) {
+                $cnt = $countsByCategory[(int) $limit->category_id] ?? 0;
+                if ($cnt > $limit->max_items) {
+                    $catName = $limit->category?->name ?? 'esta categoría';
+                    return back()->withErrors([
+                        'picks' => "Superaste el máximo de {$limit->max_items} prendas para {$catName}.",
+                    ]);
+                }
             }
         }
 

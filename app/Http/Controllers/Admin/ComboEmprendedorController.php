@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\ComboEmprendedor;
+use App\Models\ComboEmprendedorCategoryLimit;
 use App\Models\ComboEmprendedorItem;
 use App\Models\Gender;
 use App\Models\Size;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -20,7 +22,7 @@ class ComboEmprendedorController extends Controller
         $search   = $request->input('search', '');
         $genderId = $request->input('gender') ? (int) $request->input('gender') : null;
 
-        $combos = ComboEmprendedor::with(['genders', 'items.product.categories', 'items.product.sizes'])
+        $combos = ComboEmprendedor::with(['genders', 'categoryLimits', 'items.product.categories', 'items.product.sizes'])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($genderId, fn($q) => $q->whereHas('genders', fn($sq) => $sq->where('genders.id', $genderId)))
             ->latest()
@@ -122,6 +124,8 @@ class ComboEmprendedorController extends Controller
             ]);
         }
 
+        $this->syncCategoryLimits($combo, $data['category_limits']);
+
         return back()->with('success', 'Combo emprendedor creado correctamente.');
     }
 
@@ -158,7 +162,21 @@ class ComboEmprendedorController extends Controller
             ]);
         }
 
+        $this->syncCategoryLimits($combo, $data['category_limits']);
+
         return back()->with('success', 'Combo emprendedor actualizado correctamente.');
+    }
+
+    private function syncCategoryLimits(ComboEmprendedor $combo, array $limits): void
+    {
+        $combo->categoryLimits()->delete();
+        foreach ($limits as $entry) {
+            ComboEmprendedorCategoryLimit::create([
+                'combo_emprendedor_id' => $combo->id,
+                'category_id'          => (int) $entry['category_id'],
+                'max_items'            => (int) $entry['max_items'],
+            ]);
+        }
     }
 
     public function destroy(ComboEmprendedor $combo)
@@ -174,24 +192,85 @@ class ComboEmprendedorController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        return $request->validate([
-            'name'          => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'price'         => 'required|numeric|min:100000',
-            'max_items'     => 'required|integer|min:1|max:50',
-            'is_active'     => 'boolean',
-            'is_featured'   => 'boolean',
-            'image'         => 'nullable|image|max:5120',
-            'genders'       => 'required|array|min:1',
-            'genders.*'     => 'integer|exists:genders,id',
-            'product_ids'   => 'required|array|min:1',
-            'product_ids.*' => 'integer|exists:products,id',
+        $data = $request->validate([
+            'name'                        => 'required|string|max:255',
+            'description'                 => 'nullable|string',
+            'price'                       => 'required|numeric|min:100000',
+            'max_items'                   => 'required|integer|min:1|max:50',
+            'is_active'                   => 'boolean',
+            'is_featured'                 => 'boolean',
+            'image'                       => 'nullable|image|max:5120',
+            'genders'                     => 'required|array|min:1',
+            'genders.*'                   => 'integer|exists:genders,id',
+            'product_ids'                 => 'required|array|min:1',
+            'product_ids.*'               => 'integer|exists:products,id',
+            'category_limits'             => 'required|array|min:1',
+            'category_limits.*.category_id' => 'required|integer|exists:categories,id',
+            'category_limits.*.max_items'   => 'required|integer|min:1',
         ], [
-            'price.min'         => 'El precio mínimo de un combo emprendedor es de $100.000.',
-            'genders.required'  => 'Seleccioná al menos un género para el combo.',
-            'product_ids.required' => 'Tenés que curar al menos una prenda para el combo.',
-            'max_items.max'     => 'El máximo de prendas no puede superar 50.',
+            'price.min'             => 'El precio mínimo de un combo emprendedor es de $100.000.',
+            'genders.required'      => 'Seleccioná al menos un género para el combo.',
+            'product_ids.required'  => 'Tenés que curar al menos una prenda para el combo.',
+            'max_items.max'         => 'El máximo de prendas no puede superar 50.',
+            'category_limits.required' => 'Definí el máximo de prendas por categoría.',
         ]);
+
+        $productIds = array_unique(array_map('intval', $data['product_ids']));
+
+        $productsWithCategories = \App\Models\Product::with('categories:id,name')
+            ->whereIn('id', $productIds)
+            ->get();
+
+        $productsSinCategoria = $productsWithCategories
+            ->filter(fn ($p) => $p->categories->isEmpty())
+            ->pluck('name')
+            ->all();
+
+        if (! empty($productsSinCategoria)) {
+            throw ValidationException::withMessages([
+                'product_ids' => 'Hay prendas sin categoría asignada: ' .
+                    implode(', ', $productsSinCategoria) .
+                    '. Asigná una categoría a cada prenda antes de guardar el combo.',
+            ]);
+        }
+
+        // Cada prenda se asigna a su categoría principal (la primera).
+        $catLimitIds = collect($data['category_limits'])
+            ->pluck('category_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count(array_unique($catLimitIds)) !== count($catLimitIds)) {
+            throw ValidationException::withMessages([
+                'category_limits' => 'No puede haber categorías repetidas en los límites.',
+            ]);
+        }
+
+        $offendingProducts = $productsWithCategories
+            ->filter(fn ($p) => ! in_array((int) $p->categories->first()->id, $catLimitIds, true))
+            ->pluck('name')
+            ->all();
+
+        if (! empty($offendingProducts)) {
+            throw ValidationException::withMessages([
+                'category_limits' => 'Hay prendas cuya categoría no está incluida en los límites: ' .
+                    implode(', ', $offendingProducts) .
+                    '. Quitalas o agregá su categoría a los límites.',
+            ]);
+        }
+
+        $sumaLimites = array_sum(array_map(
+            fn ($e) => (int) $e['max_items'],
+            $data['category_limits']
+        ));
+
+        if ($sumaLimites !== (int) $data['max_items']) {
+            throw ValidationException::withMessages([
+                'category_limits' => "La suma de los máximos por categoría ({$sumaLimites}) debe ser igual al máximo total del combo ({$data['max_items']}).",
+            ]);
+        }
+
+        return $data;
     }
 
     private function uploadImage($file): string

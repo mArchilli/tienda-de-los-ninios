@@ -462,9 +462,11 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
     const [processing, setProcessing] = useState(false);
 
     const [selectedGenderIds, setSelectedGenderIds] = useState([]);
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
     const [sizeGroups, setSizeGroups] = useState([]);
     const [productsLoading, setProductsLoading] = useState(false);
     const [selectedProductIds, setSelectedProductIds] = useState([]);
+    const [categoryLimitsMap, setCategoryLimitsMap] = useState({});
     const fetchRef = useRef(null);
 
     useEffect(() => {
@@ -482,13 +484,21 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
             setImagePreview(combo.image ? '/' + combo.image : null);
             setSelectedGenderIds((combo.genders ?? []).map((g) => g.id));
             setSelectedProductIds((combo.items ?? []).map((i) => i.product_id));
+            setSelectedCategoryIds((combo.category_limits ?? []).map((cl) => cl.category_id));
+            const limitsObj = {};
+            (combo.category_limits ?? []).forEach((cl) => {
+                limitsObj[cl.category_id] = cl.max_items;
+            });
+            setCategoryLimitsMap(limitsObj);
         } else {
             setForm(EMPTY_FORM);
             setImageFile(null);
             setImagePreview(null);
             setSelectedGenderIds([]);
+            setSelectedCategoryIds([]);
             setSelectedProductIds([]);
             setSizeGroups([]);
+            setCategoryLimitsMap({});
         }
         setErrors({});
     }, [open, combo]);
@@ -533,6 +543,78 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
         );
     };
 
+    const toggleCategory = (id) => {
+        setSelectedCategoryIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
+
+    // Categorías disponibles según las prendas que el AJAX trajo para los géneros elegidos.
+    const availableCategoriesForGenders = useMemo(() => {
+        const presentIds = new Set();
+        sizeGroups.forEach((g) => g.products.forEach((p) => {
+            if (p.category_id != null) presentIds.add(p.category_id);
+        }));
+        return categories.filter((c) => presentIds.has(c.id));
+    }, [sizeGroups, categories]);
+
+    // Sólo mostramos al admin las prendas cuya categoría principal está en selectedCategoryIds.
+    const visibleSizeGroups = useMemo(() => {
+        if (selectedCategoryIds.length === 0) return [];
+        return sizeGroups
+            .map((g) => ({
+                ...g,
+                products: g.products.filter((p) => selectedCategoryIds.includes(p.category_id)),
+            }))
+            .filter((g) => g.products.length > 0);
+    }, [sizeGroups, selectedCategoryIds]);
+
+    // Si se quita una categoría, también deseleccionamos productos que ya no aplican.
+    const visibleProductIdsKey = useMemo(() => {
+        const ids = [];
+        visibleSizeGroups.forEach((g) => g.products.forEach((p) => ids.push(p.id)));
+        return ids.sort((a, b) => a - b).join(',');
+    }, [visibleSizeGroups]);
+
+    useEffect(() => {
+        const visibleIds = new Set(visibleProductIdsKey ? visibleProductIdsKey.split(',').map(Number) : []);
+        setSelectedProductIds((prev) => prev.filter((id) => visibleIds.has(id)));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visibleProductIdsKey]);
+
+    // Sincronizar el mapa de límites con las categorías elegidas.
+    const selectedCategoryIdsKey = useMemo(
+        () => [...selectedCategoryIds].sort((a, b) => a - b).join(','),
+        [selectedCategoryIds]
+    );
+
+    useEffect(() => {
+        setCategoryLimitsMap((prev) => {
+            const next = {};
+            selectedCategoryIds.forEach((catId) => {
+                next[catId] = prev[catId] ?? 0;
+            });
+            return next;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedCategoryIdsKey]);
+
+    // Rows ordenadas para la sección de máximos.
+    const selectedCategoryRows = useMemo(() => {
+        const byId = new Map(categories.map((c) => [c.id, c]));
+        return selectedCategoryIds
+            .map((id) => ({ id, name: byId.get(id)?.name ?? `#${id}` }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    }, [selectedCategoryIds, categories]);
+
+    const sumLimits = useMemo(
+        () => Object.values(categoryLimitsMap).reduce((s, v) => s + (Number(v) || 0), 0),
+        [categoryLimitsMap]
+    );
+
+    const maxItemsNum = Number(form.max_items) || 0;
+    const limitsSumOk = sumLimits === maxItemsNum && selectedCategoryIds.length > 0;
+
     const handleImage = (file) => {
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
@@ -557,6 +639,11 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
 
         selectedGenderIds.forEach((id) => fd.append('genders[]', id));
         selectedProductIds.forEach((id) => fd.append('product_ids[]', id));
+
+        Object.entries(categoryLimitsMap).forEach(([catId, max], idx) => {
+            fd.append(`category_limits[${idx}][category_id]`, catId);
+            fd.append(`category_limits[${idx}][max_items]`, String(max ?? 0));
+        });
 
         return fd;
     };
@@ -724,15 +811,74 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
                     {errors.genders && <p className="text-xs text-red-500">{errors.genders}</p>}
                 </div>
 
-                {/* Curaduría de productos por talle */}
+                {/* Categorías del combo */}
                 {selectedGenderIds.length > 0 && (
+                    <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">
+                                    Categorías del combo <span className="text-red-400">*</span>
+                                </p>
+                                <p className="text-xs text-brand-text-light mt-0.5">
+                                    Elegí qué categorías va a tener el combo. Solo vas a poder curar prendas de estas categorías.
+                                </p>
+                            </div>
+                            {selectedCategoryIds.length > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary-surface px-2.5 py-0.5 text-[11px] font-semibold text-brand-primary">
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {Icons.check}
+                                    </svg>
+                                    {selectedCategoryIds.length} seleccionada{selectedCategoryIds.length === 1 ? '' : 's'}
+                                </span>
+                            )}
+                        </div>
+
+                        {productsLoading ? (
+                            <div className="flex items-center gap-2 py-2 text-sm text-brand-text-muted">
+                                <Spinner /> Cargando categorías disponibles...
+                            </div>
+                        ) : availableCategoriesForGenders.length === 0 ? (
+                            <p className="text-xs text-brand-text-muted italic">
+                                No hay categorías con prendas en stock para los géneros seleccionados.
+                            </p>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {availableCategoriesForGenders.map((cat) => {
+                                    const sel = selectedCategoryIds.includes(cat.id);
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            type="button"
+                                            onClick={() => toggleCategory(cat.id)}
+                                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                                sel
+                                                    ? 'border-brand-primary bg-brand-primary text-white'
+                                                    : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
+                                            }`}
+                                        >
+                                            {sel && (
+                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    {Icons.check}
+                                                </svg>
+                                            )}
+                                            {cat.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Curaduría de productos por talle */}
+                {selectedGenderIds.length > 0 && selectedCategoryIds.length > 0 && (
                     <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-3">
                         <div>
                             <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">
                                 Prendas curadas <span className="text-red-400">*</span>
                             </p>
                             <p className="text-xs text-brand-text-light mt-0.5">
-                                Elegí qué prendas estarán disponibles. Aparecen agrupadas por talle.
+                                Elegí qué prendas estarán disponibles, filtradas por las categorías elegidas.
                             </p>
                         </div>
 
@@ -740,19 +886,63 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
                             <div className="flex items-center gap-2 py-3 text-sm text-brand-text-muted">
                                 <Spinner /> Cargando prendas...
                             </div>
-                        ) : sizeGroups.length === 0 ? (
+                        ) : visibleSizeGroups.length === 0 ? (
                             <p className="text-xs text-brand-text-muted italic">
-                                No hay prendas en stock para los géneros seleccionados.
+                                No hay prendas en stock para los géneros y categorías seleccionados.
                             </p>
                         ) : (
                             <ProductsBySizePanel
-                                sizeGroups={sizeGroups}
+                                sizeGroups={visibleSizeGroups}
                                 selectedProductIds={selectedProductIds}
                                 onToggleProduct={toggleProduct}
                                 categories={categories}
                             />
                         )}
                         {errors.product_ids && <p className="text-xs text-red-500">{errors.product_ids}</p>}
+                    </div>
+                )}
+
+                {/* Máximos por categoría */}
+                {selectedCategoryIds.length > 0 && (
+                    <div className="rounded-xl border border-gray-200 bg-brand-bg/40 p-4 space-y-3">
+                        <div className="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">
+                                    Máximo de prendas por categoría <span className="text-red-400">*</span>
+                                </p>
+                                <p className="text-xs text-brand-text-light mt-0.5">
+                                    Cuántas prendas puede elegir el cliente de cada categoría. La suma debe ser igual al máximo total del combo.
+                                </p>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                sumLimits === maxItemsNum
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : 'bg-red-50 text-red-700'
+                            }`}>
+                                Suma {sumLimits} / {maxItemsNum}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {selectedCategoryRows.map((cat) => (
+                                <div key={cat.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                    <span className="text-sm font-semibold text-brand-text truncate">{cat.name}</span>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={maxItemsNum}
+                                        value={categoryLimitsMap[cat.id] ?? 0}
+                                        onChange={(e) => {
+                                            const raw = e.target.value;
+                                            const val = raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0);
+                                            setCategoryLimitsMap((prev) => ({ ...prev, [cat.id]: val }));
+                                        }}
+                                        className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-sm text-brand-text text-right outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        {errors.category_limits && <p className="text-xs text-red-500">{errors.category_limits}</p>}
                     </div>
                 )}
 
@@ -768,7 +958,14 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
                     </button>
                     <button
                         type="submit"
-                        disabled={processing || priceLow || selectedGenderIds.length === 0 || selectedProductIds.length === 0}
+                        disabled={
+                            processing
+                            || priceLow
+                            || selectedGenderIds.length === 0
+                            || selectedCategoryIds.length === 0
+                            || selectedProductIds.length === 0
+                            || !limitsSumOk
+                        }
                         className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {processing ? <Spinner /> : (

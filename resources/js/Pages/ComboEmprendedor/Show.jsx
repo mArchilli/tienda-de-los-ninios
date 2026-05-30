@@ -10,10 +10,11 @@ function pickKey(productId, sizeId) {
     return `${productId}-${sizeId}`;
 }
 
-function ProductPickerCard({ product, size, quantity, totalRemaining, onAdd, onRemove }) {
-    const atStock    = quantity >= product.stock;
-    const noCapacity = totalRemaining <= 0 && quantity === 0;
-    const canAdd     = !atStock && totalRemaining > 0;
+function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRemaining, onAdd, onRemove }) {
+    const atStock      = quantity >= product.stock;
+    const catBlocked   = categoryRemaining != null && categoryRemaining <= 0;
+    const noCapacity   = (totalRemaining <= 0 || catBlocked) && quantity === 0;
+    const canAdd       = !atStock && totalRemaining > 0 && !catBlocked;
 
     return (
         <div
@@ -252,11 +253,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
     };
 
     const isCategoryOpen = (sizeId, categoryId) => {
-        const key = `${sizeId}-${categoryId}`;
-        if (isMaxed) return expandedKeys.has(key);
-        if (selectedCategoryIds.includes(categoryId)) return true;
-        if (search.trim()) return true;
-        return expandedKeys.has(key);
+        return expandedKeys.has(`${sizeId}-${categoryId}`);
     };
 
     const toggleSizeFilter = (sizeId) => {
@@ -332,7 +329,40 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
 
     const remaining  = combo.max_items - totalSelected;
     const isMaxed    = combo.max_items > 0 && totalSelected >= combo.max_items;
-    const canSubmit  = totalSelected >= 1 && totalSelected <= combo.max_items && !submitting;
+
+    const categoryLimits = combo.category_limits ?? [];
+    const hasCategoryLimits = categoryLimits.length > 0;
+
+    const limitsByCat = useMemo(() => {
+        const m = {};
+        categoryLimits.forEach((cl) => { m[cl.category_id] = cl.max_items; });
+        return m;
+    }, [categoryLimits]);
+
+    const productCategoryMap = useMemo(() => {
+        const m = {};
+        combo.sizes_groups.forEach((g) => g.products.forEach((p) => {
+            if (m[p.id] == null && p.category_id != null) m[p.id] = p.category_id;
+        }));
+        return m;
+    }, [combo.sizes_groups]);
+
+    const picksByCategory = useMemo(() => {
+        const counts = {};
+        Object.values(picksMap).forEach((p) => {
+            const cat = productCategoryMap[p.product_id];
+            if (cat == null) return;
+            counts[cat] = (counts[cat] ?? 0) + p.quantity;
+        });
+        return counts;
+    }, [picksMap, productCategoryMap]);
+
+    const allCategoriesWithinLimits = useMemo(() => {
+        if (!hasCategoryLimits) return true;
+        return categoryLimits.every((cl) => (picksByCategory[cl.category_id] ?? 0) <= cl.max_items);
+    }, [hasCategoryLimits, categoryLimits, picksByCategory]);
+
+    const canSubmit  = totalSelected >= 1 && totalSelected <= combo.max_items && allCategoriesWithinLimits && !submitting;
 
     const cartButtonRef = useRef(null);
 
@@ -348,6 +378,76 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         return () => clearTimeout(t);
     }, [isMaxed]);
 
+    // Auto-expandir cuando se ACTIVA un filtro de categoría (en transición),
+    // pero permitiendo después que el usuario colapse manualmente.
+    const prevSelectedCatFilterRef = useRef([]);
+    useEffect(() => {
+        const newlyAdded = selectedCategoryIds.filter(
+            (id) => !prevSelectedCatFilterRef.current.includes(id)
+        );
+        if (newlyAdded.length > 0) {
+            setExpandedKeys((prev) => {
+                const next = new Set(prev);
+                combo.sizes_groups.forEach((g) => {
+                    newlyAdded.forEach((cid) => next.add(`${g.id}-${cid}`));
+                });
+                return next;
+            });
+        }
+        prevSelectedCatFilterRef.current = selectedCategoryIds;
+    }, [selectedCategoryIds, combo.sizes_groups]);
+
+    // Auto-expandir cuando la búsqueda PASA a no-vacía (sólo en la transición).
+    const prevSearchActiveRef = useRef(false);
+    useEffect(() => {
+        const active = search.trim().length > 0;
+        if (active && !prevSearchActiveRef.current) {
+            const q = search.trim().toLowerCase();
+            setExpandedKeys((prev) => {
+                const next = new Set(prev);
+                combo.sizes_groups.forEach((g) => {
+                    g.products.forEach((p) => {
+                        if (p.category_id != null && p.name.toLowerCase().includes(q)) {
+                            next.add(`${g.id}-${p.category_id}`);
+                        }
+                    });
+                });
+                return next;
+            });
+        }
+        prevSearchActiveRef.current = active;
+    }, [search, combo.sizes_groups]);
+
+    // Auto-colapsar cuando una categoría se completa (transición de "no llena" a "llena").
+    const prevFullCatIdsRef = useRef(new Set());
+    useEffect(() => {
+        if (!hasCategoryLimits) return;
+        const currentFull = new Set(
+            categoryLimits
+                .filter((cl) => (picksByCategory[cl.category_id] ?? 0) >= cl.max_items)
+                .map((cl) => cl.category_id)
+        );
+        const justFilledIds = [];
+        currentFull.forEach((id) => {
+            if (!prevFullCatIdsRef.current.has(id)) justFilledIds.push(id);
+        });
+
+        if (justFilledIds.length > 0 && !isMaxed) {
+            setExpandedKeys(new Set());
+            const names = categoryLimits
+                .filter((cl) => justFilledIds.includes(cl.category_id))
+                .map((cl) => cl.category_name)
+                .filter(Boolean);
+            if (names.length > 0) {
+                setFeedback(
+                    `✓ Completaste ${names.join(' y ')}. Elegí prendas de otra categoría.`
+                );
+            }
+        }
+
+        prevFullCatIdsRef.current = currentFull;
+    }, [picksByCategory, categoryLimits, hasCategoryLimits, isMaxed]);
+
     const addOne = (product, size) => {
         const key = pickKey(product.id, size.id);
         setPicksMap((prev) => {
@@ -356,6 +456,16 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
             if (currentQty >= product.stock) return prev;
             const totalNow    = Object.values(prev).reduce((s, p) => s + p.quantity, 0);
             if (totalNow >= combo.max_items) return prev;
+
+            const catId = productCategoryMap[product.id];
+            if (hasCategoryLimits && catId != null && limitsByCat[catId] != null) {
+                const catCount = Object.values(prev).reduce((s, p) => {
+                    if (productCategoryMap[p.product_id] === catId) return s + p.quantity;
+                    return s;
+                }, 0);
+                if (catCount >= limitsByCat[catId]) return prev;
+            }
+
             return {
                 ...prev,
                 [key]: { product_id: product.id, size_id: size.id, size_name: size.name, quantity: currentQty + 1 },
@@ -509,6 +619,35 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                 Podés repetir el mismo producto en diferentes talles o cantidades.
                             </p>
                         </div>
+
+                        {hasCategoryLimits && (
+                            <div className="rounded-[1.4rem] border border-brand-cta/45 bg-white px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.10)]">
+                                <div className="flex items-start gap-3">
+                                    <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-brand-text">
+                                            Máximo por categoría
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-brand-text-muted">
+                                            Las prendas se distribuyen así:
+                                        </p>
+                                        <div className="mt-2 flex flex-wrap gap-1.5">
+                                            {categoryLimits.map((cl) => (
+                                                <span
+                                                    key={cl.category_id}
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-brand-cta/30 bg-brand-cta/5 px-2.5 py-1 text-[11px] font-semibold text-brand-text"
+                                                >
+                                                    <span className="text-brand-text-muted">{cl.category_name}:</span>
+                                                    <span className="font-bold text-brand-cta">hasta {cl.max_items}</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex items-start gap-3 rounded-[1.4rem] border border-brand-cta/45 bg-brand-primary-surface/35 px-4 py-4 shadow-[0_12px_28px_rgba(255,90,78,0.08)]">
                             <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -665,6 +804,17 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                     )}
                                 </div>
 
+                                {/* Tip de uso */}
+                                <div className="flex items-start gap-2.5 rounded-[1.2rem] bg-brand-secondary-light/60 border border-brand-cta/20 px-4 py-3 text-[12px] leading-snug text-brand-text">
+                                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-cta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>
+                                        Tocá cada categoría para ver sus prendas y elegir cantidades.
+                                        {hasCategoryLimits && ' Cuando completes el máximo de una categoría, se cierra automáticamente para que sigas con otra.'}
+                                    </span>
+                                </div>
+
                                 {/* Grupos filtrados (Talle → Categoría → Cards) */}
                                 {filteredGroups.length === 0 ? (
                                     <div className="rounded-[1.4rem] border border-dashed border-brand-cta/30 bg-brand-secondary-light px-4 py-12 text-center">
@@ -706,6 +856,9 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                             (sum, p) => sum + (picksMap[pickKey(p.id, group.id)]?.quantity ?? 0),
                                                             0
                                                         );
+                                                        const catLimit       = hasCategoryLimits ? limitsByCat[cat.id] : null;
+                                                        const totalInCat     = hasCategoryLimits ? (picksByCategory[cat.id] ?? 0) : 0;
+                                                        const catRemaining   = catLimit != null ? Math.max(0, catLimit - totalInCat) : null;
                                                         return (
                                                             <div
                                                                 key={`${group.id}-${cat.id}`}
@@ -719,14 +872,29 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                                     className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-cta/5"
                                                                     aria-expanded={open}
                                                                 >
-                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
                                                                         <span className="inline-flex items-center rounded-full bg-brand-cta/10 text-brand-cta px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em]">
                                                                             {cat.name}
                                                                         </span>
                                                                         <span className="text-[11px] text-brand-text-muted">
                                                                             {cat.products.length} prenda{cat.products.length === 1 ? '' : 's'}
                                                                         </span>
-                                                                        {pickedInCat > 0 && (
+                                                                        {catLimit != null && (
+                                                                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                                                totalInCat >= catLimit
+                                                                                    ? 'bg-emerald-600 text-white'
+                                                                                    : 'bg-brand-cta/10 text-brand-cta'
+                                                                            }`}>
+                                                                                {totalInCat >= catLimit && (
+                                                                                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                                    </svg>
+                                                                                )}
+                                                                                {totalInCat} / {catLimit}
+                                                                                {totalInCat >= catLimit && ' completa'}
+                                                                            </span>
+                                                                        )}
+                                                                        {catLimit == null && pickedInCat > 0 && (
                                                                             <span className="inline-flex items-center gap-1 rounded-full bg-brand-cta px-2 py-0.5 text-[10px] font-bold text-white">
                                                                                 <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -759,6 +927,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                                                         size={{ id: group.id, name: group.name }}
                                                                                         quantity={qty}
                                                                                         totalRemaining={remaining}
+                                                                                        categoryRemaining={catRemaining}
                                                                                         onAdd={() => addOne(p, { id: group.id, name: group.name })}
                                                                                         onRemove={() => removeOne(p, { id: group.id, name: group.name })}
                                                                                     />
@@ -797,6 +966,36 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                 style={{ width: `${Math.min(100, (totalSelected / combo.max_items) * 100)}%` }}
                             />
                         </div>
+
+                        {/* Progreso por categoría */}
+                        {hasCategoryLimits && (
+                            <div className="mt-4 space-y-2 border-t border-brand-secondary/30 pt-4">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted">
+                                    Por categoría
+                                </p>
+                                {categoryLimits.map((cl) => {
+                                    const cnt   = picksByCategory[cl.category_id] ?? 0;
+                                    const full  = cnt >= cl.max_items;
+                                    const pct   = Math.min(100, (cnt / cl.max_items) * 100);
+                                    return (
+                                        <div key={cl.category_id}>
+                                            <div className="flex items-center justify-between text-[11px]">
+                                                <span className="truncate text-brand-text">{cl.category_name}</span>
+                                                <span className={`font-bold ${full ? 'text-brand-cta' : 'text-brand-text-muted'}`}>
+                                                    {cnt} / {cl.max_items}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 h-1 w-full rounded-full bg-brand-secondary-light overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all ${full ? 'bg-brand-cta' : 'bg-brand-cta/60'}`}
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {/* Lista de picks */}
                         {summaryByPick.length > 0 && (

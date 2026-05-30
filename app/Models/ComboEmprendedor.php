@@ -34,4 +34,9 @@ class ComboEmprendedor extends Model
     {
         return $this->belongsToMany(Gender::class, 'combo_emprendedor_gender');
     }
+
+    public function categoryLimits()
+    {
+        return $this->hasMany(ComboEmprendedorCategoryLimit::class);
+    }
 }
