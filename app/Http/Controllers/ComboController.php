@@ -32,9 +32,10 @@ class ComboController extends Controller
                     'quantity' => (int) $first->quantity,
                     'products' => $items
                         ->map(fn ($item) => [
-                            'id'    => $item->product->id,
-                            'name'  => $item->product->name,
-                            'image' => $item->product->images[0] ?? null,
+                            'id'     => $item->product->id,
+                            'name'   => $item->product->name,
+                            'image'  => $item->product->images[0] ?? null,
+                            'images' => $item->product->images ?? [],
                             'sizes' => $item->product->sizes->map(fn ($s) => [
                                 'id'    => $s->id,
                                 'name'  => $s->name,

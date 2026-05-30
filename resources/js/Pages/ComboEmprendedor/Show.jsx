@@ -1,5 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 function fmt(p) {
@@ -10,7 +13,7 @@ function pickKey(productId, sizeId) {
     return `${productId}-${sizeId}`;
 }
 
-function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRemaining, onAdd, onRemove }) {
+function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRemaining, onAdd, onRemove, onImageClick }) {
     const atStock      = quantity >= product.stock;
     const catBlocked   = categoryRemaining != null && categoryRemaining <= 0;
     const noCapacity   = (totalRemaining <= 0 || catBlocked) && quantity === 0;
@@ -24,7 +27,13 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRe
                     : 'border border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:-translate-y-0.5 hover:border-brand-cta/50 hover:shadow-[0_14px_28px_rgba(41,50,65,0.10)]'
             }`}
         >
-            <div className="relative aspect-[4/5] overflow-hidden bg-brand-secondary-light rounded-t-[1.4rem]">
+            <button
+                type="button"
+                onClick={onImageClick}
+                disabled={!product.image}
+                aria-label={product.image ? `Ampliar imagen de ${product.name}` : 'Imagen no disponible'}
+                className="relative block aspect-[4/5] w-full overflow-hidden bg-brand-secondary-light rounded-t-[1.4rem] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 disabled:cursor-default"
+            >
                 {product.image ? (
                     <img
                         src={product.image}
@@ -50,10 +59,19 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRe
                     Talle {size.name}
                 </span>
 
+                {product.image && (
+                    <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-text/75 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 7v8M7 11h8M11 19a8 8 0 110-16 8 8 0 010 16z" />
+                        </svg>
+                        Ampliar
+                    </span>
+                )}
+
                 {quantity > 0 && (
                     <div className="pointer-events-none absolute inset-0 bg-brand-cta/5" />
                 )}
-            </div>
+            </button>
 
             <div className="flex flex-1 flex-col px-3 py-3">
                 <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-brand-text">
@@ -233,6 +251,16 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
     const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
     const [expandedKeys, setExpandedKeys]           = useState(new Set());
 
+    const [previewSlides, setPreviewSlides] = useState([]);
+    const [previewIndex, setPreviewIndex]   = useState(-1);
+
+    const openPreview = (product) => {
+        const imgs = product.images?.length ? product.images : (product.image ? [product.image] : []);
+        if (!imgs.length) return;
+        setPreviewSlides(imgs.map((src) => ({ src, alt: product.name })));
+        setPreviewIndex(0);
+    };
+
     useEffect(() => {
         setPicksMap({});
         setFeedback(null);
@@ -240,6 +268,8 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
         setSelectedSizeIds([]);
         setSelectedCategoryIds([]);
         setExpandedKeys(new Set());
+        setPreviewSlides([]);
+        setPreviewIndex(-1);
     }, [combo.id]);
 
     const toggleExpanded = (sizeId, categoryId) => {
@@ -930,6 +960,7 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                                                                                         categoryRemaining={catRemaining}
                                                                                         onAdd={() => addOne(p, { id: group.id, name: group.name })}
                                                                                         onRemove={() => removeOne(p, { id: group.id, name: group.name })}
+                                                                                        onImageClick={() => openPreview(p)}
                                                                                     />
                                                                                 );
                                                                             })}
@@ -1082,6 +1113,24 @@ export default function ComboEmprendedorShow({ combo, cartCount = 0 }) {
                     </aside>
                 </div>
             </div>
+
+            <Lightbox
+                open={previewIndex >= 0}
+                index={previewIndex < 0 ? 0 : previewIndex}
+                close={() => setPreviewIndex(-1)}
+                slides={previewSlides}
+                plugins={[Zoom]}
+                zoom={{
+                    maxZoomPixelRatio: 3,
+                    zoomInMultiplier: 2,
+                    doubleTapDelay: 300,
+                    doubleClickDelay: 300,
+                    scrollToZoom: true,
+                }}
+                carousel={{ finite: previewSlides.length <= 1 }}
+                controller={{ closeOnBackdropClick: true }}
+                styles={{ container: { backgroundColor: 'rgba(16, 24, 40, 0.92)' } }}
+            />
         </StorefrontLayout>
     );
 }

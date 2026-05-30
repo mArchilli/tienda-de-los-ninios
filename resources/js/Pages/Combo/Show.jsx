@@ -1,5 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 // ─── Combo / Builder ──────────────────────────────────────────────────────────
@@ -79,19 +82,22 @@ function ChipButton({ label, active, onClick }) {
     );
 }
 
-function ProductPickerCard({ product, selected, onToggle }) {
+function ProductPickerCard({ product, selected, onToggle, onImageClick }) {
     return (
-        <button
-            type="button"
-            onClick={onToggle}
-            aria-pressed={selected}
-            className={`group relative flex h-full w-full flex-col overflow-hidden rounded-[1.55rem] bg-white text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 ${
+        <div
+            className={`group relative flex h-full w-full flex-col overflow-hidden rounded-[1.55rem] bg-white text-left transition-all duration-300 ${
                 selected
                     ? 'border-2 border-brand-cta shadow-[0_14px_30px_rgba(255,90,78,0.18)] -translate-y-0.5'
                     : 'border border-brand-secondary/60 shadow-[0_8px_20px_rgba(41,50,65,0.05)] hover:-translate-y-0.5 hover:border-brand-cta/50 hover:shadow-[0_14px_28px_rgba(41,50,65,0.10)]'
             }`}
         >
-            <div className="relative aspect-[4/5] overflow-hidden bg-brand-secondary-light">
+            <button
+                type="button"
+                onClick={onImageClick}
+                disabled={!product.image}
+                aria-label={product.image ? `Ampliar imagen de ${product.name}` : 'Imagen no disponible'}
+                className="relative block aspect-[4/5] w-full overflow-hidden bg-brand-secondary-light text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 disabled:cursor-default"
+            >
                 {product.image ? (
                     <img
                         src={product.image}
@@ -121,13 +127,28 @@ function ProductPickerCard({ product, selected, onToggle }) {
                     </svg>
                 </span>
 
+                {/* Hint de ampliar */}
+                {product.image && (
+                    <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-text/75 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 7v8M7 11h8M11 19a8 8 0 110-16 8 8 0 010 16z" />
+                        </svg>
+                        Ampliar
+                    </span>
+                )}
+
                 {/* Velo coral suave cuando está seleccionado */}
                 {selected && (
                     <div className="pointer-events-none absolute inset-0 bg-brand-cta/5" />
                 )}
-            </div>
+            </button>
 
-            <div className="flex flex-1 flex-col px-3 py-3">
+            <button
+                type="button"
+                onClick={onToggle}
+                aria-pressed={selected}
+                className="flex flex-1 flex-col px-3 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 focus-visible:rounded-b-[1.5rem]"
+            >
                 <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-brand-text">
                     {product.name}
                 </p>
@@ -147,8 +168,8 @@ function ProductPickerCard({ product, selected, onToggle }) {
                         'Seleccionar'
                     )}
                 </span>
-            </div>
-        </button>
+            </button>
+        </div>
     );
 }
 
@@ -159,8 +180,17 @@ export default function ComboShow({ combo, cartCount = 0 }) {
     const [picks, setPicks] = useState({});           // { [categoryId]: number[] }
     const [activeStep, setActiveStep] = useState('size');
     const [feedback, setFeedback] = useState(null);
+    const [previewSlides, setPreviewSlides] = useState([]);
+    const [previewIndex, setPreviewIndex] = useState(-1);
 
     const stepRefs = useRef({});
+
+    const openPreview = (product) => {
+        const imgs = product.images?.length ? product.images : (product.image ? [product.image] : []);
+        if (!imgs.length) return;
+        setPreviewSlides(imgs.map((src) => ({ src, alt: product.name })));
+        setPreviewIndex(0);
+    };
 
     // Reset al cambiar de combo (Inertia mantiene el componente)
     useEffect(() => {
@@ -168,6 +198,8 @@ export default function ComboShow({ combo, cartCount = 0 }) {
         setPicks({});
         setActiveStep('size');
         setFeedback(null);
+        setPreviewSlides([]);
+        setPreviewIndex(-1);
     }, [combo.id]);
 
     // ─── Derivados ────────────────────────────────────────────────────────────
@@ -535,6 +567,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                                             product={p}
                                                             selected={picked.includes(p.id)}
                                                             onToggle={() => togglePick(cat, p.id)}
+                                                            onImageClick={() => openPreview(p)}
                                                         />
                                                     ))}
                                                 </div>
@@ -611,6 +644,24 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                     </aside>
                 </section>
             </div>
+
+            <Lightbox
+                open={previewIndex >= 0}
+                index={previewIndex < 0 ? 0 : previewIndex}
+                close={() => setPreviewIndex(-1)}
+                slides={previewSlides}
+                plugins={[Zoom]}
+                zoom={{
+                    maxZoomPixelRatio: 3,
+                    zoomInMultiplier: 2,
+                    doubleTapDelay: 300,
+                    doubleClickDelay: 300,
+                    scrollToZoom: true,
+                }}
+                carousel={{ finite: previewSlides.length <= 1 }}
+                controller={{ closeOnBackdropClick: true }}
+                styles={{ container: { backgroundColor: 'rgba(16, 24, 40, 0.92)' } }}
+            />
         </StorefrontLayout>
     );
 }

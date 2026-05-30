@@ -41,11 +41,12 @@ class ComboEmprendedorController extends Controller
                     ];
                 }
                 $bySize[$sid]['products'][] = [
-                    'id'    => (int) $product->id,
-                    'name'  => $product->name,
-                    'price' => (float) $product->price,
-                    'image' => $product->images[0] ?? null,
-                    'stock' => $stock,
+                    'id'     => (int) $product->id,
+                    'name'   => $product->name,
+                    'price'  => (float) $product->price,
+                    'image'  => $product->images[0] ?? null,
+                    'images' => $product->images ?? [],
+                    'stock'  => $stock,
                     'category_id'   => $product->categories->first()?->id,
                     'category_name' => $product->categories->first()?->name,
                 ];
