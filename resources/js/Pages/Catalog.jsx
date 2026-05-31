@@ -208,7 +208,7 @@ function FilterCarousel({ items, selected, onToggle }) {
                         type="button"
                         onClick={goPrev}
                         disabled={!canPrev}
-                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-secondary/40 bg-white text-brand-text-muted transition-colors hover:border-brand-cta/50 hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
+                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-cta/35 bg-white text-brand-text-muted transition-colors hover:border-brand-cta hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
                         aria-label="Anterior"
                     >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -229,10 +229,10 @@ function FilterCarousel({ items, selected, onToggle }) {
                                 key={item}
                                 type="button"
                                 onClick={() => onToggle(item)}
-                                className={`flex h-9 w-full items-center justify-center gap-1 rounded-md border text-xs font-semibold normal-case tracking-normal transition-all ${
+                                className={`flex h-9 w-full items-center justify-center gap-1 rounded-[0.85rem] border text-xs font-semibold normal-case tracking-normal transition-all ${
                                     active
                                         ? 'border-brand-cta bg-brand-cta text-white shadow-sm'
-                                        : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/50 hover:text-brand-cta'
+                                        : 'border-brand-cta/30 bg-white text-brand-text hover:border-brand-cta hover:text-brand-cta'
                                 }`}
                             >
                                 {active && (
@@ -254,7 +254,7 @@ function FilterCarousel({ items, selected, onToggle }) {
                         type="button"
                         onClick={goNext}
                         disabled={!canNext}
-                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-secondary/40 bg-white text-brand-text-muted transition-colors hover:border-brand-cta/50 hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
+                        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-full border border-brand-cta/35 bg-white text-brand-text-muted transition-colors hover:border-brand-cta hover:text-brand-cta disabled:opacity-25 disabled:cursor-default"
                         aria-label="Siguiente"
                     >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -286,19 +286,19 @@ function FilterCarousel({ items, selected, onToggle }) {
 // Panel de filtros compartido entre mobile y desktop
 function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, allCategories, selectedCategories, toggleCategory, priceRange, togglePriceRange, onlyFeatured, setOnlyFeatured, clearFilters, activeFilterCount, setVisibleProducts }) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl sm:absolute sm:inset-auto sm:left-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:w-[min(92vw,340px)] sm:rounded-md overflow-hidden border border-brand-secondary/30 bg-white shadow-[0_22px_44px_rgba(41,50,65,0.18)] animate-fade-in">
+        <div className="fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-[1.75rem] border border-brand-cta/35 bg-white shadow-[0_24px_52px_rgba(41,50,65,0.18)] animate-fade-in sm:absolute sm:inset-auto sm:left-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:w-[min(92vw,340px)] sm:rounded-[1.35rem]">
             {/* Handle mobile */}
             <div className="sm:hidden flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-brand-secondary/30" />
+                <div className="h-1 w-10 rounded-full bg-brand-cta/25" />
             </div>
 
             {/* Header */}
-            <div className="px-4 py-3 border-b border-brand-secondary/20 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text">Filtros</p>
                 <button
                     type="button"
                     onClick={() => setFiltersOpen(false)}
-                    className="sm:hidden flex h-7 w-7 items-center justify-center rounded-full text-brand-text-muted hover:bg-brand-secondary/20 hover:text-brand-text"
+                    className="sm:hidden flex h-7 w-7 items-center justify-center rounded-full border border-brand-cta/20 text-brand-text-muted transition-colors hover:bg-brand-cta/10 hover:text-brand-cta"
                     aria-label="Cerrar filtros"
                 >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -310,20 +310,20 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
             {/* Contenido con scroll */}
             <div className="overflow-y-auto max-h-[60vh] sm:max-h-none">
                 {allSizes.length > 0 && (
-                    <div className="px-4 py-4 border-b border-brand-secondary/10">
+                    <div className="px-4 py-4 border-b border-brand-cta/10">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted mb-3">Talle</p>
                         <FilterCarousel items={allSizes} selected={selectedSizes} onToggle={toggleSize} />
                     </div>
                 )}
 
                 {allCategories.length > 0 && (
-                    <div className="px-4 py-4 border-b border-brand-secondary/10">
+                    <div className="px-4 py-4 border-b border-brand-cta/10">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted mb-3">Categoría</p>
                         <FilterCarousel items={allCategories} selected={selectedCategories} onToggle={toggleCategory} />
                     </div>
                 )}
 
-                <div className="px-4 py-4 border-b border-brand-secondary/10">
+                <div className="px-4 py-4 border-b border-brand-cta/10">
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted mb-2.5">Precio</p>
                     <div className="grid grid-cols-2 gap-2">
                         {PRICE_RANGES.map((r) => {
@@ -333,10 +333,10 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
                                     key={r.key}
                                     type="button"
                                     onClick={() => togglePriceRange(r.key)}
-                                    className={`flex h-10 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold normal-case tracking-normal transition-all ${
+                                    className={`flex h-10 items-center justify-center gap-1.5 rounded-[0.85rem] border px-3 text-xs font-semibold normal-case tracking-normal transition-all ${
                                         active
                                             ? 'border-brand-cta bg-brand-cta text-white shadow-sm'
-                                            : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/50 hover:text-brand-cta'
+                                            : 'border-brand-cta/30 bg-white text-brand-text hover:border-brand-cta hover:text-brand-cta'
                                     }`}
                                 >
                                     {active && (
@@ -356,10 +356,10 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
                     <button
                         type="button"
                         onClick={() => { setOnlyFeatured((v) => !v); setVisibleProducts(PRODUCTS_PAGE_SIZE); }}
-                        className={`flex w-full items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-xs font-semibold normal-case tracking-normal transition-all ${
+                        className={`flex w-full items-center justify-between gap-3 rounded-[0.95rem] border px-3 py-2.5 text-xs font-semibold normal-case tracking-normal transition-all ${
                             onlyFeatured
                                 ? 'border-brand-cta bg-brand-cta/10 text-brand-cta'
-                                : 'border-brand-secondary/40 bg-white text-brand-text hover:border-brand-cta/50'
+                                : 'border-brand-cta/30 bg-white text-brand-text hover:border-brand-cta'
                         }`}
                     >
                         <span className="inline-flex items-center gap-2">
@@ -376,7 +376,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between gap-2 border-t border-brand-secondary/20 bg-brand-secondary-light/40 px-4 py-3">
+            <div className="flex items-center justify-between gap-2 border-t border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
                 <button
                     type="button"
                     onClick={clearFilters}
@@ -388,7 +388,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
                 <button
                     type="button"
                     onClick={() => setFiltersOpen(false)}
-                    className="inline-flex h-9 items-center justify-center rounded-md bg-brand-text px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-brand-primary"
+                    className="home-button inline-flex h-10 items-center justify-center rounded-[0.85rem] bg-brand-cta px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-md transition-colors hover:bg-brand-cta-dark"
                 >
                     Ver resultados
                 </button>
@@ -570,7 +570,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         <StorefrontLayout cartCount={cartCount}>
             <Head title={'Catálogo'} />
 
-            <section className="bg-brand-text text-white">
+            <section className="bg-brand-cta text-white">
                 <div className="w-full px-3 py-2.5 text-center text-[11px] font-light uppercase tracking-[0.18em] sm:px-5 sm:text-sm lg:px-8">
                     {'Nueva colección'} <span className="mx-2 text-white/40">|</span>
                     <span className="font-semibold">{'otoño / invierno 2026'}</span>
@@ -654,15 +654,15 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
 
                                 {sortOpen && (
                                     <div
-                                        className="absolute left-0 top-full z-20 mt-1.5 w-52 origin-top animate-fade-in overflow-hidden rounded-xl border border-brand-secondary/30 bg-white shadow-[0_18px_38px_rgba(41,50,65,0.14)]"
+                                        className="absolute left-0 top-full z-20 mt-1.5 w-52 origin-top animate-fade-in overflow-hidden rounded-[1.15rem] border border-brand-cta/35 bg-white shadow-[0_20px_40px_rgba(41,50,65,0.14)]"
                                     >
                                         {Object.entries(SORT_LABELS).map(([key, label]) => (
                                             <button
                                                 key={key}
                                                 type="button"
                                                 onClick={() => { setSort(key); setSortOpen(false); }}
-                                                className={`block w-full px-4 py-3 text-left text-sm normal-case tracking-normal transition-colors hover:bg-brand-primary-surface ${
-                                                    key === sort ? 'font-semibold text-brand-cta' : 'text-brand-text'
+                                                className={`block w-full px-4 py-3 text-left text-sm normal-case tracking-normal transition-colors hover:bg-brand-cta/8 ${
+                                                    key === sort ? 'bg-brand-cta/8 font-semibold text-brand-cta' : 'text-brand-text'
                                                 }`}
                                             >
                                                 {label}
@@ -693,7 +693,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                         {/* Panel de filtros mobile */}
                         {filtersOpen && (
                             <>
-                                <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setFiltersOpen(false)} />
+                                <div className="fixed inset-0 z-40 bg-brand-text/45 backdrop-blur-[1px]" onClick={() => setFiltersOpen(false)} />
                                 <FiltersPanel {...filtersPanelProps} />
                             </>
                         )}
@@ -778,15 +778,15 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
 
                                     {sortOpen && (
                                         <div
-                                            className="absolute right-0 top-full z-20 mt-2 w-56 origin-top animate-fade-in overflow-hidden rounded-md border border-brand-secondary/30 bg-white shadow-[0_18px_38px_rgba(41,50,65,0.14)]"
+                                            className="absolute right-0 top-full z-20 mt-2 w-56 origin-top animate-fade-in overflow-hidden rounded-[1.15rem] border border-brand-cta/35 bg-white shadow-[0_20px_40px_rgba(41,50,65,0.14)]"
                                         >
                                             {Object.entries(SORT_LABELS).map(([key, label]) => (
                                                 <button
                                                     key={key}
                                                     type="button"
                                                     onClick={() => { setSort(key); setSortOpen(false); }}
-                                                    className={`block w-full px-4 py-2.5 text-left text-xs normal-case tracking-normal transition-colors hover:bg-brand-primary-surface ${
-                                                        key === sort ? 'font-semibold text-brand-primary' : 'text-brand-text'
+                                                    className={`block w-full px-4 py-2.5 text-left text-xs normal-case tracking-normal transition-colors hover:bg-brand-cta/8 ${
+                                                        key === sort ? 'bg-brand-cta/8 font-semibold text-brand-cta' : 'text-brand-text'
                                                     }`}
                                                 >
                                                     {label}
