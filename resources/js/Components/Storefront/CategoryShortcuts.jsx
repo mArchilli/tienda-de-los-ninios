@@ -54,12 +54,15 @@ export default function CategoryShortcuts() {
                         </div>
                     </div>
 
-                    <aside className="home-panel relative min-h-[260px] overflow-hidden border border-brand-secondary/45 shadow-[0_20px_44px_rgba(31,31,31,0.08)] lg:min-h-[320px]">
+                    <a
+                        href="#about"
+                        className="home-panel group relative block min-h-[260px] overflow-hidden border border-brand-secondary/45 shadow-[0_20px_44px_rgba(31,31,31,0.08)] transition duration-300 hover:-translate-y-1.5 lg:min-h-[320px]"
+                    >
                         <img
                             src="/images/banner-filtros.png"
                             alt=""
                             aria-hidden="true"
-                            className="absolute inset-0 h-full w-full object-cover object-center"
+                            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/88 via-brand-primary/70 to-brand-primary/28" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/18 via-transparent to-white/8" />
@@ -72,18 +75,15 @@ export default function CategoryShortcuts() {
                                 <p className="mt-3 text-sm leading-relaxed text-brand-text/80">
                                     {'Prendas pensadas para acompa\u00f1ar cada aventura de todos los d\u00edas.'}
                                 </p>
-                                <a
-                                    href="#about"
-                                    className="home-button mt-5 inline-flex items-center gap-1.5 bg-brand-cta px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors hover:bg-brand-cta-dark"
-                                >
+                                <span className="home-button mt-5 inline-flex self-start items-center gap-2 bg-brand-cta px-4 py-3 text-sm font-bold uppercase tracking-[0.14em] text-white shadow-md transition-colors group-hover:bg-brand-cta-dark sm:px-5 sm:text-base">
                                     {'Conoc\u00e9 m\u00e1s'}
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6" />
                                     </svg>
-                                </a>
+                                </span>
                             </div>
                         </div>
-                    </aside>
+                    </a>
                 </div>
             </div>
         </section>

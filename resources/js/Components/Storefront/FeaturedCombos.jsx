@@ -76,7 +76,7 @@ export default function FeaturedCombos({ combos }) {
                                 type="button"
                                 onClick={() => scroll(-1)}
                                 aria-label="Anterior"
-                                className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text backdrop-blur-sm transition hover:text-brand-primary"
+                                className="home-button flex h-11 w-11 items-center justify-center border border-brand-cta bg-white text-brand-cta transition-colors hover:bg-brand-cta hover:text-white"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -86,7 +86,7 @@ export default function FeaturedCombos({ combos }) {
                                 type="button"
                                 onClick={() => scroll(1)}
                                 aria-label="Siguiente"
-                                className="home-button flex h-11 w-11 items-center justify-center border border-white/70 bg-white/80 text-brand-text backdrop-blur-sm transition hover:text-brand-primary"
+                                className="home-button flex h-11 w-11 items-center justify-center border border-brand-cta bg-white text-brand-cta transition-colors hover:bg-brand-cta hover:text-white"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
