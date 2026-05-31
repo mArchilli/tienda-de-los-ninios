@@ -5,6 +5,7 @@ import StorefrontLayout from '@/Layouts/StorefrontLayout';
 const PRODUCTS_PAGE_SIZE = 20;
 const PRIORITY_IMAGE_COUNT = 6;
 const SEARCH_DEBOUNCE_MS = 250;
+const BABY_NUMERIC_SIZE_MAX = 6;
 
 const PlaceholderIcon = (
     <svg className="h-12 w-12 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,13 +33,53 @@ const PRICE_RANGES = [
     { key: 'mas-100k',   label: 'Más de $100.000', min: 100000, max: Infinity },
 ];
 
-const isBabySize = (name) => /bebe/i.test(String(name ?? ''));
+const isBabySize = (name) => {
+    const value = normalize(name).trim();
+
+    if (!value) return false;
+    if (/bebe|beba|rn|recien nacido|newborn/.test(value)) return true;
+
+    const numericValue = Number(value);
+    return Number.isInteger(numericValue) && numericValue >= 0 && numericValue <= BABY_NUMERIC_SIZE_MAX;
+};
 
 const normalize = (value) =>
     String(value ?? '')
         .toLowerCase()
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '');
+
+function parseMultiValueParam(query, key) {
+    const repeatedValues = query.getAll(key);
+    const rawValues = repeatedValues.length > 0 ? repeatedValues : (query.get(key) ? [query.get(key)] : []);
+
+    return rawValues
+        .flatMap((value) => String(value).split(','))
+        .map((value) => value.trim())
+        .filter(Boolean);
+}
+
+function parseCatalogQueryState(url) {
+    const query = new URLSearchParams(url.split('?')[1] ?? '');
+    const audiences = parseMultiValueParam(query, 'audiencia')
+        .filter((value) => AUDIENCE_FILTERS.some((item) => item.key === value));
+    const selectedSizes = parseMultiValueParam(query, 'talles');
+    const selectedCategories = parseMultiValueParam(query, 'categorias');
+    const onlyFeatured = query.get('destacados') === '1';
+
+    const min = Number(query.get('precio_min')) || 0;
+    const max = Number(query.get('precio_max')) || Infinity;
+    const priceRange = PRICE_RANGES.find((range) => range.min === min && range.max === max)?.key ?? null;
+
+    return {
+        audiences,
+        selectedSizes,
+        selectedCategories,
+        onlyFeatured,
+        priceRange,
+        typeFilter: query.get('tipo'),
+    };
+}
 
 function matchesAudiences(item, audiences) {
     if (!audiences.length) return true;
@@ -399,31 +440,34 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
 
 export default function Catalog({ combos = [], combosEmprendedor = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
     const { url } = usePage();
+    const queryState = useMemo(() => parseCatalogQueryState(url), [url]);
     const [sort, setSort] = useState('relevancia');
     const [sortOpen, setSortOpen] = useState(false);
     const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PAGE_SIZE);
     const [search, setSearch] = useState('');
     const [filtersOpen, setFiltersOpen] = useState(false);
 
-    const initialQuery = new URLSearchParams(url.split('?')[1] ?? '');
-
-    const [audiences, setAudiences] = useState([]);
-    const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [onlyFeatured, setOnlyFeatured] = useState(initialQuery.get('destacados') === '1');
-
-    const initialPriceRange = (() => {
-        const min = Number(initialQuery.get('precio_min')) || 0;
-        const max = Number(initialQuery.get('precio_max')) || Infinity;
-        return PRICE_RANGES.find((r) => r.min === min && r.max === max)?.key ?? null;
-    })();
-    const [priceRange, setPriceRange] = useState(initialPriceRange);
+    const [audiences, setAudiences] = useState(queryState.audiences);
+    const [selectedSizes, setSelectedSizes] = useState(queryState.selectedSizes);
+    const [selectedCategories, setSelectedCategories] = useState(queryState.selectedCategories);
+    const [onlyFeatured, setOnlyFeatured] = useState(queryState.onlyFeatured);
+    const [priceRange, setPriceRange] = useState(queryState.priceRange);
 
     // Lock body scroll cuando el panel de filtros está abierto en mobile
     useEffect(() => {
         document.body.style.overflow = filtersOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [filtersOpen]);
+
+    useEffect(() => {
+        setAudiences(queryState.audiences);
+        setSelectedSizes(queryState.selectedSizes);
+        setSelectedCategories(queryState.selectedCategories);
+        setOnlyFeatured(queryState.onlyFeatured);
+        setPriceRange(queryState.priceRange);
+        setVisibleProducts(PRODUCTS_PAGE_SIZE);
+        setSearch('');
+    }, [queryState]);
 
     // Cerrar sort al hacer click fuera (el container del sort usa stopPropagation en onMouseDown)
     useEffect(() => {
@@ -440,10 +484,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         return () => clearTimeout(t);
     }, [search]);
 
-    const typeFilter = useMemo(() => {
-        const q = new URLSearchParams(url.split('?')[1] ?? '');
-        return q.get('tipo');
-    }, [url]);
+    const typeFilter = queryState.typeFilter;
 
     const priceDef = useMemo(
         () => PRICE_RANGES.find((r) => r.key === priceRange) ?? null,
@@ -508,7 +549,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     );
 
     const showCombos = typeFilter !== 'productos';
-    const showCombosEmprendedor = typeFilter !== 'productos';
+    const showCombosEmprendedor = !typeFilter;
     const showProducts = typeFilter !== 'combos';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
     const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;

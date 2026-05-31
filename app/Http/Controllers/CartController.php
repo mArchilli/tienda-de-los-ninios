@@ -777,6 +777,8 @@ class CartController extends Controller
         $fmt = fn ($n) => '$' . number_format((float) $n, 2, ',', '.') . ' ARS';
 
         $lines = [];
+        $lines[] = "\u{00A1}Hola! \u{00BF}Qu\u{00E9} tal? Tengo una consulta.";
+        $lines[] = '';
         $lines[] = '*Nuevo Pedido #' . $order->id . '*';
         $lines[] = '';
         $lines[] = '*Cliente*';

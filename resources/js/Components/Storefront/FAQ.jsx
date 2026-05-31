@@ -2,10 +2,12 @@ const FAQS = [
     {
         question: '\u00bfC\u00f3mo comprar?',
         answer: [
-            '1. Dale click en registrarse y completa con tus datos o bien si ya tenes una cuenta inicia sesion.',
-            '2. Una vez registrado, ya podes anadir productos a tu carrito, visita el catalogo y una vez que elijas todo lo que vas a comprar clickea en finalizar compra.',
-            '3. Vas a poder pagar con cualquier metodo de pago. Las compras dentro del sitio estan protegidas por Mercado Pago.',
-            '4. Listo. Cuando impacte la compra en el sistema te vamos a contactar para poder coordinar detalles y envios.',
+            'Entr\u00e1 al cat\u00e1logo y eleg\u00ed la prenda que te guste, seleccion\u00e1 un talle y agregala al carrito. Si es un combo, sum\u00e1 las prendas que quieras; pod\u00e9s sumar cuantas prendas quieras.',
+            'Una vez que tengas tu carrito, segu\u00ed las instrucciones y llen\u00e1 tus datos. Luego nos comunicaremos por WhatsApp para coordinar y despachar tu pedido.',
+            {
+                type: 'whatsapp-link',
+                text: '\u00bfTen\u00e9s alguna duda? Hac\u00e9 click ac\u00e1 y charlamos por WhatsApp.',
+            },
         ],
     },
     {
@@ -48,8 +50,10 @@ const FAQS = [
 ];
 
 const WHATSAPP_NUMBER = '5491172397202';
-const WHATSAPP_MESSAGE = encodeURIComponent('Hola! Tengo una duda sobre la tienda.');
+const WHATSAPP_MESSAGE = encodeURIComponent('\u00a1Hola! \u00bfQu\u00e9 tal? Tengo una consulta.');
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+const HOW_TO_BUY_WHATSAPP_MESSAGE = encodeURIComponent('\u00a1Hola! Tengo una duda sobre c\u00f3mo comprar en la web.');
+const HOW_TO_BUY_WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${HOW_TO_BUY_WHATSAPP_MESSAGE}`;
 
 function FaqItem({ item, featured = false }) {
     const label = item.question.startsWith('¿') ? item.question : `¿${item.question.replace(/\?$/, '')}?`;
@@ -79,9 +83,27 @@ function FaqItem({ item, featured = false }) {
 
             <div className="border-t border-brand-cta/25 px-5 py-5 sm:px-6">
                 <div className="space-y-3 text-sm leading-relaxed text-brand-text-muted sm:text-[15px]">
-                    {item.answer.map((line) => (
-                        <p key={line}>{line}</p>
-                    ))}
+                    {item.answer.map((line, index) => {
+                        if (typeof line === 'object' && line?.type === 'whatsapp-link') {
+                            const [questionText, linkText] = String(line.text).split(' Hacé ');
+
+                            return (
+                                <p key={`${item.question}-${index}`}>
+                                    {questionText}{' '}
+                                    <a
+                                        href={HOW_TO_BUY_WHATSAPP_URL}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="font-semibold text-brand-cta transition-colors hover:text-brand-cta-dark"
+                                    >
+                                        {'Hacé '}{linkText}
+                                    </a>
+                                </p>
+                            );
+                        }
+
+                        return <p key={`${item.question}-${index}`}>{line}</p>;
+                    })}
                 </div>
             </div>
         </details>

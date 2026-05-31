@@ -57,6 +57,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
+Route::get('/contacto', function () {
+    return Inertia::render('Contact');
+})->name('contact');
 Route::get('/producto/{product}', [StorefrontProductController::class, 'show'])->name('product.show');
 Route::get('/combo/{combo}', [StorefrontComboController::class, 'show'])->name('combo.show');
 Route::get('/combo-emprendedor/{combo}', [StorefrontComboEmprendedorController::class, 'show'])->name('combo-emprendedor.show');

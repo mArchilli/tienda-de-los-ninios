@@ -6,6 +6,7 @@ import CartIcon from './CartIcon';
 const MOBILE_NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
+    { label: 'Contacto', href: '/contacto' },
     { label: 'Carrito', href: '/carrito' },
 ];
 
@@ -44,6 +45,7 @@ function DesktopNav({ url }) {
             <ul className="flex items-center gap-7">
                 {DESKTOP_NAV_ITEMS.map((item) => {
                     const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
+
                     return (
                         <li key={item.label}>
                             <Link

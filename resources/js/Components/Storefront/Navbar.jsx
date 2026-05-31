@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 const NAV_ITEMS = [
     { label: 'Inicio', href: '/' },
     { label: 'Cat\u00e1logo', href: '/catalogo' },
+    { label: 'Contacto', href: '/contacto' },
 ];
 
 function isActive(currentUrl, itemHref) {
@@ -23,6 +24,7 @@ export default function Navbar() {
                 <ul className="flex h-11 items-center justify-center gap-8 overflow-x-auto whitespace-nowrap">
                     {NAV_ITEMS.map((item) => {
                         const active = item.activeBase ? url.split('?')[0] === item.activeBase : isActive(url, item.href);
+
                         return (
                             <li key={item.label}>
                                 <Link

@@ -1,11 +1,11 @@
 import Logo from './Logo';
 
 const WHATSAPP_NUMBER = '5491172397202';
-const WHATSAPP_MESSAGE = encodeURIComponent('Hola! Quiero hacer una consulta sobre la tienda.');
+const WHATSAPP_MESSAGE = encodeURIComponent('\u00a1Hola! \u00bfQu\u00e9 tal? Tengo una consulta.');
 const SOCIAL_LINKS = [
     {
         label: 'TikTok',
-        href: 'https://www.tiktok.com/',
+        href: 'https://www.tiktok.com/@latiendadelosninios',
         icon: (
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M16.5 3c.4 1.9 1.5 3 3.5 3.5v2.7c-1.3 0-2.5-.3-3.5-.9V14a5 5 0 11-5-5c.3 0 .6 0 .9.1v2.8a2.5 2.5 0 10 1.6 2.3V3h2.5z" />
@@ -23,7 +23,7 @@ const SOCIAL_LINKS = [
     },
     {
         label: 'Instagram',
-        href: 'https://www.instagram.com/',
+        href: 'https://www.instagram.com/latiendadelosninos/',
         icon: (
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="5" strokeWidth={1.8} />
@@ -38,29 +38,26 @@ const COLUMNS = [
     {
         title: 'Tienda',
         links: [
-            { label: 'Combos', href: '#combos' },
-            { label: 'Nene', href: '#nene' },
-            { label: 'Nena', href: '#nena' },
-            { label: 'Unisex', href: '#unisex' },
-            { label: 'Accesorios', href: '#accesorios' },
-            { label: 'Outlet', href: '#outlet' },
+            { label: 'Combos', href: '/catalogo?tipo=combos' },
+            { label: 'Nene', href: '/catalogo?audiencia=nino' },
+            { label: 'Bebe', href: '/catalogo?audiencia=bebe&talles=0,1,2,3,4,5,6' },
+            { label: 'Nena', href: '/catalogo?audiencia=nina' },
+            { label: 'Beba', href: '/catalogo?audiencia=beba&talles=0,1,2,3,4,5,6' },
+            { label: 'Catalogo', href: '/catalogo' },
         ],
     },
     {
         title: 'Ayuda',
         links: [
-            { label: 'Env\u00edos', href: '#envios' },
-            { label: 'Cambios y devoluciones', href: '#cambios' },
-            { label: 'Medios de pago', href: '#pagos' },
             { label: 'Preguntas frecuentes', href: '#faq' },
+            { label: 'Contacto', href: '/contacto' },
         ],
     },
     {
         title: 'Nosotros',
         links: [
-            { label: 'Sobre Mimos', href: '#about' },
-            { label: 'Contacto', href: '#contacto' },
-            { label: 'Mayoristas', href: '#mayoristas' },
+            { label: 'Sobre nosotros', href: '#about' },
+            { label: 'Redes sociales', href: '/contacto' },
         ],
     },
 ];

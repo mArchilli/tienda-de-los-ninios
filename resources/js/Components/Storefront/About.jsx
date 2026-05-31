@@ -8,7 +8,7 @@ const CHANNELS = [
         detailTitle: 'Horario de los lives',
         detail: 'Lunes a s\u00e1bado de 10 a 13hs y de 16 a 20hs',
         cta: 'Ir a TikTok',
-        href: 'https://www.tiktok.com/',
+        href: 'https://www.tiktok.com/@latiendadelosninios',
         external: true,
         panelClass: 'bg-[linear-gradient(135deg,rgba(255,90,78,0.98),rgba(240,75,64,0.92))]',
         detailClass: 'bg-white/10 border-white/18',
