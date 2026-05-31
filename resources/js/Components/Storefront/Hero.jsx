@@ -2,39 +2,39 @@
 export default function Hero() {
     return (
         <section className="flex flex-col bg-brand-bg md:min-h-[86vh] lg:min-h-[700px] xl:min-h-[760px]">
-            <div className="home-media relative h-[430px] overflow-hidden md:hidden">
+            <div className="relative aspect-[941/1672] w-full overflow-hidden rounded-none md:hidden">
                 <img
                     src="/images/banner-mobile.png"
                     alt=""
                     aria-hidden="true"
-                    className="h-full w-full object-cover object-center"
+                    className="block h-full w-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-bg/8 via-transparent to-brand-bg/35" />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/12 via-transparent to-white/8" />
-            </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/28 via-brand-primary/10 via-[38%] to-white/8" />
 
-            <div className="store-shell pb-5 pt-4 md:hidden">
-                <div className="flex max-w-[320px] flex-col items-start text-left">
-                    <h1 className="font-extrabold leading-[0.9] text-brand-text">
-                        <span className="block text-[3.65rem]">COMBOS</span>
-                        <span className="mt-1 block text-[3rem] text-brand-cta">
-                            PARA ARMAR.
-                        </span>
-                    </h1>
+                <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-5">
+                    <div className="flex max-w-[320px] flex-col items-start text-left">
+                        <h1 className="font-extrabold leading-[0.9] drop-shadow-[0_3px_12px_rgba(0,0,0,0.28)]">
+                            <span className="block text-[3.65rem] text-brand-text">COMBOS</span>
+                            <span className="mt-1 block text-[3rem] text-brand-cta">
+                                PARA ARMAR.
+                            </span>
+                        </h1>
 
-                    <div className="mt-5 flex flex-wrap gap-3">
-                        <a
-                            href="#combos"
-                            className="home-button inline-flex items-center justify-center bg-brand-cta px-6 py-3 text-[12px] font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark"
-                        >
-                            Ver combos
-                        </a>
-                        <a
-                            href="/catalogo"
-                            className="home-button inline-flex items-center justify-center border border-brand-cta bg-white px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-brand-cta shadow-sm transition-colors hover:bg-brand-primary-surface"
-                        >
-                            Catalogo completo
-                        </a>
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <a
+                                href="#combos"
+                                className="home-button inline-flex items-center justify-center bg-brand-cta px-6 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-7 sm:py-3.5 sm:text-sm lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg"
+                            >
+                                Ver combos
+                            </a>
+                            <a
+                                href="/catalogo"
+                                className="home-button inline-flex items-center justify-center border border-brand-cta bg-white px-6 py-3 text-xs font-bold uppercase tracking-wide text-brand-cta shadow-sm transition-colors hover:bg-brand-primary-surface sm:px-7 sm:py-3.5 sm:text-sm lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg"
+                            >
+                                Catalogo completo
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

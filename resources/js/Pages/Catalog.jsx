@@ -882,7 +882,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                             <button
                                                 type="button"
                                                 onClick={handleLoadMore}
-                                                className="inline-flex h-11 items-center justify-center rounded-md border border-brand-text bg-white px-8 text-[12px] font-extrabold uppercase tracking-[0.18em] text-brand-text shadow-sm transition-colors hover:bg-brand-text hover:text-white"
+                                                className="home-button inline-flex h-11 items-center justify-center rounded-[0.85rem] bg-brand-cta px-8 text-xs font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:h-12 sm:px-10 sm:text-sm"
                                             >
                                                 {'Cargar más prendas'}
                                             </button>
