@@ -25,6 +25,7 @@ class OrderController extends Controller
                 'phone'           => $o->phone,
                 'total'           => (float) $o->total,
                 'shipping_method' => $o->shipping_method,
+                'address'         => $o->address,
                 'shipping_status' => $o->shipping_status,
                 'status'          => $o->status,
                 'items_count'     => $o->items->sum('quantity'),

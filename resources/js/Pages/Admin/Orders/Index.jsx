@@ -24,7 +24,7 @@ function fmtDate(iso) {
     }
 }
 
-const SHIPPING_LABEL = { home: 'A Domicilio', branch: 'A Sucursal' };
+const SHIPPING_LABEL = { home: 'Envio a Domicilio', branch: 'Envio a Sucursal' };
 
 const STATUS_BADGE = {
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -144,7 +144,10 @@ function OrdersTable({ orders }) {
                                     <p className="text-xs text-brand-text-muted truncate">{o.email}</p>
                                 </td>
                                 <td className="px-4 py-3 text-brand-text-muted">
-                                    {SHIPPING_LABEL[o.shipping_method] ?? o.shipping_method}
+                                    <p>{SHIPPING_LABEL[o.shipping_method] ?? o.shipping_method}</p>
+                                    {o.address && (
+                                        <p className="text-xs text-brand-text-muted/80 mt-0.5">{o.address}</p>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3 text-brand-text-muted">{o.items_count}</td>
                                 <td className="px-4 py-3 font-bold text-brand-primary">{fmt(o.total)}</td>

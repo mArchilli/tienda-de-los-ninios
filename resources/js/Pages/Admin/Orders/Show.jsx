@@ -24,7 +24,7 @@ function fmtDate(iso) {
     }
 }
 
-const SHIPPING_LABEL = { home: 'A Domicilio', branch: 'A Sucursal' };
+const SHIPPING_LABEL = { home: 'Envio a Domicilio', branch: 'Envio a Sucursal' };
 
 const STATUS_BADGE = {
     pending:    'bg-amber-100 text-amber-700 border-amber-200',
@@ -395,8 +395,8 @@ export default function OrdersShow({ order }) {
                             <Row label="Provincia"        value={order.province} />
                             <Row label="Localidad"        value={order.city} />
                             <Row label="Código postal"    value={order.postal_code} />
-                            {order.shipping_method === 'home' && (
-                                <Row label="Dirección" value={order.address} />
+                            {(order.shipping_method === 'home' || order.address) && (
+                                <Row label="Dirección" value={order.address || '—'} />
                             )}
                             {order.observations && (
                                 <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
