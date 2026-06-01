@@ -182,7 +182,7 @@ export default function CheckoutIndex({ cart }) {
 
     return (
         <StorefrontLayout>
-            <Head title="Checkout · Mimos" />
+            <Head title="Checkout · La Tienda de los Niños" />
 
             <form onSubmit={submit} className="mx-auto max-w-screen-2xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-6">

@@ -48,7 +48,7 @@ export default function Confirmation({ order, items = [], whatsapp_url, whatsapp
 
     return (
         <StorefrontLayout>
-            <Head title="Pedido generado · Mimos" />
+            <Head title="Pedido generado · La Tienda de los Niños" />
 
             <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-12">
                 <section className="rounded-2xl border border-brand-secondary/30 bg-white p-8 shadow-sm text-center">

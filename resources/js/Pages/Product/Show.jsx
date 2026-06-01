@@ -237,7 +237,7 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
 
     return (
         <StorefrontLayout cartCount={cartCount}>
-            <Head title={`${product.name} - Mimos`} />
+            <Head title={`${product.name} - La Tienda de los Niños`} />
 
             <section className="relative overflow-hidden bg-brand-bg">
                 <div className="store-shell relative pt-1 pb-4 sm:pt-2 sm:pb-5 lg:pt-3 lg:pb-6 xl:pt-4 xl:pb-7">

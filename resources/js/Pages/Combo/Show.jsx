@@ -327,7 +327,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
 
     return (
         <StorefrontLayout cartCount={cartCount}>
-            <Head title={`${combo.name} · Mimos`} />
+            <Head title={`${combo.name} · La Tienda de los Niños`} />
 
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
                 {/* Breadcrumb + volver */}

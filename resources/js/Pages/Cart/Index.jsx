@@ -215,7 +215,7 @@ export default function CartIndex({ cart }) {
 
     return (
         <StorefrontLayout>
-            <Head title="Mi carrito · Mimos" />
+            <Head title="Mi carrito · La Tienda de los Niños" />
 
             <div className="mx-auto max-w-screen-2xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-6">
