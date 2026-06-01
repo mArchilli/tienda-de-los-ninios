@@ -27,16 +27,10 @@ export default function Hero() {
 
                         <div className="mt-6 flex flex-wrap gap-3">
                             <a
-                                href="#combos"
+                                href="/catalogo"
                                 className="home-button inline-flex items-center justify-center bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-8 sm:py-4 sm:text-base lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg"
                             >
                                 Ver combos
-                            </a>
-                            <a
-                                href="/catalogo"
-                                className="home-button inline-flex items-center justify-center border border-brand-cta bg-white px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-brand-cta shadow-sm transition-colors hover:bg-brand-primary-surface sm:px-8 sm:py-4 sm:text-base lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg"
-                            >
-                                Catalogo completo
                             </a>
                         </div>
                     </div>
@@ -73,16 +67,10 @@ export default function Hero() {
 
                             <div className="mt-6 flex flex-wrap gap-3 sm:mt-5 sm:gap-3.5 lg:mt-6">
                                 <a
-                                    href="#combos"
+                                    href="/catalogo"
                                     className="home-button inline-flex items-center justify-center bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-8 sm:py-4 sm:text-base lg:px-11 lg:py-[1.35rem] lg:text-lg xl:px-[3.25rem] xl:py-[1.65rem] xl:text-xl"
                                 >
                                     Ver combos
-                                </a>
-                                <a
-                                    href="/catalogo"
-                                    className="home-button inline-flex items-center justify-center border border-brand-cta bg-white px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-brand-cta shadow-sm transition-colors hover:bg-brand-primary-surface sm:px-8 sm:py-4 sm:text-base lg:px-11 lg:py-[1.35rem] lg:text-lg xl:px-[3.25rem] xl:py-[1.65rem] xl:text-xl"
-                                >
-                                    Catalogo completo
                                 </a>
                             </div>
                         </div>
