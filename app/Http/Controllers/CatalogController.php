@@ -15,7 +15,18 @@ class CatalogController extends Controller
     {
         $allCategories = Category::orderBy('name')->pluck('name')->values();
         $allSizes = Size::whereHas('products', fn ($q) => $q->where('product_size.stock', '>', 0))
-            ->orderBy('name')
+            ->get(['name'])
+            ->sortBy(function ($size) {
+                $lower = mb_strtolower($size->name);
+                $group = match (true) {
+                    str_contains($lower, 'bebe') || str_contains($lower, 'bebé') => 0,
+                    preg_match('/ni[ñn][oa]/u', $lower) === 1                     => 1,
+                    default                                                       => 2,
+                };
+                $number = preg_match('/\d+/', $size->name, $m) ? (int) $m[0] : PHP_INT_MAX;
+
+                return $group * 1000 + $number;
+            })
             ->pluck('name')
             ->values();
 
