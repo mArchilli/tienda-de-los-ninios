@@ -8,14 +8,15 @@ use App\Models\Color;
 use App\Models\Gender;
 use App\Models\Product;
 use App\Models\Size;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    public function __construct(private ImageProcessor $imageProcessor) {}
+
     public function index(Request $request)
     {
         $stockSubquery = DB::table('product_size')
@@ -210,9 +211,8 @@ class ProductController extends Controller
 
     private function uploadImages(array $files): array
     {
-        $base    = rtrim(env('PUBLIC_IMAGES_PATH', 'images'), '/');
-        $manager = new ImageManager(new Driver());
-        $paths   = [];
+        $base  = rtrim(env('PUBLIC_IMAGES_PATH', 'images'), '/');
+        $paths = [];
 
         foreach ($files as $file) {
             $filename    = uniqid() . '.' . $file->getClientOriginalExtension();
@@ -221,10 +221,7 @@ class ProductController extends Controller
 
             $file->move($destination, $filename);
 
-            $image = $manager->read($fullPath);
-            if ($image->width() > 800 || $image->height() > 1066) {
-                $image->scaleDown(800, 1066)->save($fullPath, quality: 85);
-            }
+            $this->imageProcessor->resizeDownInPlace($fullPath, 800, 1066, 85);
 
             $paths[] = $base . '/products/' . $filename;
         }

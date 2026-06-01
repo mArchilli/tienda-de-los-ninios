@@ -2,27 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use League\Glide\ServerFactory;
 
 class ImageController extends Controller
 {
-    public function show(Request $request, string $filename)
+    public function show(Request $request, string $filename, ImageProcessor $processor)
     {
-        if (! extension_loaded('gd')) {
-            abort(500, 'La extensión GD de PHP no está habilitada. Activala en php.ini y reiniciá Apache.');
-        }
+        $relativePath = 'images/products/' . $filename;
+        $sourcePath   = public_path($relativePath);
 
-        $path = 'images/products/' . $filename;
+        if (! $processor->isAvailable()) {
+            if (! is_file($sourcePath)) {
+                abort(404);
+            }
+
+            return response()->file($sourcePath, [
+                'Cache-Control' => 'public, max-age=31536000',
+            ]);
+        }
 
         $server = ServerFactory::create([
             'source' => public_path(),
             'cache'  => storage_path('app/glide-cache'),
+            'driver' => $processor->driver(),
         ]);
 
         try {
             $params    = $request->only(['w', 'h', 'fit', 'q', 'fm']);
-            $cachePath = $server->makeImage($path, $params);
+            $cachePath = $server->makeImage($relativePath, $params);
             $fullPath  = storage_path('app/glide-cache') . '/' . $cachePath;
 
             return response()->file($fullPath, [

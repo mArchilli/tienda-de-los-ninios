@@ -37,7 +37,7 @@ export default function CategoryShortcuts() {
                                 <Link
                                     key={category.label}
                                     href={category.href}
-                                    className={`group relative flex flex-col items-center rounded-[1.3rem] border border-brand-cta/40 px-3 py-4 transition duration-300 hover:-translate-y-1 hover:border-brand-cta ${
+                                    className={`group relative flex flex-col items-center rounded-[1.3rem] px-3 py-4 transition duration-300 hover:-translate-y-1 hover:border-brand-cta ${
                                         category.label === 'COMBOS'
                                             ? 'col-span-2 mx-auto w-full sm:col-span-1 sm:mx-0'
                                             : ''

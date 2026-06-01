@@ -9,15 +9,16 @@ use App\Models\ComboItem;
 use App\Models\Gender;
 use App\Models\Product;
 use App\Models\Size;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use Inertia\Inertia;
 
 class ComboController extends Controller
 {
+    public function __construct(private ImageProcessor $imageProcessor) {}
+
     public function index(Request $request)
     {
         $search     = $request->input('search', '');
@@ -274,10 +275,9 @@ class ComboController extends Controller
         return back()->with('success', 'Combo eliminado correctamente.');
     }
 
-    private function uploadImage($file): string
+    private function uploadImage(\Illuminate\Http\UploadedFile $file): string
     {
         $base        = rtrim(env('COMBO_IMAGES_PATH', 'images'), '/');
-        $manager     = new ImageManager(new Driver());
         $filename    = uniqid() . '.' . $file->getClientOriginalExtension();
         $destination = public_path($base . '/combos');
         $fullPath    = $destination . '/' . $filename;
@@ -288,10 +288,7 @@ class ComboController extends Controller
 
         $file->move($destination, $filename);
 
-        $image = $manager->read($fullPath);
-        if ($image->width() > 800 || $image->height() > 800) {
-            $image->scaleDown(800, 800)->save($fullPath, quality: 85);
-        }
+        $this->imageProcessor->resizeDownInPlace($fullPath, 800, 800, 85);
 
         return $base . '/combos/' . $filename;
     }

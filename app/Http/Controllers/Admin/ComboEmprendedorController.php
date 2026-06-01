@@ -9,14 +9,15 @@ use App\Models\ComboEmprendedorCategoryLimit;
 use App\Models\ComboEmprendedorItem;
 use App\Models\Gender;
 use App\Models\Size;
+use App\Services\ImageProcessor;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use Inertia\Inertia;
 
 class ComboEmprendedorController extends Controller
 {
+    public function __construct(private ImageProcessor $imageProcessor) {}
+
     public function index(Request $request)
     {
         $search   = $request->input('search', '');
@@ -273,10 +274,9 @@ class ComboEmprendedorController extends Controller
         return $data;
     }
 
-    private function uploadImage($file): string
+    private function uploadImage(\Illuminate\Http\UploadedFile $file): string
     {
         $base        = rtrim(env('COMBO_IMAGES_PATH', 'images'), '/');
-        $manager     = new ImageManager(new Driver());
         $filename    = uniqid() . '.' . $file->getClientOriginalExtension();
         $destination = public_path($base . '/combos-emprendedor');
         $fullPath    = $destination . '/' . $filename;
@@ -287,10 +287,7 @@ class ComboEmprendedorController extends Controller
 
         $file->move($destination, $filename);
 
-        $image = $manager->read($fullPath);
-        if ($image->width() > 800 || $image->height() > 800) {
-            $image->scaleDown(800, 800)->save($fullPath, quality: 85);
-        }
+        $this->imageProcessor->resizeDownInPlace($fullPath, 800, 800, 85);
 
         return $base . '/combos-emprendedor/' . $filename;
     }

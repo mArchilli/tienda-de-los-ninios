@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Services\ImageProcessor;
 use Illuminate\Console\Command;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class OptimizeProductImages extends Command
 {
@@ -15,11 +14,15 @@ class OptimizeProductImages extends Command
     private const MAX_HEIGHT = 1066;
     private const QUALITY    = 85;
 
-    public function handle(): int
+    public function handle(ImageProcessor $processor): int
     {
-        $dir     = public_path('images/products');
-        $dryRun  = $this->option('dry-run');
-        $manager = new ImageManager(new Driver());
+        if (! $processor->isAvailable()) {
+            $this->error('No hay driver de imágenes disponible (ni GD ni Imagick). Instalá una de las dos extensiones de PHP.');
+            return self::FAILURE;
+        }
+
+        $dir    = public_path('images/products');
+        $dryRun = $this->option('dry-run');
 
         if (!is_dir($dir)) {
             $this->error("El directorio {$dir} no existe.");
@@ -36,31 +39,33 @@ class OptimizeProductImages extends Command
             return self::SUCCESS;
         }
 
-        $this->info(sprintf('Encontradas %d imágenes.%s', count($files), $dryRun ? ' (dry-run)' : ''));
+        $this->info(sprintf('Driver: %s · Encontradas %d imágenes.%s', $processor->driver(), count($files), $dryRun ? ' (dry-run)' : ''));
 
         $processed = 0;
         $skipped   = 0;
 
         foreach ($files as $path) {
             try {
-                $image = $manager->read($path);
-                $w     = $image->width();
-                $h     = $image->height();
-
-                if ($w <= self::MAX_WIDTH && $h <= self::MAX_HEIGHT) {
-                    $this->line("  <fg=gray>SKIP</> " . basename($path) . " ({$w}×{$h})");
-                    $skipped++;
+                if ($dryRun) {
+                    ['width' => $w, 'height' => $h] = $processor->dimensions($path);
+                    if ($w > self::MAX_WIDTH || $h > self::MAX_HEIGHT) {
+                        $this->line("  <fg=green>OPT</>  " . basename($path) . " ({$w}×{$h} → máx " . self::MAX_WIDTH . "×" . self::MAX_HEIGHT . ")");
+                        $processed++;
+                    } else {
+                        $this->line("  <fg=gray>SKIP</> " . basename($path) . " ({$w}×{$h})");
+                        $skipped++;
+                    }
                     continue;
                 }
 
-                $this->line("  <fg=green>OPT</>  " . basename($path) . " ({$w}×{$h} → máx " . self::MAX_WIDTH . "×" . self::MAX_HEIGHT . ")");
-
-                if (!$dryRun) {
-                    $image->scaleDown(self::MAX_WIDTH, self::MAX_HEIGHT);
-                    $image->save($path, quality: self::QUALITY);
+                $result = $processor->resizeDownInPlace($path, self::MAX_WIDTH, self::MAX_HEIGHT, self::QUALITY);
+                if ($result['resized']) {
+                    $this->line("  <fg=green>OPT</>  " . basename($path) . " ({$result['width']}×{$result['height']} → máx " . self::MAX_WIDTH . "×" . self::MAX_HEIGHT . ")");
+                    $processed++;
+                } else {
+                    $this->line("  <fg=gray>SKIP</> " . basename($path) . " ({$result['width']}×{$result['height']})");
+                    $skipped++;
                 }
-
-                $processed++;
             } catch (\Throwable $e) {
                 $this->warn("  ERROR " . basename($path) . ": " . $e->getMessage());
             }
