@@ -529,7 +529,7 @@ function ComboEmprendedorFormModal({ open, onClose, genders, categories = [], co
         })
         .catch(() => {})
         .finally(() => setProductsLoading(false));
-    }, [selectedGenderIds, open]);
+    }, [selectedGenderIds]);
 
     const toggleGender = (id) => {
         setSelectedGenderIds((prev) =>

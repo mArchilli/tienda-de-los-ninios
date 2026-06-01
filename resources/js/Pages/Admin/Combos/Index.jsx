@@ -578,7 +578,7 @@ function ComboFormModal({ open, onClose, sizes, genders = [], combo = null }) {
         })
         .catch(() => {})
         .finally(() => setCategoriesLoading(false));
-    }, [selectedSizeIds, open, form.gender_id]);
+    }, [selectedSizeIds, form.gender_id]);
 
     const toggleSize = (id) => {
         setSelectedSizeIds((prev) =>
