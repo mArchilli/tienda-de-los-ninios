@@ -183,6 +183,14 @@ export default function Header({ cartCount, onMobileMenuChange }) {
                                     );
                                 })}
                             </ul>
+
+                            <Link
+                                href="/login"
+                                className="mt-10 text-xs text-white/35 hover:text-white/60 transition-colors"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Ingresar
+                            </Link>
                         </div>
                     </nav>
                 </div>

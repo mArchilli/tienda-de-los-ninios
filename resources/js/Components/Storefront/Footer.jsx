@@ -40,9 +40,9 @@ const COLUMNS = [
         links: [
             { label: 'Combos', href: '/catalogo?tipo=combos' },
             { label: 'Nene', href: '/catalogo?audiencia=nino' },
-            { label: 'Bebe', href: '/catalogo?audiencia=bebe&talles=0,1,2,3,4,5,6' },
+            { label: 'Bebe', href: '/catalogo?audiencia=bebe' },
             { label: 'Nena', href: '/catalogo?audiencia=nina' },
-            { label: 'Beba', href: '/catalogo?audiencia=beba&talles=0,1,2,3,4,5,6' },
+            { label: 'Beba', href: '/catalogo?audiencia=beba' },
             { label: 'Catalogo', href: '/catalogo' },
         ],
     },
@@ -118,7 +118,10 @@ export default function Footer() {
                 <div className="store-shell">
                     <div className="flex flex-col items-center justify-between gap-3 px-6 py-5 text-xs sm:flex-row sm:px-8 lg:px-10">
                         <p>{'\u00a9'} 2026 La Tienda de los Ninos. Todos los derechos reservados.</p>
-                        <p>Desarrollado por <span className="text-brand-text">PAMPA LABS</span></p>
+                        <div className="flex items-center gap-5">
+                            <p>Desarrollado por <a href="https://www.archillimatias.dev" target="_blank" rel="noreferrer" className="text-brand-text hover:text-white transition-colors">PAMPA LABS</a></p>
+                            <a href="/login" className="text-white/40 hover:text-white/70 transition-colors">Ingresar</a>
+                        </div>
                     </div>
                 </div>
             </div>
