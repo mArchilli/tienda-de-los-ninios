@@ -1,11 +1,25 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 const PRODUCTS_PAGE_SIZE = 20;
 const PRIORITY_IMAGE_COUNT = 6;
 const SEARCH_DEBOUNCE_MS = 250;
 const BABY_NUMERIC_SIZE_MAX = 6;
+
+// Snapshot del estado del catálogo (filtros + búsqueda + orden + scroll) guardado en
+// sessionStorage para que, al visitar una prenda y volver, se restaure tal cual estaba.
+const CATALOG_SNAPSHOT_KEY = 'catalog:snapshot';
+
+function readCatalogSnapshot() {
+    if (typeof window === 'undefined') return null;
+    try {
+        const raw = sessionStorage.getItem(CATALOG_SNAPSHOT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
 
 const PlaceholderIcon = (
     <svg className="h-12 w-12 text-brand-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -219,7 +233,11 @@ function FilterChip({ label, active, onClick }) {
 // Carrusel paginado 2×2 para la modal
 function FilterCarousel({ items, selected, onToggle }) {
     const ITEMS_PER_PAGE = 4;
-    const [page, setPage] = useState(0);
+    // Arranca en la página donde está el primer filtro aplicado, para que se vea de entrada.
+    const [page, setPage] = useState(() => {
+        const firstSelectedIndex = items.findIndex((item) => selected.includes(item));
+        return firstSelectedIndex >= 0 ? Math.floor(firstSelectedIndex / ITEMS_PER_PAGE) : 0;
+    });
     const touchStartX = useRef(null);
 
     const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
@@ -327,14 +345,14 @@ function FilterCarousel({ items, selected, onToggle }) {
 // Panel de filtros compartido entre mobile y desktop
 function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, allCategories, selectedCategories, toggleCategory, priceRange, togglePriceRange, onlyFeatured, setOnlyFeatured, clearFilters, activeFilterCount, setVisibleProducts }) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-[1.75rem] border border-brand-cta/35 bg-white shadow-[0_24px_52px_rgba(41,50,65,0.18)] animate-fade-in sm:absolute sm:inset-auto sm:left-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:w-[min(92vw,340px)] sm:rounded-[1.35rem]">
+        <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col overflow-hidden rounded-t-[1.75rem] border border-brand-cta/35 bg-white shadow-[0_24px_52px_rgba(41,50,65,0.18)] animate-fade-in sm:absolute sm:inset-auto sm:left-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[calc(100vh-13rem)] sm:w-[min(92vw,340px)] sm:rounded-[1.35rem]">
             {/* Handle mobile */}
-            <div className="sm:hidden flex justify-center pt-3 pb-1">
+            <div className="sm:hidden flex flex-shrink-0 justify-center pt-3 pb-1">
                 <div className="h-1 w-10 rounded-full bg-brand-cta/25" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-text">Filtros</p>
                 <button
                     type="button"
@@ -349,7 +367,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
             </div>
 
             {/* Contenido con scroll */}
-            <div className="overflow-y-auto max-h-[60vh] sm:max-h-none">
+            <div className="flex-1 overflow-y-auto">
                 {allSizes.length > 0 && (
                     <div className="px-4 py-4 border-b border-brand-cta/10">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted mb-3">Talle</p>
@@ -417,7 +435,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between gap-2 border-t border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
+            <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-brand-cta/15 bg-brand-cta/5 px-4 py-3">
                 <button
                     type="button"
                     onClick={clearFilters}
@@ -441,25 +459,50 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
 export default function Catalog({ combos = [], combosEmprendedor = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
     const { url } = usePage();
     const queryState = useMemo(() => parseCatalogQueryState(url), [url]);
-    const [sort, setSort] = useState('relevancia');
+
+    // Restaura el snapshot solo si corresponde a esta misma URL (volver desde una prenda).
+    // Si la URL trae filtros distintos (p. ej. un link de categoría), se ignora el snapshot.
+    const snapshotRef = useRef(undefined);
+    if (snapshotRef.current === undefined) {
+        const snap = readCatalogSnapshot();
+        snapshotRef.current = snap && snap.url === url ? snap : null;
+    }
+    const restored = snapshotRef.current !== null;
+    const snap = snapshotRef.current;
+
+    const [sort, setSort] = useState(restored ? (snap.sort ?? 'relevancia') : 'relevancia');
     const [sortOpen, setSortOpen] = useState(false);
-    const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PAGE_SIZE);
-    const [search, setSearch] = useState('');
+    const [visibleProducts, setVisibleProducts] = useState(restored ? (snap.visibleProducts ?? PRODUCTS_PAGE_SIZE) : PRODUCTS_PAGE_SIZE);
+    const [search, setSearch] = useState(restored ? (snap.search ?? '') : '');
     const [filtersOpen, setFiltersOpen] = useState(false);
 
-    const [audiences, setAudiences] = useState(queryState.audiences);
-    const [selectedSizes, setSelectedSizes] = useState(queryState.selectedSizes);
-    const [selectedCategories, setSelectedCategories] = useState(queryState.selectedCategories);
-    const [onlyFeatured, setOnlyFeatured] = useState(queryState.onlyFeatured);
-    const [priceRange, setPriceRange] = useState(queryState.priceRange);
+    const [audiences, setAudiences] = useState(restored ? (snap.audiences ?? []) : queryState.audiences);
+    const [selectedSizes, setSelectedSizes] = useState(restored ? (snap.selectedSizes ?? []) : queryState.selectedSizes);
+    const [selectedCategories, setSelectedCategories] = useState(restored ? (snap.selectedCategories ?? []) : queryState.selectedCategories);
+    const [onlyFeatured, setOnlyFeatured] = useState(restored ? Boolean(snap.onlyFeatured) : queryState.onlyFeatured);
+    const [priceRange, setPriceRange] = useState(restored ? (snap.priceRange ?? null) : queryState.priceRange);
 
-    // Lock body scroll cuando el panel de filtros está abierto en mobile
+    // Lock body scroll solo en mobile (bottom-sheet). En desktop el panel es un dropdown
+    // acotado a la altura del viewport, así que no hace falta bloquear el scroll.
     useEffect(() => {
-        document.body.style.overflow = filtersOpen ? 'hidden' : '';
+        if (!filtersOpen) {
+            document.body.style.overflow = '';
+            return;
+        }
+        const isMobile = window.matchMedia('(max-width: 639px)').matches;
+        if (!isMobile) return;
+        document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = ''; };
     }, [filtersOpen]);
 
+    // Sincroniza el estado con la URL cuando ésta cambia (links de categoría, etc.).
+    // Omite la primera ejecución si venimos de restaurar un snapshot, para no pisarlo.
+    const skipNextSyncRef = useRef(restored);
     useEffect(() => {
+        if (skipNextSyncRef.current) {
+            skipNextSyncRef.current = false;
+            return;
+        }
         setAudiences(queryState.audiences);
         setSelectedSizes(queryState.selectedSizes);
         setSelectedCategories(queryState.selectedCategories);
@@ -468,6 +511,36 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
         setSearch('');
     }, [queryState]);
+
+    // Guarda el snapshot antes de navegar a una prenda (o al salir), incluyendo el scroll.
+    const stateRef = useRef(null);
+    stateRef.current = { audiences, selectedSizes, selectedCategories, onlyFeatured, priceRange, search, sort, visibleProducts };
+    useEffect(() => {
+        const save = () => {
+            try {
+                sessionStorage.setItem(CATALOG_SNAPSHOT_KEY, JSON.stringify({
+                    ...stateRef.current,
+                    scrollY: window.scrollY,
+                    url,
+                }));
+            } catch { /* sessionStorage no disponible */ }
+        };
+        const stopInertia = router.on('before', save);
+        window.addEventListener('pagehide', save);
+        return () => {
+            stopInertia();
+            window.removeEventListener('pagehide', save);
+        };
+    }, [url]);
+
+    // Restaura la posición de scroll tras restaurar los filtros (refuerza sobre Inertia).
+    useLayoutEffect(() => {
+        if (!restored || typeof snap.scrollY !== 'number') return;
+        window.scrollTo(0, snap.scrollY);
+        const id = requestAnimationFrame(() => window.scrollTo(0, snap.scrollY));
+        return () => cancelAnimationFrame(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Cerrar sort al hacer click fuera (el container del sort usa stopPropagation en onMouseDown)
     useEffect(() => {
