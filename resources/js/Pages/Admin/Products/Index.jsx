@@ -973,10 +973,10 @@ function FilterSelect({ label, iconName, value, onChange, options, placeholder }
     );
 }
 
-function FilterSidebar({ localFilters, onChange, onReset, categories, colors, sizes, genders }) {
+function FilterContent({ localFilters, onChange, onReset, categories, colors, sizes, genders, showHeader = true }) {
     return (
-        <aside className="w-72 shrink-0 border-l border-gray-200 bg-brand-bg">
-            <div className="sticky top-0 max-h-screen overflow-y-auto p-4 space-y-3">
+        <div className="space-y-3">
+            {showHeader && (
                 <div className="flex items-center justify-between pb-1">
                     <div className="flex items-center gap-2 text-brand-text font-bold text-sm">
                         <Icon name="filter" className="h-4 w-4 text-brand-primary" />
@@ -989,6 +989,7 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                         Limpiar todo
                     </button>
                 </div>
+            )}
 
                 {/* Search */}
                 <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
@@ -1014,6 +1015,8 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                     </p>
                     <div className="grid grid-cols-2 gap-1.5">
                         {[
+                            { value: 'date_desc', label: 'Más nuevo' },
+                            { value: 'date_asc',  label: 'Más antiguo' },
                             { value: 'name_asc',  label: 'A → Z' },
                             { value: 'name_desc', label: 'Z → A' },
                             { value: 'stock_asc',  label: 'Menos stock' },
@@ -1081,8 +1084,45 @@ function FilterSidebar({ localFilters, onChange, onReset, categories, colors, si
                         Sin stock
                     </button>
                 </div>
+        </div>
+    );
+}
+
+function FilterSidebar(props) {
+    return (
+        <aside className="hidden lg:block w-72 shrink-0 border-l border-gray-200 bg-brand-bg">
+            <div className="sticky top-0 max-h-screen overflow-y-auto p-4">
+                <FilterContent {...props} />
             </div>
         </aside>
+    );
+}
+
+// ─── Mobile filter modal ──────────────────────────────────────────────────────
+
+function MobileFilterModal({ open, onClose, ...filterProps }) {
+    return (
+        <Modal open={open} onClose={onClose} title="Filtros">
+            <div className="space-y-4">
+                <FilterContent {...filterProps} showHeader={false} />
+                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                    <button
+                        type="button"
+                        onClick={filterProps.onReset}
+                        className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-brand-text-muted hover:bg-gray-50 transition-colors"
+                    >
+                        Limpiar todo
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 rounded-xl bg-brand-cta px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                    >
+                        Ver resultados
+                    </button>
+                </div>
+            </div>
+        </Modal>
     );
 }
 
@@ -1100,7 +1140,7 @@ export default function Index({ products, filters, categories, colors, sizes, ge
         gender:     filters.gender     ?? '',
         featured:   filters.featured   ?? '',
         stock_zero: filters.stock_zero ?? '',
-        sort:       filters.sort       ?? 'name_asc',
+        sort:       filters.sort       ?? 'date_desc',
     });
 
     const [createOpen, setCreateOpen]     = useState(false);
@@ -1109,6 +1149,16 @@ export default function Index({ products, filters, categories, colors, sizes, ge
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds]     = useState(new Set());
     const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+    const activeFilterCount = useMemo(() => {
+        let count = 0;
+        ['search', 'category', 'color', 'size', 'gender', 'featured', 'stock_zero'].forEach((k) => {
+            if (localFilters[k] !== '' && localFilters[k] != null) count++;
+        });
+        if (localFilters.sort && localFilters.sort !== 'date_desc') count++;
+        return count;
+    }, [localFilters]);
 
     const toggleSelect = (id) =>
         setSelectedIds((prev) => {
@@ -1146,7 +1196,7 @@ export default function Index({ products, filters, categories, colors, sizes, ge
     };
 
     const resetFilters = () => {
-        const empty = { search: '', category: '', color: '', size: '', gender: '', featured: '', stock_zero: '', sort: 'name_asc' };
+        const empty = { search: '', category: '', color: '', size: '', gender: '', featured: '', stock_zero: '', sort: 'date_desc' };
         setLocalFilters(empty);
         applyFilters(empty);
     };
@@ -1300,6 +1350,34 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                 onClose={() => setBulkDeleteOpen(false)}
                 selectedIds={selectedIds}
                 onSuccess={exitSelectionMode}
+            />
+
+            {/* Floating filter button (mobile only) */}
+            {!selectionMode && (
+                <button
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className="lg:hidden fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-brand-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-primary/30 hover:bg-brand-primary-dark transition-colors"
+                >
+                    <Icon name="filter" className="h-5 w-5" />
+                    Filtros
+                    {activeFilterCount > 0 && (
+                        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-brand-primary">
+                            {activeFilterCount}
+                        </span>
+                    )}
+                </button>
+            )}
+
+            <MobileFilterModal
+                open={mobileFiltersOpen}
+                onClose={() => setMobileFiltersOpen(false)}
+                localFilters={localFilters}
+                onChange={handleChange}
+                onReset={resetFilters}
+                categories={categories}
+                colors={colors}
+                sizes={sizes}
+                genders={genders}
             />
         </AuthenticatedLayout>
     );

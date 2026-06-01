@@ -55,12 +55,14 @@ class ProductController extends Controller
             $query->whereDoesntHave('sizes', fn($q) => $q->where('product_size.stock', '>', 0));
         }
 
-        $sort = $request->input('sort', 'name_asc');
+        $sort = $request->input('sort', 'date_desc');
         match ($sort) {
+            'name_asc'   => $query->orderBy('name', 'asc'),
             'name_desc'  => $query->orderBy('name', 'desc'),
             'stock_asc'  => $query->orderBy('total_stock', 'asc')->orderBy('name', 'asc'),
             'stock_desc' => $query->orderBy('total_stock', 'desc')->orderBy('name', 'asc'),
-            default      => $query->orderBy('name', 'asc'),
+            'date_asc'   => $query->orderBy('created_at', 'asc')->orderBy('id', 'asc'),
+            default      => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
         };
 
         $products = $query->paginate(12)->withQueryString();
