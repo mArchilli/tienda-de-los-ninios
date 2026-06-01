@@ -180,6 +180,11 @@ export default function CheckoutIndex({ cart }) {
     const isHome = data.shipping_method === 'home';
     const hasShippingMethod = data.shipping_method === 'home' || data.shipping_method === 'branch';
 
+    const requiredFields = ['first_name', 'last_name', 'email', 'dni', 'province', 'locality', 'postal_code', 'courier', 'phone'];
+    if (isHome) requiredFields.push('address');
+    const allFieldsFilled = hasShippingMethod && requiredFields.every((f) => String(data[f] ?? '').trim() !== '');
+    const isFormComplete = hasShippingMethod && allFieldsFilled;
+
     return (
         <StorefrontLayout>
             <Head title="Checkout · La Tienda de los Niños" />
@@ -209,18 +214,65 @@ export default function CheckoutIndex({ cart }) {
                     </Link>
                 </div>
 
-                <div className="mb-6 flex items-start gap-4 rounded-[1.4rem] border border-[#25D366]/40 bg-[#25D366]/8 px-5 py-4">
-                    <svg className="mt-0.5 h-5 w-5 shrink-0 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-                    </svg>
-                    <div>
-                        <p className="text-sm font-bold text-brand-text">¿Como funciona?</p>
-                        <ol className="mt-1.5 list-none space-y-1 text-sm text-brand-text-muted">
-                            <li><span className="font-semibold text-brand-text">1.</span> Tu pedido se enviara por <span className="font-semibold text-[#25D366]">WhatsApp</span> a la tienda al confirmar.</li>
-                            <li><span className="font-semibold text-brand-text">2.</span> Coordinamos el envio y te informamos el costo.</li>
-                            <li><span className="font-semibold text-brand-text">3.</span> Una vez cerrado el envio, se acuerda el pago.</li>
-                        </ol>
-                    </div>
+                <div className="mb-6 rounded-[1.4rem] border border-brand-primary/25 bg-white p-5 shadow-[0_4px_18px_rgba(41,50,65,0.07)]">
+                    <p className="text-sm font-extrabold uppercase tracking-[0.1em] text-brand-text">
+                        ¿Cómo funciona?
+                    </p>
+
+                    <ol className="mt-4 space-y-3">
+                        <li className="flex items-center gap-3">
+                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${hasShippingMethod ? 'bg-[#25D366] text-white' : 'border-2 border-brand-primary/30 text-brand-primary/60'}`}>
+                                {hasShippingMethod ? (
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : '1'}
+                            </span>
+                            <span className={`text-sm font-semibold transition-colors ${hasShippingMethod ? 'text-[#25D366]' : 'text-brand-text'}`}>
+                                Elegí un método de envío <span className="font-normal text-brand-text-muted">(domicilio o sucursal)</span>
+                            </span>
+                        </li>
+
+                        <li className="flex items-center gap-3">
+                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${allFieldsFilled ? 'bg-[#25D366] text-white' : 'border-2 border-brand-primary/30 text-brand-primary/60'}`}>
+                                {allFieldsFilled ? (
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : '2'}
+                            </span>
+                            <span className={`text-sm font-semibold transition-colors ${allFieldsFilled ? 'text-[#25D366]' : 'text-brand-text'}`}>
+                                Completá todos los campos del formulario
+                            </span>
+                        </li>
+
+                        <li className="flex items-start gap-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-brand-primary/20 text-xs font-bold text-brand-primary/40">3</span>
+                            <span className="pt-0.5 text-sm text-brand-text-muted">
+                                Al confirmar, tu pedido se enviará por <span className="font-semibold text-[#25D366]">WhatsApp</span> a la tienda.
+                            </span>
+                        </li>
+
+                        <li className="flex items-start gap-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-brand-primary/20 text-xs font-bold text-brand-primary/40">4</span>
+                            <span className="pt-0.5 text-sm text-brand-text-muted">
+                                Coordinamos el envío y te informamos el costo.
+                            </span>
+                        </li>
+
+                        <li className="flex items-start gap-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-brand-primary/20 text-xs font-bold text-brand-primary/40">5</span>
+                            <span className="pt-0.5 text-sm text-brand-text-muted">
+                                Una vez cerrado el envío, se acuerda el pago.
+                            </span>
+                        </li>
+                    </ol>
+
+                    <p className={`mt-4 text-xs font-semibold transition-colors ${isFormComplete ? 'text-[#25D366]' : 'text-brand-text-muted'}`}>
+                        {isFormComplete
+                            ? '¡Todo listo! Ya podés enviar tu pedido.'
+                            : 'El botón "Enviar mi pedido" se habilitará cuando completes los pasos 1 y 2.'}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
@@ -337,7 +389,7 @@ export default function CheckoutIndex({ cart }) {
 
                         <button
                             type="submit"
-                            disabled={processing || !hasShippingMethod}
+                            disabled={processing || !isFormComplete}
                             className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#1ebe5d] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
