@@ -169,6 +169,99 @@ class CartController extends Controller
         return $max;
     }
 
+    /**
+     * Demanda total de stock del carrito, agrupada por "product_id:size_id".
+     * Suma productos sueltos y ambas variantes de combo, multiplicando cada
+     * prenda por la cantidad (quantity) del ítem que la contiene. Los productos
+     * sin talle (size_id nulo) no consumen stock por talle y se omiten.
+     */
+    protected static function cartDemand(array $cart): array
+    {
+        $demand = [];
+        $add = function (int $pid, int $sid, int $qty) use (&$demand) {
+            if ($pid <= 0 || $sid <= 0 || $qty <= 0) return;
+            $key = $pid . ':' . $sid;
+            $demand[$key] = ($demand[$key] ?? 0) + $qty;
+        };
+
+        foreach (($cart['products'] ?? []) as $i) {
+            $add((int) ($i['product_id'] ?? 0), (int) ($i['size_id'] ?? 0), (int) ($i['quantity'] ?? 0));
+        }
+
+        foreach (($cart['combos'] ?? []) as $i) {
+            $qty = (int) ($i['quantity'] ?? 0);
+
+            if (($i['variant'] ?? null) === 'emprendedor') {
+                // Cada pick trae su propio (product_id, size_id).
+                foreach (($i['picks'] ?? []) as $pick) {
+                    $add((int) ($pick['product_id'] ?? 0), (int) ($pick['size_id'] ?? 0), $qty);
+                }
+                continue;
+            }
+
+            // Combo tradicional: todas las prendas comparten el talle del combo.
+            $sid = (int) ($i['size_id'] ?? 0);
+            foreach (($i['picks'] ?? []) as $productIds) {
+                foreach ((array) $productIds as $pid) {
+                    $add((int) $pid, $sid, $qty);
+                }
+            }
+        }
+
+        return $demand;
+    }
+
+    /**
+     * Verifica que la demanda total del carrito (acumulando TODOS los ítems,
+     * incluso cuando comparten la misma prenda/talle entre combos distintos o
+     * con productos sueltos) no supere el stock disponible. Devuelve un mensaje
+     * de error legible si algo excede, o null si el carrito es válido.
+     */
+    protected static function stockErrorMessage(array $cart, bool $lock = false): ?string
+    {
+        $demand = self::cartDemand($cart);
+        if (empty($demand)) {
+            return null;
+        }
+
+        $query = DB::table('product_size')
+            ->where(function ($q) use ($demand) {
+                foreach (array_keys($demand) as $key) {
+                    [$pid, $sid] = explode(':', $key);
+                    $q->orWhere(function ($qq) use ($pid, $sid) {
+                        $qq->where('product_id', (int) $pid)
+                           ->where('size_id', (int) $sid);
+                    });
+                }
+            });
+
+        // Dentro de la transacción de checkout bloqueamos las filas para evitar
+        // sobreventa cuando dos pedidos compiten por la misma última unidad.
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $stocks = $query
+            ->get(['product_id', 'size_id', 'stock'])
+            ->mapWithKeys(fn ($r) => [$r->product_id . ':' . $r->size_id => (int) $r->stock]);
+
+        foreach ($demand as $key => $need) {
+            $have = (int) ($stocks[$key] ?? 0);
+            if ($need > $have) {
+                [$pid, $sid] = array_map('intval', explode(':', $key));
+                $pname = Product::where('id', $pid)->value('name') ?? "Producto #{$pid}";
+                $sname = Size::where('id', $sid)->value('name');
+                $sizeTxt = $sname ? " (talle {$sname})" : '';
+
+                return $have <= 0
+                    ? "«{$pname}»{$sizeTxt} ya no tiene stock disponible."
+                    : "Stock insuficiente para «{$pname}»{$sizeTxt}: necesitás {$need} y quedan {$have}.";
+            }
+        }
+
+        return null;
+    }
+
     protected function buildView(array $cart): array
     {
         $products = array_values(array_map(fn ($i) => [
@@ -341,6 +434,10 @@ class CartController extends Controller
             ];
         }
 
+        if ($err = self::stockErrorMessage($cart)) {
+            return back()->withErrors(['stock' => $err]);
+        }
+
         $this->saveCart($cart);
 
         return back()->with('flash', [
@@ -386,6 +483,10 @@ class CartController extends Controller
                 'price'       => (float) $combo->price,
                 'quantity'    => $qty,
             ];
+        }
+
+        if ($err = self::stockErrorMessage($cart)) {
+            return back()->withErrors(['picks' => $err]);
         }
 
         $this->saveCart($cart);
@@ -492,6 +593,10 @@ class CartController extends Controller
             ];
         }
 
+        if ($err = self::stockErrorMessage($cart)) {
+            return back()->withErrors(['picks' => $err]);
+        }
+
         $this->saveCart($cart);
 
         return back()->with('flash', [
@@ -526,6 +631,12 @@ class CartController extends Controller
             $cart['products'][$key]['quantity'] = $newQty;
         } else {
             $cart['combos'][$key]['quantity'] = $newQty;
+        }
+
+        // Control agregado: la misma prenda/talle puede repetirse entre combos
+        // y productos sueltos; verificamos que la suma total no supere el stock.
+        if ($err = self::stockErrorMessage($cart)) {
+            return back()->withErrors(['cart' => $err]);
         }
 
         $this->saveCart($cart);
@@ -573,26 +684,34 @@ class CartController extends Controller
 
         $data = $request->validate($rules);
 
-        $view = $this->buildView($this->getCart());
+        $cart = $this->getCart();
+        $view = $this->buildView($cart);
         if (empty($view['items'])) {
             return redirect()->route('cart.index')->withErrors([
                 'cart' => 'Tu carrito está vacío.',
             ]);
         }
 
-        foreach ($view['items'] as $item) {
-            $max = (int) ($item['max_quantity'] ?? 99);
-            if ((int) $item['quantity'] > $max) {
-                return redirect()->route('cart.index')->withErrors([
-                    'cart' => 'Algunos ítems del carrito ya no tienen stock suficiente. Ajustá las cantidades antes de continuar.',
-                ]);
-            }
+        // Control de stock autoritativo antes de descontar: contempla la
+        // demanda acumulada de la misma prenda/talle entre combos y productos
+        // sueltos (el chequeo por ítem no alcanza cuando se comparten prendas).
+        if ($err = self::stockErrorMessage($cart)) {
+            return redirect()->route('cart.index')->withErrors([
+                'cart' => $err . ' Ajustá las cantidades antes de continuar.',
+            ]);
         }
 
         $stock = app(StockService::class);
 
-        $order = DB::transaction(function () use ($data, $view, $stock) {
-            $order = Order::create([
+        try {
+            $order = DB::transaction(function () use ($data, $view, $cart, $stock) {
+                // Re-chequeo con bloqueo de filas dentro de la transacción: es la
+                // verdad autoritativa frente a pedidos concurrentes.
+                if ($err = self::stockErrorMessage($cart, true)) {
+                    throw new \RuntimeException($err);
+                }
+
+                $order = Order::create([
                 'user_id'         => Auth::check() ? Auth::id() : null,
                 'total'           => $view['subtotal'],
                 'status'          => Order::STATUS_PENDING,
@@ -642,8 +761,13 @@ class CartController extends Controller
                 $stock->adjustForOrderItem($orderItem, -1);
             }
 
-            return $order;
-        });
+                return $order;
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->route('cart.index')->withErrors([
+                'cart' => $e->getMessage() . ' Ajustá las cantidades antes de continuar.',
+            ]);
+        }
 
         // Vaciamos el carrito tras crear la orden.
         $this->saveCart(['products' => [], 'combos' => []]);

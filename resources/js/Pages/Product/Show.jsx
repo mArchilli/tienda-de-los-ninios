@@ -229,8 +229,8 @@ export default function ProductShow({ product, related = [], cartCount = 0 }) {
             onSuccess: () => {
                 setFeedback(`OK: ${product.name} agregado al carrito (${qty} ${qty === 1 ? 'unidad' : 'unidades'}).`);
             },
-            onError: () => {
-                setError('No pudimos agregar el producto. Intenta de nuevo.');
+            onError: (errs) => {
+                setError(errs?.stock || errs?.size_id || 'No pudimos agregar el producto. Intenta de nuevo.');
             },
         });
     };

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
@@ -198,6 +198,8 @@ function SummaryRow({ label, value, accent }) {
 }
 
 export default function CartIndex({ cart }) {
+    const { errors } = usePage().props;
+    const stockError = errors?.cart ?? null;
     const items = cart?.items ?? [];
     const subtotal = cart?.subtotal ?? 0;
     const isEmpty = items.length === 0;
@@ -229,6 +231,15 @@ export default function CartIndex({ cart }) {
                         Revisa tus productos antes de finalizar la compra
                     </p>
                 </div>
+
+                {stockError && (
+                    <div className="mt-6 flex items-start gap-2 rounded-[1rem] border border-brand-cta/45 bg-brand-cta-surface px-4 py-3 text-sm font-semibold text-brand-cta">
+                        <svg className="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                        <span>{stockError}</span>
+                    </div>
+                )}
 
                 <div className="mt-6">
                     <Link

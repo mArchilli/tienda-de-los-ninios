@@ -66,15 +66,19 @@ function StepHeader({ index, title, status, completed, open, onToggle, disabled 
     );
 }
 
-function ChipButton({ label, active, onClick }) {
+function ChipButton({ label, active, onClick, disabled }) {
     return (
         <button
             type="button"
             onClick={onClick}
+            disabled={disabled}
+            title={disabled ? 'Sin stock suficiente para completar el combo en este talle' : undefined}
             className={`min-w-[64px] h-10 rounded-full px-4 text-sm font-semibold border shadow-sm transition-colors ${
-                active
-                    ? 'bg-brand-cta text-white border-brand-cta'
-                    : 'bg-white text-brand-cta border-brand-cta/35 hover:border-brand-cta'
+                disabled
+                    ? 'bg-brand-secondary-light text-brand-text-light border-brand-secondary line-through cursor-not-allowed'
+                    : active
+                        ? 'bg-brand-cta text-white border-brand-cta'
+                        : 'bg-white text-brand-cta border-brand-cta/35 hover:border-brand-cta'
             }`}
         >
             {label}
@@ -217,6 +221,26 @@ export default function ComboShow({ combo, cartCount = 0 }) {
         return map;
     }, [size, combo.categories]);
 
+    // Talles para los que el combo SÍ puede completarse con el stock actual:
+    // cada categoría debe tener al menos `quantity` productos DISTINTOS con
+    // stock > 0 en ese talle (cada slot de la categoría exige un producto
+    // distinto). Si alguna categoría no llega, el talle se tacha.
+    const feasibleSizes = useMemo(() => {
+        const set = new Set();
+        for (const s of combo.sizes) {
+            const ok = combo.categories.every((cat) => {
+                const inStock = cat.products.filter((p) =>
+                    p.sizes.some((ps) => ps.id === s.id && ps.stock > 0)
+                ).length;
+                return inStock >= cat.quantity;
+            });
+            if (ok) set.add(s.id);
+        }
+        return set;
+    }, [combo.sizes, combo.categories]);
+
+    const hasBlockedSizes = combo.sizes.some((s) => !feasibleSizes.has(s.id));
+
     const isCategoryComplete = (cat) =>
         (picks[cat.id]?.length ?? 0) >= cat.quantity;
 
@@ -271,6 +295,7 @@ export default function ComboShow({ combo, cartCount = 0 }) {
 
     const pickSize = (sid) => {
         if (sid === size) return;
+        if (!feasibleSizes.has(sid)) return;   // talle sin stock para completar el combo
         setSize(sid);
         setPicks({});                    // las picks dependen del talle
     };
@@ -311,8 +336,8 @@ export default function ComboShow({ combo, cartCount = 0 }) {
             onSuccess: () => {
                 setFeedback(`✓ ${combo.name} agregado al carrito.`);
             },
-            onError: () => {
-                setFeedback('No pudimos agregar el combo. Intentá de nuevo.');
+            onError: (errs) => {
+                setFeedback(errs?.picks || errs?.stock || 'No pudimos agregar el combo. Intentá de nuevo.');
             },
         });
     };
@@ -432,14 +457,22 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                         Talles disponibles
                                     </p>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {combo.sizes.map((s) => (
-                                            <span
-                                                key={s.id}
-                                                className="inline-flex h-8 min-w-[36px] items-center justify-center rounded-full bg-brand-secondary-light border border-brand-secondary px-2.5 text-xs font-bold text-brand-text"
-                                            >
-                                                {s.name}
-                                            </span>
-                                        ))}
+                                        {combo.sizes.map((s) => {
+                                            const feasible = feasibleSizes.has(s.id);
+                                            return (
+                                                <span
+                                                    key={s.id}
+                                                    title={feasible ? undefined : 'Sin stock suficiente para completar el combo'}
+                                                    className={`inline-flex h-8 min-w-[36px] items-center justify-center rounded-full border px-2.5 text-xs font-bold ${
+                                                        feasible
+                                                            ? 'bg-brand-secondary-light border-brand-secondary text-brand-text'
+                                                            : 'bg-brand-secondary-light/50 border-brand-secondary text-brand-text-light line-through'
+                                                    }`}
+                                                >
+                                                    {s.name}
+                                                </span>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
@@ -496,16 +529,24 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                 {combo.sizes.length === 0 ? (
                                     <p className="text-sm text-brand-text-muted italic">Este combo no tiene talles disponibles.</p>
                                 ) : (
-                                    <div className="flex flex-wrap gap-2 mt-5">
-                                        {combo.sizes.map((s) => (
-                                            <ChipButton
-                                                key={s.id}
-                                                label={s.name}
-                                                active={size === s.id}
-                                                onClick={() => pickSize(s.id)}
-                                            />
-                                        ))}
-                                    </div>
+                                    <>
+                                        <div className="flex flex-wrap gap-2 mt-5">
+                                            {combo.sizes.map((s) => (
+                                                <ChipButton
+                                                    key={s.id}
+                                                    label={s.name}
+                                                    active={size === s.id}
+                                                    disabled={!feasibleSizes.has(s.id)}
+                                                    onClick={() => pickSize(s.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                        {hasBlockedSizes && (
+                                            <p className="mt-3 text-[11px] text-brand-text-muted">
+                                                Los talles <span className="line-through">tachados</span> no tienen stock suficiente para completar el combo. Volvé a revisar más adelante.
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
