@@ -39,6 +39,8 @@ const Icons = {
     image:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
     money:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m-9-4h18" />,
     sort:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />,
+    chevronLeft:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />,
+    chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />,
 };
 
 const Icon = ({ name, className = 'h-4 w-4' }) => (
@@ -905,21 +907,57 @@ function ProductCard({ product, onEdit, onDelete, selectionMode = false, selecte
                     <h3 className="font-bold text-brand-text text-sm leading-tight line-clamp-2">{product.name}</h3>
 
                     {/* Meta */}
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                        {product.categories?.slice(0, 2).map((c) => (
-                            <span key={c.id} className="rounded-full bg-brand-primary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary">
-                                {c.name}
-                            </span>
-                        ))}
-                        {product.sizes?.length > 0 && (
-                            <span className="rounded-full bg-brand-secondary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary-dark">
-                                {product.sizes.length} talle{product.sizes.length !== 1 ? 's' : ''}
-                            </span>
+                    <div className="mt-2 space-y-2">
+                        {/* Categorías + género */}
+                        {(product.categories?.length > 0 || product.genders?.length > 0) && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {product.categories?.slice(0, 2).map((c) => (
+                                    <span key={c.id} className="rounded-full bg-brand-primary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary">
+                                        {c.name}
+                                    </span>
+                                ))}
+                                {product.genders?.map((g) => (
+                                    <span key={g.id} className="inline-flex items-center gap-1 rounded-full bg-brand-secondary-surface px-2 py-0.5 text-[10px] font-medium text-brand-primary-dark">
+                                        <Icon name="gender" className="h-2.5 w-2.5" />
+                                        {g.name}
+                                    </span>
+                                ))}
+                            </div>
                         )}
+
+                        {/* Colores por nombre */}
                         {product.colors?.length > 0 && (
-                            <span className="rounded-full bg-brand-cta-surface px-2 py-0.5 text-[10px] font-medium text-brand-cta">
-                                {product.colors.length} color{product.colors.length !== 1 ? 'es' : ''}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <Icon name="color" className="h-3 w-3 shrink-0 text-brand-cta" />
+                                {product.colors.map((c) => (
+                                    <span key={c.id} className="rounded-full bg-brand-cta-surface px-2 py-0.5 text-[10px] font-medium text-brand-cta">
+                                        {c.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Talles con stock */}
+                        {product.sizes?.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <Icon name="size" className="h-3 w-3 shrink-0 text-brand-primary-dark" />
+                                {product.sizes.map((s) => {
+                                    const st = s.pivot?.stock ?? 0;
+                                    return (
+                                        <span
+                                            key={s.id}
+                                            className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${
+                                                st === 0
+                                                    ? 'border-gray-200 bg-gray-50 text-brand-text-light'
+                                                    : 'border-brand-primary/20 bg-brand-primary-surface text-brand-primary-dark'
+                                            }`}
+                                        >
+                                            {s.name}
+                                            <span className="font-bold">({st})</span>
+                                        </span>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -1297,21 +1335,33 @@ export default function Index({ products, filters, categories, colors, sizes, ge
 
                             {products.last_page > 1 && (
                                 <div className="flex flex-wrap justify-center gap-1.5 mt-8">
-                                    {products.links.map((link, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
-                                            disabled={!link.url}
-                                            className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                                link.active
-                                                    ? 'bg-brand-primary text-white shadow-sm'
-                                                    : link.url
-                                                    ? 'bg-white text-brand-text hover:bg-brand-primary-surface border border-gray-200'
-                                                    : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
+                                    {products.links.map((link, i) => {
+                                        const isPrev = i === 0;
+                                        const isNext = i === products.links.length - 1;
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                                disabled={!link.url}
+                                                aria-label={isPrev ? 'Anterior' : isNext ? 'Siguiente' : undefined}
+                                                className={`min-w-[36px] flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                                    link.active
+                                                        ? 'bg-brand-primary text-white shadow-sm'
+                                                        : link.url
+                                                        ? 'bg-white text-brand-text hover:bg-brand-primary-surface border border-gray-200'
+                                                        : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+                                                }`}
+                                            >
+                                                {isPrev ? (
+                                                    <Icon name="chevronLeft" className="h-4 w-4" />
+                                                ) : isNext ? (
+                                                    <Icon name="chevronRight" className="h-4 w-4" />
+                                                ) : (
+                                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </>
