@@ -277,8 +277,6 @@ export default function CheckoutIndex({ cart }) {
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
                     <div className="space-y-6">
-                        <ProductsCard items={items} />
-
                         <section className="rounded-[1.5rem] border border-brand-primary/25 bg-white p-5 shadow-[0_18px_36px_rgba(41,50,65,0.06)]">
                             <div className="rounded-[1rem] border border-brand-primary bg-brand-primary px-4 py-4 text-white">
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/72">Envio</p>
@@ -375,6 +373,8 @@ export default function CheckoutIndex({ cart }) {
                                 </div>
                             )}
                         </section>
+
+                        <ProductsCard items={items} />
                     </div>
 
                     <aside className="space-y-3 self-start rounded-[1.5rem] border border-brand-primary/25 bg-white p-5 shadow-[0_18px_36px_rgba(41,50,65,0.08)]">
