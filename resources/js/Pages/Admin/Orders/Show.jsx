@@ -144,6 +144,7 @@ function ProductItem({ item, onImageClick }) {
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-brand-text-muted">
                     {item.size    && <span>Talle: <strong className="text-brand-text">{item.size}</strong></span>}
+                    {item.color   && <span>Color: <strong className="text-brand-text">{item.color}</strong></span>}
                     <span>Cantidad: <strong className="text-brand-text">{item.quantity}</strong></span>
                 </div>
                 {item.description && (
@@ -266,6 +267,11 @@ function ComboItem({ item, onImageClick }) {
                                     {pick.size && (
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-brand-cta">
                                             Talle {pick.size}
+                                        </span>
+                                    )}
+                                    {pick.color && (
+                                        <span className="text-[10px] font-medium text-brand-text-muted">
+                                            Color: <strong className="text-brand-text">{pick.color}</strong>
                                         </span>
                                     )}
                                     {pick.description && (

@@ -46,7 +46,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('items.product');
+        $order->load('items.product.colors');
 
         // Recopilamos ids para bulk-load. Diferenciamos entre combos tradicionales
         // (picks = {catId: [productId,...]}) y combos emprendedor
@@ -104,11 +104,12 @@ class OrderController extends Controller
         // Productos de picks indexados por id.
         $picksById = [];
         if (! empty($pickIds)) {
-            Product::whereIn('id', array_unique($pickIds))->get()->each(function (Product $p) use (&$picksById) {
+            Product::with('colors')->whereIn('id', array_unique($pickIds))->get()->each(function (Product $p) use (&$picksById) {
                 $picksById[$p->id] = [
                     'name'        => $p->name,
                     'image'       => $p->images[0] ?? null,
                     'description' => $p->description ?? null,
+                    'color'       => $p->colors->pluck('name')->implode(', ') ?: null,
                 ];
             });
         }
@@ -169,6 +170,7 @@ class OrderController extends Controller
                 'price'       => (float) $item->price,
                 'subtotal'    => (float) $item->price * (int) $item->quantity,
                 'size'        => $item->size,
+                'color'       => $isCombo ? null : ($item->product?->colors->pluck('name')->implode(', ') ?: null),
                 'gender'      => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
                 'picks'       => $picks,
             ];
