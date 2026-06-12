@@ -135,9 +135,16 @@ function FlashBanner({ message, onDismiss }) {
 
 // ─── Size card ────────────────────────────────────────────────────────────────
 
-function SizeCard({ size, section, onEdit, onDelete }) {
+function SizeCard({ size, section, onEdit, onDelete, selectionMode = false, selected = false, onToggleSelect }) {
     return (
-        <div className="group flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm hover:shadow-md hover:border-brand-primary/30 transition-all">
+        <div
+            onClick={selectionMode ? () => onToggleSelect(size.id) : undefined}
+            className={`group flex items-center gap-3 rounded-2xl border bg-white p-3.5 shadow-sm transition-all ${
+                selectionMode
+                    ? `cursor-pointer select-none ${selected ? 'border-brand-primary shadow-md shadow-brand-primary/20' : 'border-gray-200 hover:border-brand-primary/50'}`
+                    : 'border-gray-200 hover:shadow-md hover:border-brand-primary/30'
+            }`}
+        >
             <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${section.chipBg} ${section.chipText} font-bold text-sm`}>
                 {size.name.length <= 3 ? size.name : <section.Icon />}
             </span>
@@ -147,33 +154,45 @@ function SizeCard({ size, section, onEdit, onDelete }) {
                 <p className="text-xs text-brand-text-muted">{section.label}</p>
             </div>
 
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                    onClick={() => onEdit(size)}
-                    title="Editar"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-brand-primary-surface hover:text-brand-primary transition-colors"
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                </button>
-                <button
-                    onClick={() => onDelete(size)}
-                    title="Eliminar"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
-            </div>
+            {selectionMode ? (
+                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                    selected ? 'bg-brand-primary border-brand-primary' : 'bg-white border-gray-300'
+                }`}>
+                    {selected && (
+                        <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </div>
+            ) : (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={() => onEdit(size)}
+                        title="Editar"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-brand-primary-surface hover:text-brand-primary transition-colors"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => onDelete(size)}
+                        title="Eliminar"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
 
 // ─── Section block ────────────────────────────────────────────────────────────
 
-function SizeSection({ section, sizes, onEdit, onDelete }) {
+function SizeSection({ section, sizes, onEdit, onDelete, selectionMode, selectedIds, onToggleSelect }) {
     if (sizes.length === 0) return null;
 
     return (
@@ -199,6 +218,9 @@ function SizeSection({ section, sizes, onEdit, onDelete }) {
                             section={section}
                             onEdit={onEdit}
                             onDelete={onDelete}
+                            selectionMode={selectionMode}
+                            selected={selectedIds?.has(size.id)}
+                            onToggleSelect={onToggleSelect}
                         />
                     ))}
                 </div>
@@ -323,11 +345,17 @@ function EditModal({ open, onClose, size }) {
 
 function DeleteModal({ open, onClose, size }) {
     const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => { if (open) setError(null); }, [open]);
 
     const submit = () => {
         setProcessing(true);
+        setError(null);
         router.delete(route('admin.sizes.destroy', size.id), {
+            preserveScroll: true,
             onSuccess: onClose,
+            onError: (errs) => setError(errs.delete ?? 'No se pudo eliminar el talle.'),
             onFinish: () => setProcessing(false),
         });
     };
@@ -346,6 +374,17 @@ function DeleteModal({ open, onClose, size }) {
                         </p>
                     </div>
                 </div>
+                <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-700">
+                    <svg className="h-4 w-4 shrink-0 text-sky-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Antes de borrar, corroborá que no haya prendas ni combos que usen este talle.</span>
+                </div>
+                {error && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        {error}
+                    </div>
+                )}
                 <div className="flex justify-end gap-3">
                     <button type="button" onClick={onClose} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-brand-text-muted hover:bg-gray-50 transition-colors">
                         Cancelar
@@ -364,6 +403,72 @@ function DeleteModal({ open, onClose, size }) {
     );
 }
 
+// ─── Bulk delete modal ────────────────────────────────────────────────────────
+
+function BulkDeleteModal({ open, onClose, selectedIds, onSuccess }) {
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(null);
+    const count = selectedIds.size;
+
+    useEffect(() => { if (open) setError(null); }, [open]);
+
+    const submit = () => {
+        setProcessing(true);
+        setError(null);
+        router.delete(route('admin.sizes.bulk-destroy'), {
+            data: { ids: [...selectedIds] },
+            preserveScroll: true,
+            onSuccess: () => { onSuccess(); onClose(); },
+            onError: (errs) => setError(errs.bulk ?? 'No se pudieron eliminar los talles.'),
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    return (
+        <Modal open={open} onClose={onClose} title="Eliminar talles">
+            <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
+                    <svg className="h-5 w-5 shrink-0 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-semibold text-red-700">
+                            ¿Eliminar {count} talle{count !== 1 ? 's' : ''}?
+                        </p>
+                        <p className="text-xs text-red-500 mt-1">
+                            Esta acción no se puede deshacer. Los talles se desvincularán de todas las prendas asociadas.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-700">
+                    <svg className="h-4 w-4 shrink-0 text-sky-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Antes de borrar, corroborá que no haya prendas ni combos que usen estos talles.</span>
+                </div>
+                {error && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        {error}
+                    </div>
+                )}
+                <div className="flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-brand-text-muted hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onClick={submit} disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60">
+                        {processing ? <Spinner /> : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        )}
+                        Eliminar {count} talle{count !== 1 ? 's' : ''}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Index({ sizes }) {
@@ -374,6 +479,9 @@ export default function Index({ sizes }) {
     const [createOpen, setCreateOpen] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
     useEffect(() => {
         if (flash?.success) setFlashMsg(flash.success);
@@ -384,6 +492,21 @@ export default function Index({ sizes }) {
         const q = search.toLowerCase();
         return sizes.filter((s) => s.name.toLowerCase().includes(q));
     }, [sizes, search]);
+
+    const toggleSelect = (id) =>
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+
+    const selectAll = () => setSelectedIds(new Set(filtered.map((s) => s.id)));
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+    };
 
     const grouped = useMemo(() => {
         const map = { bebe: [], nino: [], otro: [] };
@@ -398,20 +521,64 @@ export default function Index({ sizes }) {
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-bold text-brand-text">Talles</h1>
+                        <h1 className="text-xl font-bold text-brand-text">
+                            {selectionMode ? 'Selección' : 'Talles'}
+                        </h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
-                            {sizes.length} talle{sizes.length !== 1 ? 's' : ''} registrado{sizes.length !== 1 ? 's' : ''}
+                            {selectionMode
+                                ? `${selectedIds.size} talle${selectedIds.size !== 1 ? 's' : ''} seleccionado${selectedIds.size !== 1 ? 's' : ''}`
+                                : `${sizes.length} talle${sizes.length !== 1 ? 's' : ''} registrado${sizes.length !== 1 ? 's' : ''}`
+                            }
                         </p>
                     </div>
-                    <button
-                        onClick={() => setCreateOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
-                    >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nuevo Talle
-                    </button>
+                    {selectionMode ? (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={selectedIds.size < filtered.length ? selectAll : clearSelection}
+                                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+                            >
+                                {selectedIds.size < filtered.length ? 'Seleccionar todos' : 'Deseleccionar'}
+                            </button>
+                            <button
+                                onClick={() => setBulkDeleteOpen(true)}
+                                disabled={selectedIds.size === 0}
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Eliminar{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                            </button>
+                            <button
+                                onClick={exitSelectionMode}
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:bg-gray-50 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setSelectionMode(true)}
+                                disabled={sizes.length === 0}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Seleccionar
+                            </button>
+                            <button
+                                onClick={() => setCreateOpen(true)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Nuevo Talle
+                            </button>
+                        </div>
+                    )}
                 </div>
             }
         >
@@ -419,6 +586,15 @@ export default function Index({ sizes }) {
 
             <div className="p-6 space-y-5">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
+
+                {selectionMode && (
+                    <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                        <svg className="h-4 w-4 shrink-0 text-sky-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Antes de borrar, corroborá que no haya prendas ni combos que usen los talles que querés eliminar.</span>
+                    </div>
+                )}
 
                 {/* Search */}
                 {sizes.length > 0 && (
@@ -489,6 +665,9 @@ export default function Index({ sizes }) {
                                 sizes={grouped[section.key]}
                                 onEdit={setEditTarget}
                                 onDelete={setDeleteTarget}
+                                selectionMode={selectionMode}
+                                selectedIds={selectedIds}
+                                onToggleSelect={toggleSelect}
                             />
                         ))}
                     </div>
@@ -498,6 +677,12 @@ export default function Index({ sizes }) {
             <CreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
             <EditModal open={editTarget !== null} onClose={() => setEditTarget(null)} size={editTarget} />
             <DeleteModal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} size={deleteTarget} />
+            <BulkDeleteModal
+                open={bulkDeleteOpen}
+                onClose={() => setBulkDeleteOpen(false)}
+                selectedIds={selectedIds}
+                onSuccess={exitSelectionMode}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -275,6 +275,28 @@ class ComboController extends Controller
         return back()->with('success', 'Combo eliminado correctamente.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:combos,id',
+        ]);
+
+        $combos = Combo::whereIn('id', $request->ids)->get();
+
+        foreach ($combos as $combo) {
+            if ($combo->image) {
+                @unlink(public_path($combo->image));
+            }
+            $combo->delete();
+        }
+
+        $count = count($request->ids);
+        $label = $count === 1 ? 'combo eliminado' : 'combos eliminados';
+
+        return back()->with('success', "{$count} {$label} correctamente.");
+    }
+
     private function uploadImage(\Illuminate\Http\UploadedFile $file): string
     {
         $base        = rtrim(env('COMBO_IMAGES_PATH', 'images'), '/');

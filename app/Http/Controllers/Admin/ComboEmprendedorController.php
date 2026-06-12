@@ -191,6 +191,28 @@ class ComboEmprendedorController extends Controller
         return back()->with('success', 'Combo emprendedor eliminado correctamente.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:combo_emprendedors,id',
+        ]);
+
+        $combos = ComboEmprendedor::whereIn('id', $request->ids)->get();
+
+        foreach ($combos as $combo) {
+            if ($combo->image) {
+                @unlink(public_path($combo->image));
+            }
+            $combo->delete();
+        }
+
+        $count = count($request->ids);
+        $label = $count === 1 ? 'combo emprendedor eliminado' : 'combos emprendedor eliminados';
+
+        return back()->with('success', "{$count} {$label} correctamente.");
+    }
+
     private function validatePayload(Request $request): array
     {
         $data = $request->validate([

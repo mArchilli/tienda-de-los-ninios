@@ -989,7 +989,7 @@ function DeleteModal({ open, onClose, combo }) {
 
 // ─── Combo card ───────────────────────────────────────────────────────────────
 
-function ComboCard({ combo, onEdit, onDelete }) {
+function ComboCard({ combo, onEdit, onDelete, selectionMode = false, selected = false, onToggleSelect }) {
     const imgSrc = combo.image ? glideUrl('/' + combo.image, 400, 533) : null;
     const categoryCounts = useMemo(() => {
         const map = {};
@@ -1001,7 +1001,14 @@ function ComboCard({ combo, onEdit, onDelete }) {
     }, [combo.items]);
 
     return (
-        <div className="group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border border-gray-200 hover:shadow-md hover:border-brand-primary/30 transition-all">
+        <div
+            onClick={selectionMode ? () => onToggleSelect(combo.id) : undefined}
+            className={`group bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col border transition-all ${
+                selectionMode
+                    ? `cursor-pointer select-none ${selected ? 'border-brand-primary shadow-md shadow-brand-primary/20' : 'border-gray-200 hover:border-brand-primary/50'}`
+                    : 'border-gray-200 hover:shadow-md hover:border-brand-primary/30'
+            }`}
+        >
             {/* Image */}
             <div className="relative aspect-[3/4] bg-gray-50">
                 {imgSrc ? (
@@ -1022,8 +1029,18 @@ function ComboCard({ combo, onEdit, onDelete }) {
                     </span>
                 </div>
 
-                {/* Featured star */}
-                {combo.is_featured && (
+                {/* Selection check / Featured star */}
+                {selectionMode ? (
+                    <div className={`absolute top-2 right-2 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        selected ? 'bg-brand-primary border-brand-primary' : 'bg-white/80 border-gray-400'
+                    }`}>
+                        {selected && (
+                            <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {Icons.check}
+                            </svg>
+                        )}
+                    </div>
+                ) : combo.is_featured && (
                     <div className="absolute top-2 right-2">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-cta shadow">
                             <svg className="h-3.5 w-3.5 fill-white text-white" viewBox="0 0 24 24" stroke="currentColor" fill="none">
@@ -1074,24 +1091,72 @@ function ComboCard({ combo, onEdit, onDelete }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
-                    <button
-                        onClick={() => onEdit(combo)}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
-                    >
-                        <Icon name="pencil" className="h-3.5 w-3.5" />
-                        Editar
+                {!selectionMode && (
+                    <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
+                        <button
+                            onClick={() => onEdit(combo)}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
+                        >
+                            <Icon name="pencil" className="h-3.5 w-3.5" />
+                            Editar
+                        </button>
+                        <button
+                            onClick={() => onDelete(combo)}
+                            title="Eliminar"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        >
+                            <Icon name="trash" className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ─── Bulk delete modal ────────────────────────────────────────────────────────
+
+function BulkDeleteModal({ open, onClose, selectedIds, onSuccess }) {
+    const [processing, setProcessing] = useState(false);
+    const count = selectedIds.size;
+
+    const submit = () => {
+        setProcessing(true);
+        router.delete(route('admin.combos.bulk-destroy'), {
+            data: { ids: [...selectedIds] },
+            onSuccess: () => { onSuccess(); onClose(); },
+            onError: () => setProcessing(false),
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    return (
+        <Modal open={open} onClose={onClose} title="Eliminar combos">
+            <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
+                    <svg className="h-5 w-5 shrink-0 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-semibold text-red-700">
+                            ¿Eliminar {count} combo{count !== 1 ? 's' : ''}?
+                        </p>
+                        <p className="text-xs text-red-500 mt-1">
+                            Esta acción no se puede deshacer. Se eliminarán todas las prendas asociadas a los combos.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-brand-text-muted hover:bg-gray-50 transition-colors">
+                        Cancelar
                     </button>
-                    <button
-                        onClick={() => onDelete(combo)}
-                        title="Eliminar"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-brand-text-muted hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                        <Icon name="trash" className="h-3.5 w-3.5" />
+                    <button onClick={submit} disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-60">
+                        {processing ? <Spinner /> : <Icon name="trash" />}
+                        Eliminar {count} combo{count !== 1 ? 's' : ''}
                     </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }
 
@@ -1104,10 +1169,30 @@ export default function Index({ combos, sizes, categories, genders = [], filters
     const [createOpen, setCreateOpen]     = useState(false);
     const [editTarget, setEditTarget]     = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds]     = useState(new Set());
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
     const [search, setSearch]                 = useState(filters?.search ?? '');
     const [activeCategory, setActiveCategory] = useState(filters?.category ?? '');
     const searchTimeout = useRef(null);
+
+    const comboList = combos.data ?? [];
+
+    const toggleSelect = (id) =>
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+
+    const selectAll = () => setSelectedIds(new Set(comboList.map((c) => c.id)));
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+    };
 
     useEffect(() => {
         if (flash?.success) setFlashMsg(flash.success);
@@ -1151,18 +1236,58 @@ export default function Index({ combos, sizes, categories, genders = [], filters
             header={
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-bold text-brand-text">Combos</h1>
+                        <h1 className="text-xl font-bold text-brand-text">
+                            {selectionMode ? 'Selección' : 'Combos'}
+                        </h1>
                         <p className="text-sm text-brand-text-muted mt-0.5">
-                            {total} combo{total !== 1 ? 's' : ''} {hasFilters ? 'encontrado' : 'registrado'}{total !== 1 ? 's' : ''}
+                            {selectionMode
+                                ? `${selectedIds.size} combo${selectedIds.size !== 1 ? 's' : ''} seleccionado${selectedIds.size !== 1 ? 's' : ''}`
+                                : `${total} combo${total !== 1 ? 's' : ''} ${hasFilters ? 'encontrado' : 'registrado'}${total !== 1 ? 's' : ''}`
+                            }
                         </p>
                     </div>
-                    <button
-                        onClick={() => setCreateOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
-                    >
-                        <Icon name="plus" />
-                        Nuevo Combo
-                    </button>
+                    {selectionMode ? (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={selectedIds.size < comboList.length ? selectAll : clearSelection}
+                                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+                            >
+                                {selectedIds.size < comboList.length ? 'Seleccionar todos' : 'Deseleccionar'}
+                            </button>
+                            <button
+                                onClick={() => setBulkDeleteOpen(true)}
+                                disabled={selectedIds.size === 0}
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Icon name="trash" />
+                                Eliminar{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                            </button>
+                            <button
+                                onClick={exitSelectionMode}
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:bg-gray-50 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setSelectionMode(true)}
+                                disabled={comboList.length === 0}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Icon name="check" />
+                                Seleccionar
+                            </button>
+                            <button
+                                onClick={() => setCreateOpen(true)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                            >
+                                <Icon name="plus" />
+                                Nuevo Combo
+                            </button>
+                        </div>
+                    )}
                 </div>
             }
         >
@@ -1296,6 +1421,9 @@ export default function Index({ combos, sizes, categories, genders = [], filters
                                         combo={combo}
                                         onEdit={setEditTarget}
                                         onDelete={setDeleteTarget}
+                                        selectionMode={selectionMode}
+                                        selected={selectedIds.has(combo.id)}
+                                        onToggleSelect={toggleSelect}
                                     />
                                 ))}
                             </div>
@@ -1341,6 +1469,12 @@ export default function Index({ combos, sizes, categories, genders = [], filters
                 open={deleteTarget !== null}
                 onClose={() => setDeleteTarget(null)}
                 combo={deleteTarget}
+            />
+            <BulkDeleteModal
+                open={bulkDeleteOpen}
+                onClose={() => setBulkDeleteOpen(false)}
+                selectedIds={selectedIds}
+                onSuccess={exitSelectionMode}
             />
         </AuthenticatedLayout>
     );

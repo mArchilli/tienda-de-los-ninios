@@ -40,8 +40,39 @@ class ColorController extends Controller
 
     public function destroy(Color $color)
     {
+        if ($color->products()->exists()) {
+            return back()->withErrors([
+                'delete' => "No se puede eliminar el color «{$color->name}» porque tiene prendas asociadas. Quitalo de esas prendas primero.",
+            ]);
+        }
+
         $color->delete();
 
         return back()->with('success', 'Color eliminado correctamente.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:colors,id',
+        ]);
+
+        $blocking = Color::whereIn('id', $request->ids)
+            ->whereHas('products')
+            ->pluck('name');
+
+        if ($blocking->isNotEmpty()) {
+            return back()->withErrors([
+                'bulk' => 'No se pueden eliminar estos colores porque tienen prendas asociadas: ' . $blocking->implode(', ') . '. Quitalos de esas prendas primero.',
+            ]);
+        }
+
+        Color::whereIn('id', $request->ids)->delete();
+
+        $count = count($request->ids);
+        $label = $count === 1 ? 'color eliminado' : 'colores eliminados';
+
+        return back()->with('success', "{$count} {$label} correctamente.");
     }
 }

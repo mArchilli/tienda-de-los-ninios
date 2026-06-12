@@ -95,28 +95,33 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::get('/sizes', [SizeController::class, 'index'])->name('sizes.index');
     Route::post('/sizes', [SizeController::class, 'store'])->name('sizes.store');
     Route::put('/sizes/{size}', [SizeController::class, 'update'])->name('sizes.update');
+    Route::delete('/sizes/bulk', [SizeController::class, 'bulkDestroy'])->name('sizes.bulk-destroy');
     Route::delete('/sizes/{size}', [SizeController::class, 'destroy'])->name('sizes.destroy');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/bulk', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::get('/colors', [ColorController::class, 'index'])->name('colors.index');
     Route::post('/colors', [ColorController::class, 'store'])->name('colors.store');
     Route::put('/colors/{color}', [ColorController::class, 'update'])->name('colors.update');
+    Route::delete('/colors/bulk', [ColorController::class, 'bulkDestroy'])->name('colors.bulk-destroy');
     Route::delete('/colors/{color}', [ColorController::class, 'destroy'])->name('colors.destroy');
 
     Route::get('/combos/categories-for-sizes', [ComboController::class, 'categoriesWithProducts'])->name('combos.categories-for-sizes');
     Route::get('/combos', [ComboController::class, 'index'])->name('combos.index');
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
     Route::post('/combos/{combo}', [ComboController::class, 'update'])->name('combos.update');
+    Route::delete('/combos/bulk', [ComboController::class, 'bulkDestroy'])->name('combos.bulk-destroy');
     Route::delete('/combos/{combo}', [ComboController::class, 'destroy'])->name('combos.destroy');
 
     Route::get('/combos-emprendedor/products-for-genders', [ComboEmprendedorController::class, 'productsForGenders'])->name('combos-emprendedor.products-for-genders');
     Route::get('/combos-emprendedor', [ComboEmprendedorController::class, 'index'])->name('combos-emprendedor.index');
     Route::post('/combos-emprendedor', [ComboEmprendedorController::class, 'store'])->name('combos-emprendedor.store');
     Route::post('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'update'])->name('combos-emprendedor.update');
+    Route::delete('/combos-emprendedor/bulk', [ComboEmprendedorController::class, 'bulkDestroy'])->name('combos-emprendedor.bulk-destroy');
     Route::delete('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'destroy'])->name('combos-emprendedor.destroy');
 
     Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');

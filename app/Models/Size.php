@@ -16,6 +16,11 @@ class Size extends Model
         return $this->belongsToMany(Product::class)->withPivot('stock');
     }
 
+    public function combos()
+    {
+        return $this->belongsToMany(Combo::class);
+    }
+
     /**
      * Clave de orden por familia + valor numérico.
      * Bebé < Niño/a < Otros; dentro de cada familia, asc por primer número del nombre.

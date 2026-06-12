@@ -15,4 +15,14 @@ class Category extends Model
     {
         return $this->belongsToMany(Product::class);
     }
+
+    public function comboItems()
+    {
+        return $this->hasMany(ComboItem::class);
+    }
+
+    public function comboEmprendedorLimits()
+    {
+        return $this->hasMany(ComboEmprendedorCategoryLimit::class);
+    }
 }
