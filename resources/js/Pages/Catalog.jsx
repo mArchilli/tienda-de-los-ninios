@@ -11,6 +11,10 @@ const BABY_NUMERIC_SIZE_MAX = 6;
 // sessionStorage para que, al visitar una prenda y volver, se restaure tal cual estaba.
 const CATALOG_SNAPSHOT_KEY = 'catalog:snapshot';
 
+// Rutas de ficha de detalle: el snapshot solo se conserva al ir a una de ellas (para
+// restaurar al volver). Cualquier otra navegación descarta el snapshot.
+const DETAIL_URL_RE = /^\/(producto|combo|combo-emprendedor)\//;
+
 function readCatalogSnapshot() {
     if (typeof window === 'undefined') return null;
     try {
@@ -540,11 +544,14 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         setSearch('');
     }, [queryState]);
 
-    // Guarda el snapshot antes de navegar a una prenda (o al salir), incluyendo el scroll.
+    // Guarda el snapshot (filtros + scroll) SOLO al navegar a una ficha de prenda/combo,
+    // para restaurarlo al volver. Si se navega a cualquier otra parte (home, etc.), se
+    // descarta: así, al reingresar al catálogo desde un link con filtros en la URL, se
+    // respetan esos parámetros en lugar de restaurar un estado viejo ya modificado.
     const stateRef = useRef(null);
     stateRef.current = { audiences, selectedSizes, selectedCategories, onlyFeatured, priceRange, typeFilter, search, sort, visibleProducts };
     useEffect(() => {
-        const save = () => {
+        const writeSnapshot = () => {
             try {
                 sessionStorage.setItem(CATALOG_SNAPSHOT_KEY, JSON.stringify({
                     ...stateRef.current,
@@ -553,11 +560,23 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                 }));
             } catch { /* sessionStorage no disponible */ }
         };
-        const stopInertia = router.on('before', save);
-        window.addEventListener('pagehide', save);
+        const clearSnapshot = () => {
+            try { sessionStorage.removeItem(CATALOG_SNAPSHOT_KEY); } catch { /* noop */ }
+        };
+        const stopInertia = router.on('before', (event) => {
+            let path = '';
+            try {
+                const target = event.detail.visit.url;
+                path = target instanceof URL ? target.pathname : new URL(target, window.location.origin).pathname;
+            } catch { path = ''; }
+            if (DETAIL_URL_RE.test(path)) writeSnapshot();
+            else clearSnapshot();
+        });
+        // Cierre/recarga de la pestaña: conservamos el estado por si se reabre la misma URL.
+        window.addEventListener('pagehide', writeSnapshot);
         return () => {
             stopInertia();
-            window.removeEventListener('pagehide', save);
+            window.removeEventListener('pagehide', writeSnapshot);
         };
     }, [url]);
 

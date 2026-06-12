@@ -5,7 +5,6 @@ import About from '@/Components/Storefront/About';
 import FAQ from '@/Components/Storefront/FAQ';
 import PriceRangeSection from '@/Components/Storefront/PriceRangeSection';
 import FeaturedCombos from '@/Components/Storefront/FeaturedCombos';
-import TrustBanner from '@/Components/Storefront/TrustBanner';
 import CategoryShortcuts from '@/Components/Storefront/CategoryShortcuts';
 
 export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount }) {
@@ -19,7 +18,6 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
                 <PriceRangeSection />
                 <CategoryShortcuts />
                 <About />
-                {/* <TrustBanner /> */}
                 <FAQ />
             </div>
         </StorefrontLayout>
