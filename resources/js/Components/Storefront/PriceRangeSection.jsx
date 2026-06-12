@@ -7,7 +7,7 @@ const ENTREPRENEUR_COMBO = {
         'Pensamos estos combos para que te animes a comenzar, con prendas seleccionadas especialmente para que puedas venderlas y obtener un buen margen de ganancia.',
         'Si estás buscando una opción práctica, rentable y lista para empezar, este es el combo ideal para vos.',
     ],
-    href: '/catalogo?precio_min=100000',
+    href: '/catalogo?tipo=combos',
     mobileImage: '/images/combo-emprendedor-mobile.png',
     image: '/images/combo-emprendedor.png',
 };

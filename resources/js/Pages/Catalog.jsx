@@ -114,6 +114,16 @@ function fmt(price) {
     return '$' + Number(price).toLocaleString('es-AR');
 }
 
+// Combina los géneros de un combo en una etiqueta legible.
+function comboGenderLabel(genders = []) {
+    const hasNinos = genders.includes('Niños');
+    const hasNinas = genders.includes('Niñas');
+    if (hasNinos && hasNinas) return 'Niño y Niña';
+    if (hasNinos) return 'Niño';
+    if (hasNinas) return 'Niña';
+    return genders.join(' · ');
+}
+
 const ProductCard = memo(function ProductCard({ item, priority = false }) {
     const href =
         item.type === 'combo'             ? `/combo/${item.id}` :
@@ -124,6 +134,9 @@ const ProductCard = memo(function ProductCard({ item, priority = false }) {
         item.type === 'combo'             ? 'Combo' :
         item.type === 'combo-emprendedor' ? 'Emprendedor' :
         null;
+
+    const isCombo = item.type === 'combo' || item.type === 'combo-emprendedor';
+    const genderLabel = isCombo ? comboGenderLabel(item.genders ?? []) : '';
 
     return (
         <Link href={href} className="group block h-full" prefetch="hover">
@@ -152,10 +165,19 @@ const ProductCard = memo(function ProductCard({ item, priority = false }) {
                         </span>
                     )}
 
-                    {badgeLabel && (
-                        <span className="absolute right-3 top-3 rounded-md bg-brand-text px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
-                            {badgeLabel}
-                        </span>
+                    {(badgeLabel || genderLabel) && (
+                        <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+                            {badgeLabel && (
+                                <span className="rounded-md bg-brand-text px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white shadow-sm">
+                                    {badgeLabel}
+                                </span>
+                            )}
+                            {genderLabel && (
+                                <span className="rounded-md bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-primary shadow-sm">
+                                    {genderLabel}
+                                </span>
+                            )}
+                        </div>
                     )}
 
                     <span
@@ -481,6 +503,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     const [selectedCategories, setSelectedCategories] = useState(restored ? (snap.selectedCategories ?? []) : queryState.selectedCategories);
     const [onlyFeatured, setOnlyFeatured] = useState(restored ? Boolean(snap.onlyFeatured) : queryState.onlyFeatured);
     const [priceRange, setPriceRange] = useState(restored ? (snap.priceRange ?? null) : queryState.priceRange);
+    const [typeFilter, setTypeFilter] = useState(restored ? (snap.typeFilter ?? null) : queryState.typeFilter);
 
     // Lock body scroll solo en mobile (bottom-sheet). En desktop el panel es un dropdown
     // acotado a la altura del viewport, así que no hace falta bloquear el scroll.
@@ -508,13 +531,14 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         setSelectedCategories(queryState.selectedCategories);
         setOnlyFeatured(queryState.onlyFeatured);
         setPriceRange(queryState.priceRange);
+        setTypeFilter(queryState.typeFilter);
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
         setSearch('');
     }, [queryState]);
 
     // Guarda el snapshot antes de navegar a una prenda (o al salir), incluyendo el scroll.
     const stateRef = useRef(null);
-    stateRef.current = { audiences, selectedSizes, selectedCategories, onlyFeatured, priceRange, search, sort, visibleProducts };
+    stateRef.current = { audiences, selectedSizes, selectedCategories, onlyFeatured, priceRange, typeFilter, search, sort, visibleProducts };
     useEffect(() => {
         const save = () => {
             try {
@@ -556,8 +580,6 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         const t = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
         return () => clearTimeout(t);
     }, [search]);
-
-    const typeFilter = queryState.typeFilter;
 
     const priceDef = useMemo(
         () => PRICE_RANGES.find((r) => r.key === priceRange) ?? null,
@@ -622,7 +644,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     );
 
     const showCombos = typeFilter !== 'productos';
-    const showCombosEmprendedor = !typeFilter;
+    const showCombosEmprendedor = typeFilter !== 'productos';
     const showProducts = typeFilter !== 'combos';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
     const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;
@@ -630,6 +652,11 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         selectedSizes.length + selectedCategories.length + (onlyFeatured ? 1 : 0) + (priceRange ? 1 : 0);
 
     const handleLoadMore = useCallback(() => setVisibleProducts((c) => c + PRODUCTS_PAGE_SIZE), []);
+
+    const toggleType = useCallback((type) => {
+        setTypeFilter((prev) => (prev === type ? null : type));
+        setVisibleProducts(PRODUCTS_PAGE_SIZE);
+    }, []);
 
     const toggleAudience = useCallback((key) => {
         setAudiences((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
@@ -642,7 +669,13 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     }, []);
 
     const toggleCategory = useCallback((cat) => {
-        setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
+        setSelectedCategories((prev) => {
+            const next = prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat];
+            // Las categorías aplican solo a prendas: al seleccionar una, forzamos la
+            // vista de prendas para no mostrar combos.
+            if (next.length > 0) setTypeFilter('productos');
+            return next;
+        });
         setVisibleProducts(PRODUCTS_PAGE_SIZE);
     }, []);
 
@@ -743,6 +776,35 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                             </svg>
                                         )}
                                         {a.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Tipo: Combos / Prendas */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                            {[
+                                { key: 'combos', label: 'Combos' },
+                                { key: 'productos', label: 'Prendas' },
+                            ].map((t) => {
+                                const active = typeFilter === t.key;
+                                return (
+                                    <button
+                                        key={t.key}
+                                        type="button"
+                                        onClick={() => toggleType(t.key)}
+                                        className={`flex h-12 items-center justify-center gap-2 rounded-2xl border text-[15px] font-semibold normal-case tracking-normal transition-all ${
+                                            active
+                                                ? 'border-brand-cta bg-brand-cta text-white shadow-md'
+                                                : 'border-brand-secondary/30 bg-white text-brand-text shadow-sm hover:border-brand-cta/40 hover:text-brand-cta'
+                                        }`}
+                                    >
+                                        {active && (
+                                            <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                        {t.label}
                                     </button>
                                 );
                             })}
@@ -912,7 +974,24 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                             </div>
                         </div>
 
-                        {/* Fila 2: Audiencia quick-filters */}
+                        {/* Fila 2: Tipo (Combos / Prendas) */}
+                        <div className="flex items-center gap-2 pb-3 overflow-x-auto">
+                            <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted">
+                                Ver:
+                            </span>
+                            <FilterChip
+                                label="Combos"
+                                active={typeFilter === 'combos'}
+                                onClick={() => toggleType('combos')}
+                            />
+                            <FilterChip
+                                label="Prendas"
+                                active={typeFilter === 'productos'}
+                                onClick={() => toggleType('productos')}
+                            />
+                        </div>
+
+                        {/* Fila 3: Audiencia quick-filters */}
                         <div className="flex items-center gap-2 pb-3 overflow-x-auto">
                             <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted">
                                 Para:
