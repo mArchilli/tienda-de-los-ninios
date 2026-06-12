@@ -86,6 +86,19 @@ function ProductPickerCard({ product, size, quantity, totalRemaining, categoryRe
                     Stock: <span className="font-semibold text-brand-text">{product.stock}</span>
                 </p>
 
+                {product.colors?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                        {product.colors.map((c) => (
+                            <span
+                                key={c.id}
+                                className="inline-flex items-center rounded-full bg-brand-secondary-light px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-brand-text-muted"
+                            >
+                                {c.name}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
                 <div className="mt-3 flex items-center justify-between gap-2">
                     {quantity === 0 ? (
                         <button

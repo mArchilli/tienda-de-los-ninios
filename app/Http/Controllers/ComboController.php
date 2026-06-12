@@ -18,6 +18,7 @@ class ComboController extends Controller
             'gender',
             'items.category',
             'items.product.sizes',
+            'items.product.colors',
         ]);
 
         // Agrupamos los items por categoría: cada categoría queda con su quantity y la
@@ -36,6 +37,10 @@ class ComboController extends Controller
                             'name'   => $item->product->name,
                             'image'  => $item->product->images[0] ?? null,
                             'images' => $item->product->images ?? [],
+                            'colors' => $item->product->colors->map(fn ($c) => [
+                                'id'   => $c->id,
+                                'name' => $c->name,
+                            ])->values(),
                             'sizes' => $item->product->sizes->map(fn ($s) => [
                                 'id'    => $s->id,
                                 'name'  => $s->name,

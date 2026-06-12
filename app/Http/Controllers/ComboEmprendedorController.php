@@ -19,6 +19,7 @@ class ComboEmprendedorController extends Controller
             'categoryLimits.category:id,name',
             'items.product.sizes',
             'items.product.categories',
+            'items.product.colors',
         ]);
 
         // Agrupamos productos por talle (con stock > 0). Cada producto puede
@@ -46,6 +47,10 @@ class ComboEmprendedorController extends Controller
                     'price'  => (float) $product->price,
                     'image'  => $product->images[0] ?? null,
                     'images' => $product->images ?? [],
+                    'colors' => $product->colors->map(fn ($c) => [
+                        'id'   => $c->id,
+                        'name' => $c->name,
+                    ])->values(),
                     'stock'  => $stock,
                     'category_id'   => $product->categories->first()?->id,
                     'category_name' => $product->categories->first()?->name,

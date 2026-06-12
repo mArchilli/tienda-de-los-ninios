@@ -147,32 +147,52 @@ function ProductPickerCard({ product, selected, onToggle, onImageClick }) {
                 )}
             </button>
 
-            <button
-                type="button"
-                onClick={onToggle}
-                aria-pressed={selected}
-                className="flex flex-1 flex-col px-3 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2 focus-visible:rounded-b-[1.5rem]"
-            >
+            <div className="flex flex-1 flex-col px-3 py-3">
                 <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-brand-text">
                     {product.name}
                 </p>
-                <span
-                    className={`mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
-                        selected ? 'text-brand-cta' : 'text-brand-text-light group-hover:text-brand-text-muted'
-                    }`}
-                >
+
+                {product.colors?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                        {product.colors.map((c) => (
+                            <span
+                                key={c.id}
+                                className="inline-flex items-center rounded-full bg-brand-secondary-light px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-brand-text-muted"
+                            >
+                                {c.name}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                <div className="mt-3">
                     {selected ? (
-                        <>
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            aria-pressed={selected}
+                            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-brand-cta bg-brand-cta/5 text-brand-cta text-[11px] font-bold uppercase tracking-[0.14em] transition-colors hover:bg-brand-cta hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2"
+                        >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                             Seleccionado
-                        </>
+                        </button>
                     ) : (
-                        'Seleccionar'
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            aria-pressed={selected}
+                            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-brand-cta text-white text-[11px] font-bold uppercase tracking-[0.14em] transition-colors hover:bg-brand-cta-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta focus-visible:ring-offset-2"
+                        >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Agregar
+                        </button>
                     )}
-                </span>
-            </button>
+                </div>
+            </div>
         </div>
     );
 }
@@ -450,30 +470,30 @@ export default function ComboShow({ combo, cartCount = 0 }) {
                                 </div>
                             )}
 
-                            {/* Talles disponibles */}
+                            {/* Talles disponibles — sólo informativo (la selección se hace más abajo) */}
                             {combo.sizes.length > 0 && (
                                 <div className="mt-6">
                                     <p className="text-[11px] uppercase tracking-[0.2em] text-brand-text-muted font-semibold mb-2">
                                         Talles disponibles
                                     </p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {combo.sizes.map((s) => {
+                                    <p className="text-sm font-semibold leading-relaxed text-brand-text">
+                                        {combo.sizes.map((s, i) => {
                                             const feasible = feasibleSizes.has(s.id);
                                             return (
-                                                <span
-                                                    key={s.id}
-                                                    title={feasible ? undefined : 'Sin stock suficiente para completar el combo'}
-                                                    className={`inline-flex h-8 min-w-[36px] items-center justify-center rounded-full border px-2.5 text-xs font-bold ${
-                                                        feasible
-                                                            ? 'bg-brand-secondary-light border-brand-secondary text-brand-text'
-                                                            : 'bg-brand-secondary-light/50 border-brand-secondary text-brand-text-light line-through'
-                                                    }`}
-                                                >
-                                                    {s.name}
+                                                <span key={s.id}>
+                                                    <span
+                                                        title={feasible ? undefined : 'Sin stock suficiente para completar el combo'}
+                                                        className={feasible ? 'text-brand-text' : 'text-brand-text-light line-through'}
+                                                    >
+                                                        {s.name}
+                                                    </span>
+                                                    {i < combo.sizes.length - 1 && (
+                                                        <span className="mx-1.5 text-brand-text-light">·</span>
+                                                    )}
                                                 </span>
                                             );
                                         })}
-                                    </div>
+                                    </p>
                                 </div>
                             )}
 
