@@ -254,8 +254,13 @@ function SizePicker({ sizes, selectedSizes, onToggle, onSetStock }) {
         s.name.toLowerCase().includes(query.toLowerCase())
     );
 
+    const natCompare = (a, b) =>
+        a.name.localeCompare(b.name, 'es', { numeric: true, sensitivity: 'base' });
+
     const groups = SIZE_GROUPS.reduce((acc, g) => {
-        const items = filtered.filter((s) => categorizeSizeName(s.name) === g);
+        const items = filtered
+            .filter((s) => categorizeSizeName(s.name) === g)
+            .sort(natCompare);
         if (items.length) acc[g] = items;
         return acc;
     }, {});
@@ -988,7 +993,7 @@ function ProductCard({ product, onEdit, onDelete, selectionMode = false, selecte
 
 // ─── Filter sidebar ───────────────────────────────────────────────────────────
 
-function FilterSelect({ label, iconName, value, onChange, options, placeholder }) {
+function FilterSelect({ label, iconName, value, onChange, options, groups, placeholder }) {
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide mb-2 flex items-center gap-1.5">
@@ -1001,14 +1006,39 @@ function FilterSelect({ label, iconName, value, onChange, options, placeholder }
                 className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-brand-text focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none bg-white"
             >
                 <option value="">{placeholder}</option>
-                {options.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                        {opt.name}
-                    </option>
-                ))}
+                {groups
+                    ? groups.map((group) => (
+                          <optgroup key={group.label} label={group.label}>
+                              {group.options.map((opt) => (
+                                  <option key={opt.id} value={opt.id}>
+                                      {opt.name}
+                                  </option>
+                              ))}
+                          </optgroup>
+                      ))
+                    : options.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                              {opt.name}
+                          </option>
+                      ))}
             </select>
         </div>
     );
+}
+
+// Agrupa los talles en Bebé / Niño-a / Otros y los ordena naturalmente dentro de cada grupo
+function groupSizesForSelect(sizes) {
+    const natCompare = (a, b) =>
+        a.name.localeCompare(b.name, 'es', { numeric: true, sensitivity: 'base' });
+
+    return SIZE_GROUPS
+        .map((label) => ({
+            label,
+            options: sizes
+                .filter((s) => categorizeSizeName(s.name) === label)
+                .sort(natCompare),
+        }))
+        .filter((g) => g.options.length > 0);
 }
 
 function FilterContent({ localFilters, onChange, onReset, categories, colors, sizes, genders, showHeader = true }) {
@@ -1100,7 +1130,7 @@ function FilterContent({ localFilters, onChange, onReset, categories, colors, si
 
                 <FilterSelect label="Categoría" iconName="category" value={localFilters.category} onChange={(v) => onChange('category', v)} options={categories} placeholder="Todas" />
                 <FilterSelect label="Color"     iconName="color"    value={localFilters.color}    onChange={(v) => onChange('color', v)}    options={colors}    placeholder="Todos" />
-                <FilterSelect label="Talle"     iconName="size"     value={localFilters.size}     onChange={(v) => onChange('size', v)}     options={sizes}     placeholder="Todos" />
+                <FilterSelect label="Talle"     iconName="size"     value={localFilters.size}     onChange={(v) => onChange('size', v)}     groups={groupSizesForSelect(sizes)}     placeholder="Todos" />
                 <FilterSelect label="Género"    iconName="gender"   value={localFilters.gender}   onChange={(v) => onChange('gender', v)}   options={genders}   placeholder="Todos" />
 
                 {/* Stock */}
