@@ -202,18 +202,22 @@ const ProductCard = memo(function ProductCard({ item, priority = false }) {
 });
 
 const SORTERS = {
-    relevancia: (a, b) => Number(b.is_featured) - Number(a.is_featured),
+    // El backend ya entrega las prendas de más nuevas a más antiguas; un sort estable
+    // (return 0) preserva ese orden sin que los destacados se adelanten.
+    novedades: () => 0,
     'precio-asc': (a, b) => Number(a.price) - Number(b.price),
     'precio-desc': (a, b) => Number(b.price) - Number(a.price),
     nombre: (a, b) => a.name.localeCompare(b.name, 'es'),
 };
 
 const SORT_LABELS = {
-    relevancia: 'Relevancia',
+    novedades: 'Más recientes',
     'precio-asc': 'Precio: menor a mayor',
     'precio-desc': 'Precio: mayor a menor',
     nombre: 'Nombre (A -> Z)',
 };
+
+const DEFAULT_SORT = 'novedades';
 
 function SectionHeading({ title, subtitle }) {
     return (
@@ -492,7 +496,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     const restored = snapshotRef.current !== null;
     const snap = snapshotRef.current;
 
-    const [sort, setSort] = useState(restored ? (snap.sort ?? 'relevancia') : 'relevancia');
+    const [sort, setSort] = useState(restored ? (snap.sort ?? DEFAULT_SORT) : DEFAULT_SORT);
     const [sortOpen, setSortOpen] = useState(false);
     const [visibleProducts, setVisibleProducts] = useState(restored ? (snap.visibleProducts ?? PRODUCTS_PAGE_SIZE) : PRODUCTS_PAGE_SIZE);
     const [search, setSearch] = useState(restored ? (snap.search ?? '') : '');
@@ -631,15 +635,15 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     const filteredProducts = useMemo(() => typedProducts.filter(filterItem), [typedProducts, filterItem]);
 
     const sortedCombos = useMemo(
-        () => [...filteredCombos].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        () => [...filteredCombos].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
         [filteredCombos, sort]
     );
     const sortedCombosEmprendedor = useMemo(
-        () => [...filteredCombosEmprendedor].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        () => [...filteredCombosEmprendedor].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
         [filteredCombosEmprendedor, sort]
     );
     const sortedProducts = useMemo(
-        () => [...filteredProducts].sort(SORTERS[sort] ?? SORTERS.relevancia),
+        () => [...filteredProducts].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
         [filteredProducts, sort]
     );
 

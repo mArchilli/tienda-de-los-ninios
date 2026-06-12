@@ -84,8 +84,8 @@ class CatalogController extends Controller
                 'genders:id,name',
                 'categories:id,name',
             ])
-            ->orderBy('updated_at', 'desc')
-            ->get(['id', 'name', 'price', 'images', 'is_featured', 'updated_at'])
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'name', 'price', 'images', 'is_featured', 'created_at'])
             ->map(fn ($p) => [
                 'id'          => $p->id,
                 'name'        => $p->name,
