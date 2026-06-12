@@ -21,8 +21,6 @@ function ComboCard({ combo }) {
                             </div>
                         )}
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-brand-text/55 via-transparent to-white/10" />
-
                         {combo.badge && (
                             <span className={`absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white sm:left-4 sm:top-4 sm:px-3 sm:py-1 sm:text-[10px] ${combo.badgeColor ?? 'bg-brand-primary'}`}>
                                 {combo.badge}
@@ -113,7 +111,7 @@ export default function FeaturedCombos({ combos }) {
                     <div className="relative z-10 mt-8 hidden sm:block">
                         <div
                             ref={scrollerRef}
-                            className="scrollbar-thin -mx-2 flex snap-x snap-mandatory gap-4 overflow-x-auto px-2 pb-3 scroll-smooth lg:gap-5 xl:gap-6"
+                            className="-mx-2 flex snap-x snap-mandatory gap-4 overflow-x-auto px-2 pb-3 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:gap-5 xl:gap-6"
                         >
                             {items.map((combo) => (
                                 <div key={combo.id} className="w-[318px] flex-none snap-start lg:w-[338px] xl:w-[352px]">
