@@ -7,41 +7,118 @@ use App\Models\Combo;
 use App\Models\ComboEmprendedor;
 use App\Models\Order;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('items')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn (Order $o) => [
-                'id'              => $o->id,
-                'first_name'      => $o->first_name,
-                'last_name'       => $o->last_name,
-                'email'           => $o->email,
-                'phone'           => $o->phone,
-                'total'           => (float) $o->total,
-                'shipping_method' => $o->shipping_method,
-                'address'         => $o->address,
-                'shipping_status' => $o->shipping_status,
-                'status'          => $o->status,
-                'items_count'     => $o->items->sum('quantity'),
-                'created_at'      => optional($o->created_at)->toIso8601String(),
-            ]);
+        $month     = $this->parseMonth($request->query('month'));
+        $start     = (clone $month)->startOfMonth();
+        $end       = (clone $month)->endOfMonth();
+        $previous  = (clone $month)->subMonthNoOverflow();
+        $prevStart = (clone $previous)->startOfMonth();
+        $prevEnd   = (clone $previous)->endOfMonth();
 
-        $pending    = $orders->where('shipping_status', Order::SHIPPING_STATUS_PENDING)->values();
-        $dispatched = $orders->whereIn('shipping_status', [
-            Order::SHIPPING_STATUS_DISPATCHED,
-            Order::SHIPPING_STATUS_DELIVERED,
-        ])->values();
+        $monthOrders = Order::with('items')
+            ->whereBetween('created_at', [$start, $end])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $map = fn (Order $o) => [
+            'id'              => $o->id,
+            'first_name'      => $o->first_name,
+            'last_name'       => $o->last_name,
+            'email'           => $o->email,
+            'phone'           => $o->phone,
+            'total'           => (float) $o->total,
+            'shipping_method' => $o->shipping_method,
+            'address'         => $o->address,
+            'shipping_status' => $o->shipping_status,
+            'status'          => $o->status,
+            'items_count'     => (int) $o->items->sum('quantity'),
+            'created_at'      => optional($o->created_at)->toIso8601String(),
+        ];
+
+        $pending = $monthOrders
+            ->where('shipping_status', Order::SHIPPING_STATUS_PENDING)
+            ->map($map)->values();
+
+        $dispatched = $monthOrders
+            ->whereIn('shipping_status', [
+                Order::SHIPPING_STATUS_DISPATCHED,
+                Order::SHIPPING_STATUS_DELIVERED,
+            ])
+            ->map($map)->values();
+
+        // Pedidos por método de envío en el mes.
+        $branchCount = $monthOrders->where('shipping_method', 'branch')->count();
+        $homeCount   = $monthOrders->where('shipping_method', 'home')->count();
+
+        $prevCount = Order::whereBetween('created_at', [$prevStart, $prevEnd])->count();
+
+        // Pendientes globales (incluye otros meses) para no perder de vista lo accionable.
+        $pendingTotal = Order::where('shipping_status', Order::SHIPPING_STATUS_PENDING)->count();
 
         return Inertia::render('Admin/Orders/Index', [
-            'pending'    => $pending,
-            'dispatched' => $dispatched,
+            'selectedMonth'   => $month->format('Y-m'),
+            'selectedLabel'   => $this->monthLabel($month),
+            'previousLabel'   => $this->monthLabel($previous),
+            'availableMonths' => $this->availableMonths(),
+            'pending'         => $pending,
+            'dispatched'      => $dispatched,
+            'metrics'         => [
+                'orders_total'     => $monthOrders->count(),
+                'orders_prev'      => $prevCount,
+                'branch_count'     => $branchCount,
+                'home_count'       => $homeCount,
+                'pending_count'    => $pending->count(),
+                'dispatched_count' => $dispatched->count(),
+                'pending_total'    => $pendingTotal,
+            ],
         ]);
+    }
+
+    private function parseMonth(?string $value): Carbon
+    {
+        if ($value && preg_match('/^\d{4}-\d{2}$/', $value)) {
+            try {
+                return Carbon::createFromFormat('Y-m', $value)->startOfMonth();
+            } catch (\Exception $e) {
+                // fallback al mes actual
+            }
+        }
+        return Carbon::now()->startOfMonth();
+    }
+
+    private function monthLabel(Carbon $date): string
+    {
+        $meses = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+        ];
+        return $meses[(int) $date->month] . ' ' . $date->year;
+    }
+
+    private function availableMonths(): array
+    {
+        $first = Order::min('created_at');
+        $start = $first ? Carbon::parse($first)->startOfMonth() : Carbon::now()->startOfMonth();
+        $end   = Carbon::now()->startOfMonth();
+
+        $months = [];
+        $cursor = clone $end;
+        while ($cursor->greaterThanOrEqualTo($start)) {
+            $months[] = [
+                'value' => $cursor->format('Y-m'),
+                'label' => $this->monthLabel($cursor),
+            ];
+            $cursor->subMonthNoOverflow();
+        }
+        return $months;
     }
 
     public function show(Order $order)
