@@ -1,11 +1,11 @@
 import { Link } from '@inertiajs/react';
 
 const CATEGORIES = [
-    { label: 'NENE',   href: '/catalogo?audiencia=nino', image: '/images/filtro-nene.png'   },
-    { label: 'NENA',   href: '/catalogo?audiencia=nina', image: '/images/filtro-nena.png'   },
-    { label: 'BEBE',   href: '/catalogo?audiencia=bebe', image: '/images/filtro-bebe.png'   },
-    { label: 'BEBA',   href: '/catalogo?audiencia=beba', image: '/images/filtro-beba.png'   },
-    { label: 'COMBOS', href: '/catalogo?tipo=combos',    image: '/images/filtro-combos.png' },
+    { label: 'NENE',   href: '/catalogo?audiencia=nino&tipo=productos', image: '/images/filtro-nene.png'   },
+    { label: 'NENA',   href: '/catalogo?audiencia=nina&tipo=productos', image: '/images/filtro-nena.png'   },
+    { label: 'BEBE',   href: '/catalogo?audiencia=bebe&tipo=productos', image: '/images/filtro-bebe.png'   },
+    { label: 'BEBA',   href: '/catalogo?audiencia=beba&tipo=productos', image: '/images/filtro-beba.png'   },
+    { label: 'COMBOS', href: '/catalogo?tipo=combos',                   image: '/images/filtro-combos.png' },
 ];
 
 function CircleSlot({ label, image }) {
@@ -29,7 +29,7 @@ export default function CategoryShortcuts() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)] lg:gap-8 xl:gap-10">
                     <div className="px-2 py-2 sm:px-0">
                         <h2 className="home-section-title">
-                            ROPA QUE LES ENCANTA
+                            CATALOGO
                         </h2>
 
                         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
