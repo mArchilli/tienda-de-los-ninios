@@ -34,10 +34,17 @@ export default function Confirmation({ order, items = [], whatsapp_url, whatsapp
     useEffect(() => {
         if (!whatsapp_url || openedRef.current) return;
         openedRef.current = true;
-        // Intento de apertura automática. Si el navegador lo bloquea, el usuario
-        // tiene el botón "Abrir WhatsApp" más abajo como fallback.
-        const win = window.open(whatsapp_url, '_blank', 'noopener,noreferrer');
-        if (win) setOpened(true);
+        // En mobile, window.open con _blank es bloqueado como popup cuando se llama
+        // fuera de un gesto del usuario. Con location.href el SO intercepta la URL
+        // de WhatsApp y abre la app directamente sin bloqueos.
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            setOpened(true);
+            window.location.href = whatsapp_url;
+        } else {
+            const win = window.open(whatsapp_url, '_blank', 'noopener,noreferrer');
+            if (win) setOpened(true);
+        }
     }, [whatsapp_url]);
 
     const openWhatsapp = () => {
