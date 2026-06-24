@@ -30,12 +30,14 @@ const STATUS_BADGE = {
     pending:    'bg-amber-100 text-amber-700 border-amber-200',
     dispatched: 'bg-sky-100 text-sky-700 border-sky-200',
     delivered:  'bg-emerald-100 text-emerald-700 border-emerald-200',
+    cancelled:  'bg-rose-100 text-rose-700 border-rose-200',
 };
 
 const STATUS_LABEL = {
     pending:    'Pendiente',
     dispatched: 'Despachado',
     delivered:  'Entregado',
+    cancelled:  'Cancelado',
 };
 
 // ─── Flash banner ─────────────────────────────────────────────────────────────
@@ -304,15 +306,16 @@ export default function OrdersShow({ order }) {
         if (flash?.success) setFlashMessage(flash.success);
     }, [flash]);
 
-    const isPending  = order.shipping_status === 'pending';
-    const nextStatus = isPending ? 'dispatched' : 'pending';
+    const shippingStatus = order.shipping_status;
+    const isPending   = shippingStatus === 'pending';
+    const isCancelled = shippingStatus === 'cancelled';
 
-    const toggleStatus = () => {
+    const updateStatus = (status) => {
         if (processing) return;
         setProcessing(true);
         router.patch(
             route('admin.orders.update-status', order.id),
-            { shipping_status: nextStatus },
+            { shipping_status: status },
             { preserveScroll: true, onFinish: () => setProcessing(false) },
         );
     };
@@ -341,10 +344,10 @@ export default function OrdersShow({ order }) {
                             <span
                                 className={
                                     'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ' +
-                                    (STATUS_BADGE[order.shipping_status] ?? 'bg-gray-100 text-brand-text-muted border-gray-200')
+                                    (STATUS_BADGE[shippingStatus] ?? 'bg-gray-100 text-brand-text-muted border-gray-200')
                                 }
                             >
-                                {STATUS_LABEL[order.shipping_status] ?? order.shipping_status}
+                                {STATUS_LABEL[shippingStatus] ?? shippingStatus}
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-brand-text-muted">
@@ -352,28 +355,65 @@ export default function OrdersShow({ order }) {
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={toggleStatus}
-                        disabled={processing}
-                        className={
-                            'inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ' +
-                            (isPending
-                                ? 'bg-brand-cta text-white hover:bg-brand-cta-dark'
-                                : 'border border-gray-200 bg-white text-brand-text hover:border-brand-primary hover:text-brand-primary')
-                        }
-                    >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {isPending ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                            ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                    d="M3 12a9 9 0 109-9M3 12l3-3m-3 3l3 3" />
-                            )}
-                        </svg>
-                        {processing ? 'Actualizando…' : isPending ? 'Marcar como Despachado' : 'Volver a Pendiente'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* Cancelar — sólo visible si el pedido está pendiente */}
+                        {isPending && (
+                            <button
+                                type="button"
+                                onClick={() => updateStatus('cancelled')}
+                                disabled={processing}
+                                className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition-colors hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                {processing ? 'Actualizando…' : 'Cancelar pedido'}
+                            </button>
+                        )}
+
+                        {/* Acción principal según estado */}
+                        {!isCancelled && (
+                            <button
+                                type="button"
+                                onClick={() => updateStatus(isPending ? 'dispatched' : 'pending')}
+                                disabled={processing}
+                                className={
+                                    'inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ' +
+                                    (isPending
+                                        ? 'bg-brand-cta text-white hover:bg-brand-cta-dark'
+                                        : 'border border-gray-200 bg-white text-brand-text hover:border-brand-primary hover:text-brand-primary')
+                                }
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {isPending ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                            d="M3 12a9 9 0 109-9M3 12l3-3m-3 3l3 3" />
+                                    )}
+                                </svg>
+                                {processing ? 'Actualizando…' : isPending ? 'Marcar como Despachado' : 'Volver a Pendiente'}
+                            </button>
+                        )}
+
+                        {/* Restaurar — sólo visible si el pedido está cancelado */}
+                        {isCancelled && (
+                            <button
+                                type="button"
+                                onClick={() => updateStatus('pending')}
+                                disabled={processing}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-brand-text shadow-sm transition-colors hover:border-brand-primary hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M3 12a9 9 0 109-9M3 12l3-3m-3 3l3 3" />
+                                </svg>
+                                {processing ? 'Actualizando…' : 'Restaurar a Pendiente'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             }
         >

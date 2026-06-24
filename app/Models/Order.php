@@ -19,6 +19,7 @@ class Order extends Model
     const SHIPPING_STATUS_PENDING = 'pending';
     const SHIPPING_STATUS_DISPATCHED = 'dispatched';
     const SHIPPING_STATUS_DELIVERED = 'delivered';
+    const SHIPPING_STATUS_CANCELLED = 'cancelled';
 
     const STATUS_PENDING = 'pending';
     const STATUS_CONFIRMED = 'confirmed';

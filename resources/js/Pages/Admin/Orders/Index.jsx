@@ -66,18 +66,21 @@ const STATUS_BADGE = {
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
     dispatched: 'bg-sky-100 text-sky-700 border-sky-200',
     delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    cancelled: 'bg-rose-100 text-rose-700 border-rose-200',
 };
 
 const STATUS_LABEL = {
     pending: 'Pendiente',
     dispatched: 'Despachado',
     delivered: 'Entregado',
+    cancelled: 'Cancelado',
 };
 
 const STATUS_ACCENT = {
     pending: 'bg-amber-400',
     dispatched: 'bg-sky-400',
     delivered: 'bg-emerald-400',
+    cancelled: 'bg-rose-400',
 };
 
 // ─── Flash banner ─────────────────────────────────────────────────────────────
@@ -217,6 +220,7 @@ function Tabs({ active, onChange, counts }) {
     const tabs = [
         { key: 'pending', label: 'Pendientes', count: counts.pending },
         { key: 'dispatched', label: 'Despachados', count: counts.dispatched },
+        { key: 'cancelled', label: 'Cancelados', count: counts.cancelled },
     ];
 
     return (
@@ -355,6 +359,7 @@ export default function OrdersIndex({
     availableMonths = [],
     pending = [],
     dispatched = [],
+    cancelled = [],
     metrics = {},
 }) {
     const flash = usePage().props.flash;
@@ -371,11 +376,11 @@ export default function OrdersIndex({
         router.get(route('admin.orders.index'), { month: m }, {
             preserveScroll: true,
             preserveState: true,
-            only: ['selectedMonth', 'selectedLabel', 'previousLabel', 'pending', 'dispatched', 'metrics'],
+            only: ['selectedMonth', 'selectedLabel', 'previousLabel', 'pending', 'dispatched', 'cancelled', 'metrics'],
         });
     };
 
-    const list = tab === 'pending' ? pending : dispatched;
+    const list = tab === 'pending' ? pending : tab === 'dispatched' ? dispatched : cancelled;
 
     const filtered = useMemo(() => {
         const needle = q.trim().toLowerCase();
@@ -476,7 +481,7 @@ export default function OrdersIndex({
                     <Tabs
                         active={tab}
                         onChange={setTab}
-                        counts={{ pending: pending.length, dispatched: dispatched.length }}
+                        counts={{ pending: pending.length, dispatched: dispatched.length, cancelled: cancelled.length }}
                     />
 
                     <div className="relative w-full max-w-sm">
@@ -523,7 +528,9 @@ export default function OrdersIndex({
                             ? 'No hay pedidos que coincidan con la búsqueda.'
                             : tab === 'pending'
                                 ? `No hay pedidos pendientes en ${selectedLabel}.`
-                                : `No hay pedidos despachados en ${selectedLabel}.`
+                                : tab === 'dispatched'
+                                    ? `No hay pedidos despachados en ${selectedLabel}.`
+                                    : `No hay pedidos cancelados en ${selectedLabel}.`
                     }
                 />
             </div>

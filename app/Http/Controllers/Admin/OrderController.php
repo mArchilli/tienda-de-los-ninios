@@ -53,11 +53,19 @@ class OrderController extends Controller
             ])
             ->map($map)->values();
 
-        // Pedidos por método de envío en el mes.
-        $branchCount = $monthOrders->where('shipping_method', 'branch')->count();
-        $homeCount   = $monthOrders->where('shipping_method', 'home')->count();
+        $cancelled = $monthOrders
+            ->where('shipping_status', Order::SHIPPING_STATUS_CANCELLED)
+            ->map($map)->values();
 
-        $prevCount = Order::whereBetween('created_at', [$prevStart, $prevEnd])->count();
+        $activeOrders = $monthOrders->where('shipping_status', '!=', Order::SHIPPING_STATUS_CANCELLED);
+
+        // Pedidos por método de envío en el mes (excluye cancelados).
+        $branchCount = $activeOrders->where('shipping_method', 'branch')->count();
+        $homeCount   = $activeOrders->where('shipping_method', 'home')->count();
+
+        $prevCount = Order::whereBetween('created_at', [$prevStart, $prevEnd])
+            ->where('shipping_status', '!=', Order::SHIPPING_STATUS_CANCELLED)
+            ->count();
 
         // Pendientes globales (incluye otros meses) para no perder de vista lo accionable.
         $pendingTotal = Order::where('shipping_status', Order::SHIPPING_STATUS_PENDING)->count();
@@ -69,14 +77,16 @@ class OrderController extends Controller
             'availableMonths' => $this->availableMonths(),
             'pending'         => $pending,
             'dispatched'      => $dispatched,
+            'cancelled'       => $cancelled,
             'metrics'         => [
-                'orders_total'     => $monthOrders->count(),
-                'orders_prev'      => $prevCount,
-                'branch_count'     => $branchCount,
-                'home_count'       => $homeCount,
-                'pending_count'    => $pending->count(),
-                'dispatched_count' => $dispatched->count(),
-                'pending_total'    => $pendingTotal,
+                'orders_total'      => $activeOrders->count(),
+                'orders_prev'       => $prevCount,
+                'branch_count'      => $branchCount,
+                'home_count'        => $homeCount,
+                'pending_count'     => $pending->count(),
+                'dispatched_count'  => $dispatched->count(),
+                'cancelled_count'   => $cancelled->count(),
+                'pending_total'     => $pendingTotal,
             ],
         ]);
     }
@@ -286,6 +296,7 @@ class OrderController extends Controller
                     Order::SHIPPING_STATUS_PENDING,
                     Order::SHIPPING_STATUS_DISPATCHED,
                     Order::SHIPPING_STATUS_DELIVERED,
+                    Order::SHIPPING_STATUS_CANCELLED,
                 ]),
             ],
         ]);
