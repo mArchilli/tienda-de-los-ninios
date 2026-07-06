@@ -27,7 +27,7 @@ function StatCard({ title, value, accent = 'primary' }) {
     );
 }
 
-export default function MetricsOrders({ month, monthLabel, orders = [], currentStats }) {
+export default function MetricsOrders({ view, period, periodLabel, orders = [], currentStats }) {
     const initialBillable = useMemo(
         () => new Set(orders.filter((o) => o.is_billable).map((o) => o.id)),
         [orders]
@@ -113,7 +113,11 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
         setConfirmOpen(false);
         router.patch(
             route('admin.metrics.orders.update'),
-            { month, billable_order_ids: Array.from(billable) },
+            {
+                view,
+                ...(view === 'day' ? { day: period } : { month: period }),
+                billable_order_ids: Array.from(billable),
+            },
             { preserveScroll: true }
         );
     };
@@ -127,14 +131,14 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
                     <div>
                         <div className="flex items-center gap-2 text-xs text-brand-text-muted">
                             <Link
-                                href={route('admin.metrics.index', { month })}
+                                href={route('admin.metrics.index', view === 'day' ? { view: 'day', day: period } : { month: period })}
                                 className="hover:text-brand-primary"
                             >
                                 ← Volver a métricas
                             </Link>
                         </div>
                         <h1 className="mt-1 text-xl font-bold text-brand-text">
-                            Órdenes facturadas — {monthLabel}
+                            Órdenes facturadas — {periodLabel}
                         </h1>
                         <p className="text-sm text-brand-text-muted">
                             Destildá una orden para excluirla del facturado y devolver el stock.
@@ -143,7 +147,7 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
                 </div>
             }
         >
-            <Head title={`Órdenes — ${monthLabel}`} />
+            <Head title={`Órdenes — ${periodLabel}`} />
 
             <form onSubmit={submit} className="p-6 space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -229,7 +233,7 @@ export default function MetricsOrders({ month, monthLabel, orders = [], currentS
                     {filteredOrders.length === 0 ? (
                         <div className="p-10 text-center text-sm text-brand-text-muted">
                             {orders.length === 0
-                                ? 'No hay órdenes en este mes.'
+                                ? `No hay órdenes en este ${view === 'day' ? 'día' : 'mes'}.`
                                 : 'No hay órdenes que coincidan con la búsqueda.'}
                         </div>
                     ) : (
@@ -357,7 +361,7 @@ function ConfirmModal({ onCancel, onConfirm, processing, toCancel, toReactivate,
                 <div className="px-5 pt-5 pb-3 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-brand-text">Confirmar cambios</h3>
                     <p className="mt-1 text-xs text-brand-text-muted">
-                        Esta acción ajusta las métricas del mes y modifica el stock de las prendas involucradas.
+                        Esta acción ajusta las métricas del período y modifica el stock de las prendas involucradas.
                     </p>
                 </div>
 

@@ -26,9 +26,15 @@ function pctDelta(curr, prev) {
     return { value: d, kind: d > 0 ? 'up' : 'down' };
 }
 
+function shiftDay(ymd, delta) {
+    const [y, m, day] = ymd.split('-').map(Number);
+    const d = new Date(y, m - 1, day + delta);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ title, value, sub, delta, accent = 'primary', icon, action }) {
+function KpiCard({ title, value, sub, delta, deltaCaption, accent = 'primary', icon, action }) {
     const accents = {
         primary:   'bg-brand-primary-surface text-brand-primary',
         cta:       'bg-brand-cta-surface text-brand-cta',
@@ -55,7 +61,7 @@ function KpiCard({ title, value, sub, delta, accent = 'primary', icon, action })
                 {delta ? (
                     <div className="flex items-center gap-1.5">
                         <DeltaBadge delta={delta} />
-                        <span className="text-xs text-brand-text-muted">vs. mes anterior</span>
+                        <span className="text-xs text-brand-text-muted">{deltaCaption}</span>
                     </div>
                 ) : <span />}
                 {action}
@@ -88,28 +94,28 @@ function DeltaBadge({ delta }) {
 
 // ─── Bar chart (CSS) ──────────────────────────────────────────────────────────
 
-function MonthlyChart({ data, selectedMonth, onSelect }) {
+function PeriodChart({ data, selectedPeriod, onSelect, title, subtitle }) {
     const max = useMemo(() => Math.max(1, ...data.map((d) => d.revenue)), [data]);
 
     return (
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h2 className="text-base font-bold text-brand-text">Facturación mensual</h2>
-                    <p className="text-xs text-brand-text-muted">Últimos 12 meses · click en una barra para ver detalle</p>
+                    <h2 className="text-base font-bold text-brand-text">{title}</h2>
+                    <p className="text-xs text-brand-text-muted">{subtitle}</p>
                 </div>
             </div>
 
-            <div className="flex items-end gap-2 h-56 px-1">
+            <div className="flex items-end gap-1.5 h-56 px-1 overflow-x-auto">
                 {data.map((d) => {
-                    const isSelected = d.month === selectedMonth;
+                    const isSelected = d.period === selectedPeriod;
                     const heightPct = max > 0 ? (d.revenue / max) * 100 : 0;
                     return (
                         <button
-                            key={d.month}
+                            key={d.period}
                             type="button"
-                            onClick={() => onSelect(d.month)}
-                            className="group relative flex flex-1 flex-col items-center justify-end h-full min-w-0"
+                            onClick={() => onSelect(d.period)}
+                            className="group relative flex flex-1 flex-col items-center justify-end h-full min-w-[6px]"
                             title={`${d.label}: ${fmtMoney(d.revenue)} · ${d.orders_count} pedidos`}
                         >
                             {/* Tooltip */}
@@ -131,13 +137,13 @@ function MonthlyChart({ data, selectedMonth, onSelect }) {
                 })}
             </div>
 
-            <div className="mt-2 flex gap-2 px-1">
+            <div className="mt-2 flex gap-1.5 px-1">
                 {data.map((d) => (
                     <div
-                        key={d.month + '-label'}
+                        key={d.period + '-label'}
                         className={
-                            'flex-1 text-center text-[10px] font-semibold uppercase ' +
-                            (d.month === selectedMonth ? 'text-brand-cta' : 'text-brand-text-muted')
+                            'flex-1 text-center text-[10px] font-semibold uppercase truncate ' +
+                            (d.period === selectedPeriod ? 'text-brand-cta' : 'text-brand-text-muted')
                         }
                     >
                         {d.label}
@@ -214,35 +220,126 @@ function TopSellersCard({ title, subtitle, items, emptyText, accent }) {
     );
 }
 
+// ─── Day navigator ────────────────────────────────────────────────────────────
+
+function DayNavigator({ selectedDay, bounds, onNavigate }) {
+    const prevDisabled = !!bounds?.min && shiftDay(selectedDay, -1) < bounds.min;
+    const nextDisabled = !!bounds?.max && shiftDay(selectedDay, 1) > bounds.max;
+
+    return (
+        <div className="flex items-center gap-2">
+            <button
+                type="button"
+                onClick={() => onNavigate(shiftDay(selectedDay, -1))}
+                disabled={prevDisabled}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-brand-text-muted shadow-sm hover:border-brand-primary hover:text-brand-primary transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-brand-text-muted"
+                title="Día anterior"
+            >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <input
+                id="day-select"
+                type="date"
+                value={selectedDay}
+                min={bounds?.min}
+                max={bounds?.max}
+                onChange={(e) => e.target.value && onNavigate(e.target.value)}
+                className="rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm font-semibold text-brand-text shadow-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none"
+            />
+
+            <button
+                type="button"
+                onClick={() => onNavigate(shiftDay(selectedDay, 1))}
+                disabled={nextDisabled}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-brand-text-muted shadow-sm hover:border-brand-primary hover:text-brand-primary transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-brand-text-muted"
+                title="Día siguiente"
+            >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+    );
+}
+
+// ─── View toggle ────────────────────────────────────────────────────────────
+
+function ViewToggle({ view, onChange }) {
+    return (
+        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
+            {[
+                { value: 'month', label: 'Mes' },
+                { value: 'day', label: 'Día' },
+            ].map((opt) => (
+                <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => onChange(opt.value)}
+                    className={
+                        'rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ' +
+                        (view === opt.value
+                            ? 'bg-brand-primary text-white shadow-sm'
+                            : 'text-brand-text-muted hover:text-brand-text')
+                    }
+                >
+                    {opt.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MetricsIndex({
-    selectedMonth,
+    view,
+    selectedPeriod,
     selectedLabel,
     previousLabel,
     selectedStats,
     previousStats,
-    monthlyHistory = [],
+    history = [],
     availableMonths = [],
+    dayBounds,
     topProducts = [],
     topCombos = [],
     allTime,
 }) {
-    const navigateMonth = (m) => {
-        router.get(route('admin.metrics.index'), { month: m }, {
+    const navigate = (params) => {
+        router.get(route('admin.metrics.index'), params, {
             preserveScroll: true,
             preserveState: true,
             only: [
-                'selectedMonth', 'selectedLabel', 'previousLabel',
-                'selectedStats', 'previousStats', 'topProducts', 'topCombos',
+                'view', 'selectedPeriod', 'selectedLabel', 'previousLabel',
+                'selectedStats', 'previousStats', 'history', 'availableMonths',
+                'dayBounds', 'topProducts', 'topCombos',
             ],
         });
+    };
+
+    const navigatePeriod = (period) => {
+        if (view === 'day') navigate({ view: 'day', day: period });
+        else navigate({ view: 'month', month: period });
+    };
+
+    const switchView = (nextView) => {
+        if (nextView === view) return;
+        navigate({ view: nextView });
     };
 
     const revenueDelta = pctDelta(selectedStats.revenue, previousStats.revenue);
     const ordersDelta  = pctDelta(selectedStats.orders_count, previousStats.orders_count);
     const ticketDelta  = pctDelta(selectedStats.avg_ticket, previousStats.avg_ticket);
     const itemsDelta   = pctDelta(selectedStats.items_count, previousStats.items_count);
+
+    const deltaCaption = view === 'day' ? 'vs. día anterior' : 'vs. mes anterior';
+    const chartTitle = view === 'day' ? 'Facturación diaria' : 'Facturación mensual';
+    const chartSubtitle = view === 'day'
+        ? 'Últimos 30 días · click en una barra para ver detalle'
+        : 'Últimos 12 meses · click en una barra para ver detalle';
 
     return (
         <AuthenticatedLayout
@@ -255,20 +352,27 @@ export default function MetricsIndex({
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="month-select" className="text-sm font-semibold text-brand-text-muted">
-                            Mes:
-                        </label>
-                        <select
-                            id="month-select"
-                            value={selectedMonth}
-                            onChange={(e) => navigateMonth(e.target.value)}
-                            className="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm font-semibold text-brand-text shadow-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none"
-                        >
-                            {availableMonths.map((m) => (
-                                <option key={m.value} value={m.value}>{m.label}</option>
-                            ))}
-                        </select>
+                    <div className="flex items-center gap-3">
+                        <ViewToggle view={view} onChange={switchView} />
+
+                        {view === 'day' ? (
+                            <DayNavigator
+                                selectedDay={selectedPeriod}
+                                bounds={dayBounds}
+                                onNavigate={navigatePeriod}
+                            />
+                        ) : (
+                            <select
+                                id="month-select"
+                                value={selectedPeriod}
+                                onChange={(e) => navigatePeriod(e.target.value)}
+                                className="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm font-semibold text-brand-text shadow-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none"
+                            >
+                                {availableMonths.map((m) => (
+                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                 </div>
             }
@@ -302,6 +406,7 @@ export default function MetricsIndex({
                         value={fmtMoney(selectedStats.revenue)}
                         sub={`${previousLabel}: ${fmtMoneyCompact(previousStats.revenue)}`}
                         delta={revenueDelta}
+                        deltaCaption={deltaCaption}
                         accent="cta"
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -310,7 +415,7 @@ export default function MetricsIndex({
                         }
                         action={
                             <Link
-                                href={route('admin.metrics.orders', { month: selectedMonth })}
+                                href={route('admin.metrics.orders', view === 'day' ? { view: 'day', day: selectedPeriod } : { month: selectedPeriod })}
                                 className="inline-flex items-center gap-1 rounded-lg border border-brand-cta/30 bg-brand-cta-surface px-2.5 py-1 text-[11px] font-bold text-brand-cta hover:bg-brand-cta hover:text-white transition-colors"
                             >
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -325,6 +430,7 @@ export default function MetricsIndex({
                         value={selectedStats.orders_count}
                         sub={`${previousLabel}: ${previousStats.orders_count}`}
                         delta={ordersDelta}
+                        deltaCaption={deltaCaption}
                         accent="primary"
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,6 +443,7 @@ export default function MetricsIndex({
                         value={fmtMoney(selectedStats.avg_ticket)}
                         sub={`${previousLabel}: ${fmtMoneyCompact(previousStats.avg_ticket)}`}
                         delta={ticketDelta}
+                        deltaCaption={deltaCaption}
                         accent="secondary"
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -349,6 +456,7 @@ export default function MetricsIndex({
                         value={selectedStats.items_count}
                         sub={`${previousLabel}: ${previousStats.items_count}`}
                         delta={itemsDelta}
+                        deltaCaption={deltaCaption}
                         accent="text"
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,10 +467,12 @@ export default function MetricsIndex({
                 </div>
 
                 {/* Chart */}
-                <MonthlyChart
-                    data={monthlyHistory}
-                    selectedMonth={selectedMonth}
-                    onSelect={navigateMonth}
+                <PeriodChart
+                    data={history}
+                    selectedPeriod={selectedPeriod}
+                    onSelect={navigatePeriod}
+                    title={chartTitle}
+                    subtitle={chartSubtitle}
                 />
 
                 {/* Top sellers */}
@@ -371,14 +481,14 @@ export default function MetricsIndex({
                         title="Prendas más vendidas"
                         subtitle={`Top 10 · ${selectedLabel}`}
                         items={topProducts}
-                        emptyText="No hay prendas vendidas en este mes."
+                        emptyText={view === 'day' ? 'No hay prendas vendidas en este día.' : 'No hay prendas vendidas en este mes.'}
                         accent="primary"
                     />
                     <TopSellersCard
                         title="Combos más vendidos"
                         subtitle={`Top 10 · ${selectedLabel}`}
                         items={topCombos}
-                        emptyText="No hay combos vendidos en este mes."
+                        emptyText={view === 'day' ? 'No hay combos vendidos en este día.' : 'No hay combos vendidos en este mes.'}
                         accent="cta"
                     />
                 </div>

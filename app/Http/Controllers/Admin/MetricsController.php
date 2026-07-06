@@ -16,32 +16,57 @@ class MetricsController extends Controller
 {
     public function index(Request $request)
     {
-        $selected = $this->parseMonth($request->query('month'));
-        $previous = (clone $selected)->subMonthNoOverflow();
+        $view = $request->query('view') === 'day' ? 'day' : 'month';
 
-        $selectedStats = $this->monthStats($selected);
-        $previousStats = $this->monthStats($previous);
+        if ($view === 'day') {
+            $selected = $this->parseDay($request->query('day'));
+            $previous = (clone $selected)->subDay();
 
-        $monthlyHistory = $this->monthlyHistory(12);
-        $availableMonths = $this->availableMonths();
+            $selectedRange = [$selected->copy()->startOfDay(), $selected->copy()->endOfDay()];
+            $previousRange = [$previous->copy()->startOfDay(), $previous->copy()->endOfDay()];
 
-        $topProducts = $this->topProductsForMonth($selected, 10);
-        $topCombos   = $this->topCombosForMonth($selected, 10);
+            $viewData = [
+                'selectedPeriod' => $selected->format('Y-m-d'),
+                'selectedLabel'  => $this->dayLabel($selected),
+                'previousLabel'  => $this->dayLabel($previous),
+                'dayBounds'      => $this->dayBounds(),
+            ];
+
+            $history = $this->dailyHistory(30);
+        } else {
+            $selected = $this->parseMonth($request->query('month'));
+            $previous = (clone $selected)->subMonthNoOverflow();
+
+            $selectedRange = [$selected->copy()->startOfMonth(), $selected->copy()->endOfMonth()];
+            $previousRange = [$previous->copy()->startOfMonth(), $previous->copy()->endOfMonth()];
+
+            $viewData = [
+                'selectedPeriod'  => $selected->format('Y-m'),
+                'selectedLabel'   => $this->monthLabel($selected),
+                'previousLabel'   => $this->monthLabel($previous),
+                'availableMonths' => $this->availableMonths(),
+            ];
+
+            $history = $this->monthlyHistory(12);
+        }
+
+        $selectedStats = $this->periodStats(...$selectedRange);
+        $previousStats = $this->periodStats(...$previousRange);
+
+        $topProducts = $this->topProducts(...$selectedRange, limit: 10);
+        $topCombos   = $this->topCombos(...$selectedRange, limit: 10);
 
         $allTime = $this->allTimeStats();
 
-        return Inertia::render('Admin/Metrics/Index', [
-            'selectedMonth'   => $selected->format('Y-m'),
-            'selectedLabel'   => $this->monthLabel($selected),
-            'previousLabel'   => $this->monthLabel($previous),
-            'selectedStats'   => $selectedStats,
-            'previousStats'   => $previousStats,
-            'monthlyHistory'  => $monthlyHistory,
-            'availableMonths' => $availableMonths,
-            'topProducts'     => $topProducts,
-            'topCombos'       => $topCombos,
-            'allTime'         => $allTime,
-        ]);
+        return Inertia::render('Admin/Metrics/Index', array_merge($viewData, [
+            'view'          => $view,
+            'selectedStats' => $selectedStats,
+            'previousStats' => $previousStats,
+            'history'       => $history,
+            'topProducts'   => $topProducts,
+            'topCombos'     => $topCombos,
+            'allTime'       => $allTime,
+        ]));
     }
 
     private function parseMonth(?string $value): Carbon
@@ -56,6 +81,18 @@ class MetricsController extends Controller
         return Carbon::now()->startOfMonth();
     }
 
+    private function parseDay(?string $value): Carbon
+    {
+        if ($value && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            try {
+                return Carbon::createFromFormat('Y-m-d', $value)->startOfDay();
+            } catch (\Exception $e) {
+                // fallback to today
+            }
+        }
+        return Carbon::now()->startOfDay();
+    }
+
     private function monthLabel(Carbon $date): string
     {
         $meses = [
@@ -66,16 +103,24 @@ class MetricsController extends Controller
         return $meses[(int) $date->month] . ' ' . $date->year;
     }
 
+    private function dayLabel(Carbon $date): string
+    {
+        $dias = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+        $meses = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+        ];
+        return $dias[(int) $date->dayOfWeekIso] . ' ' . $date->day . ' de ' . $meses[(int) $date->month] . ' de ' . $date->year;
+    }
+
     private function billableQuery()
     {
         return Order::query()->where('status', '!=', Order::STATUS_CANCELLED);
     }
 
-    private function monthStats(Carbon $month): array
+    private function periodStats(Carbon $start, Carbon $end): array
     {
-        $start = (clone $month)->startOfMonth();
-        $end   = (clone $month)->endOfMonth();
-
         $base = $this->billableQuery()->whereBetween('created_at', [$start, $end]);
 
         $ordersCount = (clone $base)->count();
@@ -114,8 +159,36 @@ class MetricsController extends Controller
             $row = $rows->get($key);
 
             $result[] = [
-                'month'        => $key,
+                'period'       => $key,
                 'label'        => $this->shortMonthLabel($d),
+                'revenue'      => $row ? round((float) $row->revenue, 2) : 0.0,
+                'orders_count' => $row ? (int) $row->orders_count : 0,
+            ];
+        }
+
+        return $result;
+    }
+
+    private function dailyHistory(int $days): array
+    {
+        $start = Carbon::now()->startOfDay()->subDays($days - 1);
+
+        $rows = $this->billableQuery()
+            ->where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as d, SUM(total) as revenue, COUNT(*) as orders_count')
+            ->groupBy('d')
+            ->get()
+            ->keyBy('d');
+
+        $result = [];
+        for ($i = 0; $i < $days; $i++) {
+            $d   = (clone $start)->addDays($i);
+            $key = $d->toDateString();
+            $row = $rows->get($key);
+
+            $result[] = [
+                'period'       => $key,
+                'label'        => $d->format('d/m'),
                 'revenue'      => $row ? round((float) $row->revenue, 2) : 0.0,
                 'orders_count' => $row ? (int) $row->orders_count : 0,
             ];
@@ -152,11 +225,19 @@ class MetricsController extends Controller
         return $months;
     }
 
-    private function topProductsForMonth(Carbon $month, int $limit): array
+    private function dayBounds(): array
     {
-        $start = (clone $month)->startOfMonth();
-        $end   = (clone $month)->endOfMonth();
+        $first = $this->billableQuery()->min('created_at');
+        $min = $first ? Carbon::parse($first)->toDateString() : Carbon::now()->toDateString();
 
+        return [
+            'min' => $min,
+            'max' => Carbon::now()->toDateString(),
+        ];
+    }
+
+    private function topProducts(Carbon $start, Carbon $end, int $limit): array
+    {
         $rows = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', Order::STATUS_CANCELLED)
@@ -190,12 +271,9 @@ class MetricsController extends Controller
         })->values()->all();
     }
 
-    private function topCombosForMonth(Carbon $month, int $limit): array
+    private function topCombos(Carbon $start, Carbon $end, int $limit): array
     {
-        $start = (clone $month)->startOfMonth();
-        $end   = (clone $month)->endOfMonth();
-
-        // Pull combo rows for the month, then aggregate in PHP using combo_data JSON.
+        // Pull combo rows for the period, then aggregate in PHP using combo_data JSON.
         $items = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', Order::STATUS_CANCELLED)
@@ -256,9 +334,21 @@ class MetricsController extends Controller
 
     public function orders(Request $request)
     {
-        $month = $this->parseMonth($request->query('month'));
-        $start = (clone $month)->startOfMonth();
-        $end   = (clone $month)->endOfMonth();
+        $view = $request->query('view') === 'day' ? 'day' : 'month';
+
+        if ($view === 'day') {
+            $day = $this->parseDay($request->query('day'));
+            $start = $day->copy()->startOfDay();
+            $end   = $day->copy()->endOfDay();
+            $period = $day->format('Y-m-d');
+            $label  = $this->dayLabel($day);
+        } else {
+            $month = $this->parseMonth($request->query('month'));
+            $start = $month->copy()->startOfMonth();
+            $end   = $month->copy()->endOfMonth();
+            $period = $month->format('Y-m');
+            $label  = $this->monthLabel($month);
+        }
 
         $orders = Order::with('items')
             ->whereBetween('created_at', [$start, $end])
@@ -278,24 +368,37 @@ class MetricsController extends Controller
             ->values();
 
         return Inertia::render('Admin/Metrics/Orders', [
-            'month'        => $month->format('Y-m'),
-            'monthLabel'   => $this->monthLabel($month),
+            'view'         => $view,
+            'period'       => $period,
+            'periodLabel'  => $label,
             'orders'       => $orders,
-            'currentStats' => $this->monthStats($month),
+            'currentStats' => $this->periodStats($start, $end),
         ]);
     }
 
     public function updateOrders(Request $request, StockService $stock)
     {
         $data = $request->validate([
-            'month'                => ['required', 'regex:/^\d{4}-\d{2}$/'],
+            'view'                 => ['nullable', 'in:day,month'],
+            'month'                => ['required_if:view,month', 'nullable', 'regex:/^\d{4}-\d{2}$/'],
+            'day'                  => ['required_if:view,day', 'nullable', 'regex:/^\d{4}-\d{2}-\d{2}$/'],
             'billable_order_ids'   => ['present', 'array'],
             'billable_order_ids.*' => ['integer'],
         ]);
 
-        $month = $this->parseMonth($data['month']);
-        $start = (clone $month)->startOfMonth();
-        $end   = (clone $month)->endOfMonth();
+        $view = $data['view'] ?? 'month';
+
+        if ($view === 'day') {
+            $day = $this->parseDay($data['day']);
+            $start = $day->copy()->startOfDay();
+            $end   = $day->copy()->endOfDay();
+            $redirectParams = ['view' => 'day', 'day' => $data['day']];
+        } else {
+            $month = $this->parseMonth($data['month']);
+            $start = $month->copy()->startOfMonth();
+            $end   = $month->copy()->endOfMonth();
+            $redirectParams = ['month' => $data['month']];
+        }
 
         $billable = array_map('intval', $data['billable_order_ids']);
 
@@ -323,7 +426,7 @@ class MetricsController extends Controller
         });
 
         return redirect()
-            ->route('admin.metrics.orders', ['month' => $data['month']])
+            ->route('admin.metrics.orders', $redirectParams)
             ->with('success', 'Métricas actualizadas.');
     }
 }
