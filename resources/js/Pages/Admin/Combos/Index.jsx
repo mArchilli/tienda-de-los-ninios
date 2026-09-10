@@ -31,6 +31,7 @@ const Icons = {
     star:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
     gift:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
     image:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+    warn:    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />,
 };
 
 const Icon = ({ name, className = 'h-4 w-4' }) => (
@@ -121,6 +122,93 @@ function FlashBanner({ message, onDismiss }) {
             <button onClick={onDismiss} className="text-emerald-400 hover:text-emerald-600 transition-colors">
                 <Icon name="close" />
             </button>
+        </div>
+    );
+}
+
+// ─── Aviso de revisión de combos ──────────────────────────────────────────────
+
+// Banner global: cuántos combos tienen prendas de un género distinto al del combo.
+function ReviewBanner({ count, onlyReview, onToggleOnlyReview }) {
+    if (!count) return null;
+
+    return (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+            <div className="flex items-start gap-3">
+                <Icon name="warn" className="h-5 w-5 shrink-0 text-amber-500" />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold">
+                        {count} combo{count !== 1 ? 's' : ''} necesita{count !== 1 ? 'n' : ''} revisión
+                    </p>
+                    <p className="mt-0.5 text-xs leading-snug text-amber-800">
+                        Tienen prendas de un género distinto al del combo (se marcan abajo con
+                        <span className="font-semibold"> «Revisar prendas»</span>). En la tienda esas
+                        prendas ya no se muestran; para depurarlas, editá el combo y guardá.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={onToggleOnlyReview}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors"
+                    >
+                        {onlyReview ? 'Ver todos los combos' : 'Ver sólo los que necesitan revisión'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Detalle por combo, dentro de la tarjeta.
+function ReviewNotice({ review }) {
+    const [open, setOpen] = useState(false);
+    if (!review) return null;
+
+    const { combo_gender, mismatched_count, affected_categories = [], sample_products = [] } = review;
+
+    return (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900">
+            <div className="flex items-start gap-2">
+                <Icon name="warn" className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wide">Revisar prendas</p>
+                    <p className="mt-0.5 text-[11px] leading-snug">
+                        Combo de <b>{combo_gender}</b> con <b>{mismatched_count}</b> prenda
+                        {mismatched_count !== 1 ? 's' : ''} de otro género
+                        {affected_categories.length > 0 && <> (en {affected_categories.join(', ')})</>}.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => setOpen((o) => !o)}
+                        className="mt-1 text-[11px] font-semibold underline underline-offset-2 hover:text-amber-700"
+                    >
+                        {open ? 'Ocultar explicación' : '¿Por qué pasa esto?'}
+                    </button>
+                    {open && (
+                        <div className="mt-1.5 space-y-1.5 text-[11px] leading-snug">
+                            <p>
+                                <b>Causa:</b> se agregaron al combo prendas de otro género, o se cambió el
+                                género del combo después de haberlo armado. El género de cada prenda se
+                                define en <i>Prendas</i>; el del combo, en este formulario.
+                            </p>
+                            <p>
+                                En la tienda el combo se filtra por su género, así que esas prendas
+                                <b> ya no se muestran</b> a los clientes.
+                            </p>
+                            <p>
+                                <b>Para depurarlo:</b> tocá <i>Editar</i> y guardá. Al abrir el formulario las
+                                prendas de otro género se quitan solas; verificá que cada categoría siga
+                                teniendo prendas y guardá.
+                            </p>
+                            {sample_products.length > 0 && (
+                                <p className="text-amber-700">
+                                    Por ejemplo: {sample_products.join(', ')}
+                                    {mismatched_count > sample_products.length ? '…' : ''}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
@@ -570,8 +658,17 @@ function ComboFormModal({ open, onClose, sizes, genders = [], combo = null }) {
             setSelectedCategoryIds((prev) => prev.filter((id) => validIds.includes(id)));
             setCategorySettings((prev) => {
                 const next = {};
-                for (const id of Object.keys(prev)) {
-                    if (validIds.includes(Number(id))) next[id] = prev[id];
+                for (const cat of cats) {
+                    const existing = prev[cat.id];
+                    if (!existing) continue;
+                    // Descartamos las prendas que ya no están disponibles para el
+                    // talle/género elegido. Evita arrastrar prendas de otro género
+                    // al re-guardar un combo (auto-corrige combos ya inconsistentes).
+                    const availableIds = new Set((cat.products ?? []).map((p) => p.id));
+                    next[cat.id] = {
+                        ...existing,
+                        selectedProductIds: (existing.selectedProductIds ?? []).filter((id) => availableIds.has(id)),
+                    };
                 }
                 return next;
             });
@@ -931,8 +1028,12 @@ function ComboFormModal({ open, onClose, sizes, genders = [], combo = null }) {
                     </button>
                     <button
                         type="submit"
-                        disabled={processing || hasUncovered}
-                        title={hasUncovered ? 'Resolvé los talles sin cobertura antes de guardar' : ''}
+                        disabled={processing || hasUncovered || categoriesLoading}
+                        title={
+                            hasUncovered ? 'Resolvé los talles sin cobertura antes de guardar'
+                            : categoriesLoading ? 'Esperá a que termine de cargar la lista de prendas'
+                            : ''
+                        }
                         className="inline-flex items-center gap-2 rounded-xl bg-brand-cta px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {processing ? <Spinner /> : (
@@ -1056,6 +1157,16 @@ function ComboCard({ combo, onEdit, onDelete, selectionMode = false, selected = 
                         {fmt(combo.price)}
                     </span>
                 </div>
+
+                {/* Necesita revisión */}
+                {combo.review && !selectionMode && (
+                    <div className="absolute bottom-2 right-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                            <Icon name="warn" className="h-3 w-3" />
+                            Revisar
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Body */}
@@ -1089,6 +1200,8 @@ function ComboCard({ combo, onEdit, onDelete, selectionMode = false, selected = 
                         </div>
                     )}
                 </div>
+
+                {!selectionMode && <ReviewNotice review={combo.review} />}
 
                 {/* Actions */}
                 {!selectionMode && (
@@ -1162,7 +1275,7 @@ function BulkDeleteModal({ open, onClose, selectedIds, onSuccess }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Index({ combos, sizes, categories, genders = [], filters }) {
+export default function Index({ combos, sizes, categories, genders = [], filters, needsReviewCount = 0 }) {
     const { flash } = usePage().props;
 
     const [flashMsg, setFlashMsg]         = useState(flash?.success ?? null);
@@ -1175,6 +1288,7 @@ export default function Index({ combos, sizes, categories, genders = [], filters
 
     const [search, setSearch]                 = useState(filters?.search ?? '');
     const [activeCategory, setActiveCategory] = useState(filters?.category ?? '');
+    const [onlyReview, setOnlyReview]         = useState(Boolean(filters?.needs_review));
     const searchTimeout = useRef(null);
 
     const comboList = combos.data ?? [];
@@ -1198,10 +1312,11 @@ export default function Index({ combos, sizes, categories, genders = [], filters
         if (flash?.success) setFlashMsg(flash.success);
     }, [flash]);
 
-    const applyFilters = useCallback((newSearch, newCategory) => {
+    const applyFilters = useCallback((newSearch, newCategory, newOnlyReview) => {
         const params = {};
-        if (newSearch)   params.search   = newSearch;
-        if (newCategory) params.category = newCategory;
+        if (newSearch)     params.search       = newSearch;
+        if (newCategory)   params.category     = newCategory;
+        if (newOnlyReview) params.needs_review = 1;
         router.get(route('admin.combos.index'), params, {
             preserveState: true,
             preserveScroll: true,
@@ -1213,22 +1328,30 @@ export default function Index({ combos, sizes, categories, genders = [], filters
         setSearch(value);
         clearTimeout(searchTimeout.current);
         const currentCategory = activeCategory;
-        searchTimeout.current = setTimeout(() => applyFilters(value, currentCategory), 400);
+        const currentOnlyReview = onlyReview;
+        searchTimeout.current = setTimeout(() => applyFilters(value, currentCategory, currentOnlyReview), 400);
     };
 
     const handleCategoryToggle = (id) => {
         const next = activeCategory === String(id) ? '' : String(id);
         setActiveCategory(next);
-        applyFilters(search, next);
+        applyFilters(search, next, onlyReview);
+    };
+
+    const handleReviewToggle = () => {
+        const next = !onlyReview;
+        setOnlyReview(next);
+        applyFilters(search, activeCategory, next);
     };
 
     const resetFilters = () => {
         setSearch('');
         setActiveCategory('');
+        setOnlyReview(false);
         router.get(route('admin.combos.index'), {}, { replace: true });
     };
 
-    const hasFilters = search || activeCategory;
+    const hasFilters = search || activeCategory || onlyReview;
     const total = combos.total ?? combos.data?.length ?? 0;
 
     return (
@@ -1295,6 +1418,12 @@ export default function Index({ combos, sizes, categories, genders = [], filters
 
             <div className="p-6 space-y-5">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
+
+                <ReviewBanner
+                    count={needsReviewCount}
+                    onlyReview={onlyReview}
+                    onToggleOnlyReview={handleReviewToggle}
+                />
 
                 {/* Search + filters */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">

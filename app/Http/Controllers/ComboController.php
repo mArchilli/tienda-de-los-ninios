@@ -19,19 +19,31 @@ class ComboController extends Controller
             'items.category',
             'items.product.sizes',
             'items.product.colors',
+            'items.product.genders',
         ]);
 
+        $comboGenderId = $combo->gender?->id;
+
         // Agrupamos los items por categoría: cada categoría queda con su quantity y la
-        // lista de productos elegibles (con sus talles+stock).
+        // lista de productos elegibles (con sus talles+stock). Si el combo tiene un
+        // género asignado, descartamos las prendas que no lo comparten: hay combos
+        // cargados con prendas mezcladas y un combo «de niños» nunca debe ofrecer
+        // prendas de niña (ni al revés). La categoría se conserva aunque quede sin
+        // prendas válidas, de modo que el combo aparezca como no completable en vez
+        // de ofrecer una prenda del género equivocado.
         $categories = $combo->items
             ->groupBy('category_id')
-            ->map(function ($items) {
+            ->map(function ($items) use ($comboGenderId) {
                 $first = $items->first();
                 return [
                     'id'       => $first->category->id,
                     'name'     => $first->category->name,
                     'quantity' => (int) $first->quantity,
                     'products' => $items
+                        ->filter(fn ($item) => $item->product && (
+                            ! $comboGenderId
+                            || $item->product->genders->contains('id', $comboGenderId)
+                        ))
                         ->map(fn ($item) => [
                             'id'     => $item->product->id,
                             'name'   => $item->product->name,

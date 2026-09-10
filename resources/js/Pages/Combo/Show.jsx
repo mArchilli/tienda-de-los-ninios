@@ -228,8 +228,8 @@ export default function ComboShow({ combo, cartCount = 0 }) {
 
     // ─── Derivados ────────────────────────────────────────────────────────────
 
-    // Productos disponibles por categoría según talle + stock. El género ya está
-    // pre-filtrado al crear el combo.
+    // Productos disponibles por categoría según talle + stock. El backend ya
+    // entrega sólo prendas del género del combo.
     const availableByCategory = useMemo(() => {
         const map = {};
         if (!size) return map;

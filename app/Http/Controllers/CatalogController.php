@@ -31,15 +31,20 @@ class CatalogController extends Controller
             ->values();
 
         $combos = Combo::where('is_active', true)
-            ->with(['sizes:id,name', 'items.product.genders:id,name'])
+            ->with(['sizes:id,name', 'gender:id,name', 'items.product.genders:id,name'])
             ->orderBy('name')
-            ->get(['id', 'name', 'price', 'image', 'is_featured'])
+            ->get(['id', 'name', 'price', 'image', 'is_featured', 'gender_id'])
             ->map(function ($c) {
-                $genders = $c->items
-                    ->flatMap(fn ($item) => optional($item->product)->genders ?? collect())
-                    ->pluck('name')
-                    ->unique()
-                    ->values();
+                // La audiencia del combo la define su género asignado (no la unión de
+                // géneros de sus prendas: hay combos con prendas mezcladas). Los
+                // combos antiguos sin género asignado caen al inferido de las prendas.
+                $genders = $c->gender
+                    ? collect([$c->gender->name])
+                    : $c->items
+                        ->flatMap(fn ($item) => optional($item->product)->genders ?? collect())
+                        ->pluck('name')
+                        ->unique()
+                        ->values();
 
                 return [
                     'id'          => $c->id,
@@ -47,7 +52,7 @@ class CatalogController extends Controller
                     'price'       => $c->price,
                     'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
                     'is_featured' => (bool) $c->is_featured,
-                    'genders'     => $genders,
+                    'genders'     => $genders->values(),
                     'sizes'       => $c->sizes->pluck('name')->values(),
                 ];
             })

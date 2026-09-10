@@ -21,23 +21,93 @@ class ComboController extends Controller
 
     public function index(Request $request)
     {
-        $search     = $request->input('search', '');
-        $categoryId = $request->input('category') ? (int) $request->input('category') : null;
+        $search      = $request->input('search', '');
+        $categoryId  = $request->input('category') ? (int) $request->input('category') : null;
+        $needsReview = $request->boolean('needs_review');
 
-        $combos = Combo::with(['sizes', 'gender', 'items.category', 'items.product'])
+        // Combos cuyo armado incluye prendas de un género distinto al del combo.
+        // Se calcula sobre TODOS los combos (no sólo la página actual) para poder
+        // mostrar el aviso global y ofrecer el filtro «sólo los que necesitan revisión».
+        $reviewIds = Combo::whereNotNull('gender_id')
+            ->with(['items:id,combo_id,product_id', 'items.product:id', 'items.product.genders:id'])
+            ->get(['id', 'gender_id'])
+            ->filter(fn (Combo $c) => $c->items->contains(fn ($it) =>
+                $it->product && ! $it->product->genders->contains('id', $c->gender_id)
+            ))
+            ->pluck('id');
+
+        $combos = Combo::with([
+                'sizes',
+                'gender',
+                'items.category',
+                'items.product:id,name',
+                'items.product.genders:id,name',
+            ])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($categoryId, fn($q) => $q->whereHas('items', fn($sq) => $sq->where('category_id', $categoryId)))
+            ->when($needsReview, fn($q) => $q->whereIn('id', $reviewIds))
             ->latest()
             ->paginate(12)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Combo $combo) => array_merge($combo->toArray(), [
+                'review' => $this->genderReview($combo),
+            ]));
 
         return Inertia::render('Admin/Combos/Index', [
-            'combos'     => $combos,
-            'sizes'      => Size::orderBy('name')->get(['id', 'name']),
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
-            'genders'    => Gender::orderBy('name')->get(['id', 'name']),
-            'filters'    => ['search' => $search, 'category' => $categoryId ? (string) $categoryId : ''],
+            'combos'           => $combos,
+            'sizes'            => Size::orderBy('name')->get(['id', 'name']),
+            'categories'       => Category::orderBy('name')->get(['id', 'name']),
+            'genders'          => Gender::orderBy('name')->get(['id', 'name']),
+            'filters'          => [
+                'search'       => $search,
+                'category'     => $categoryId ? (string) $categoryId : '',
+                'needs_review' => $needsReview,
+            ],
+            'needsReviewCount' => $reviewIds->count(),
         ]);
+    }
+
+    /**
+     * Detecta si un combo ofrece prendas cuyo género no coincide con el suyo.
+     * Devuelve el detalle para el aviso del panel, o null si está consistente.
+     * Requiere que el combo venga con `gender`, `items.category` e
+     * `items.product.genders` precargados.
+     */
+    private function genderReview(Combo $combo): ?array
+    {
+        if (! $combo->gender_id) {
+            return null;
+        }
+
+        $mismatched = $combo->items->filter(fn ($item) =>
+            $item->product && ! $item->product->genders->contains('id', $combo->gender_id)
+        );
+
+        if ($mismatched->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'reason'              => 'gender_mismatch',
+            'combo_gender'        => $combo->gender?->name,
+            'mismatched_count'    => $mismatched->count(),
+            'total_items'         => $combo->items->count(),
+            'affected_categories' => $mismatched
+                ->map(fn ($item) => $item->category?->name)
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values()
+                ->all(),
+            'sample_products'     => $mismatched
+                ->map(fn ($item) => $item->product?->name)
+                ->filter()
+                ->unique()
+                ->sort()
+                ->take(6)
+                ->values()
+                ->all(),
+        ];
     }
 
     public function categoriesWithProducts(Request $request)
@@ -154,6 +224,45 @@ class ComboController extends Controller
         ]);
     }
 
+    /**
+     * Si el combo tiene un género asignado, todas las prendas elegidas deben
+     * pertenecer a ese género. Impide guardar combos con prendas mezcladas
+     * (un combo «de niños» con prendas de niña o viceversa).
+     */
+    private function assertGenderConsistency(Request $request): void
+    {
+        $genderId = $request->input('gender_id') ? (int) $request->input('gender_id') : null;
+        if (! $genderId) {
+            return;
+        }
+
+        $productIds = collect($request->input('categories', []))
+            ->flatMap(fn ($cat) => (array) ($cat['product_ids'] ?? []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->all();
+
+        if (empty($productIds)) {
+            return;
+        }
+
+        $offending = Product::whereIn('id', $productIds)
+            ->whereDoesntHave('genders', fn ($q) => $q->where('genders.id', $genderId))
+            ->orderBy('name')
+            ->pluck('name');
+
+        if ($offending->isNotEmpty()) {
+            $sample = $offending->take(8)->implode(', ');
+            $more   = $offending->count() > 8 ? ' y ' . ($offending->count() - 8) . ' más' : '';
+
+            throw ValidationException::withMessages([
+                'gender_id' => "Hay prendas que no pertenecen al género del combo: {$sample}{$more}. "
+                    . 'Quitalas del combo o corregí el género de esas prendas antes de guardar.',
+            ]);
+        }
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -174,6 +283,7 @@ class ComboController extends Controller
         ]);
 
         $this->assertSizeCoverage($request);
+        $this->assertGenderConsistency($request);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
@@ -226,6 +336,7 @@ class ComboController extends Controller
         ]);
 
         $this->assertSizeCoverage($request);
+        $this->assertGenderConsistency($request);
 
         if ($request->hasFile('image')) {
             if ($combo->image) {
