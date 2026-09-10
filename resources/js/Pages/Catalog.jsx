@@ -206,9 +206,10 @@ const ProductCard = memo(function ProductCard({ item, priority = false }) {
 });
 
 const SORTERS = {
-    // El backend ya entrega las prendas de más nuevas a más antiguas; un sort estable
-    // (return 0) preserva ese orden sin que los destacados se adelanten.
-    novedades: () => 0,
+    // Más recientes primero. Los id son autoincrementales dentro de cada tipo
+    // (prendas, combos, combos emprendedor), así que id descendente = del más
+    // nuevo al más antiguo, sin depender del orden con que llegan del backend.
+    novedades: (a, b) => b.id - a.id,
     'precio-asc': (a, b) => Number(a.price) - Number(b.price),
     'precio-desc': (a, b) => Number(b.price) - Number(a.price),
     nombre: (a, b) => a.name.localeCompare(b.name, 'es'),

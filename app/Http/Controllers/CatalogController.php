@@ -32,8 +32,9 @@ class CatalogController extends Controller
 
         $combos = Combo::where('is_active', true)
             ->with(['sizes:id,name', 'gender:id,name', 'items.product.genders:id,name'])
-            ->orderBy('name')
-            ->get(['id', 'name', 'price', 'image', 'is_featured', 'gender_id'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'price', 'image', 'is_featured', 'gender_id', 'created_at'])
             ->map(function ($c) {
                 // La audiencia del combo la define su género asignado (no la unión de
                 // géneros de sus prendas: hay combos con prendas mezcladas). Los
@@ -60,8 +61,9 @@ class CatalogController extends Controller
 
         $combosEmprendedor = ComboEmprendedor::where('is_active', true)
             ->with(['genders:id,name', 'items.product.sizes'])
-            ->orderBy('name')
-            ->get(['id', 'name', 'price', 'image', 'is_featured', 'max_items'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'price', 'image', 'is_featured', 'max_items', 'created_at'])
             ->map(function ($c) {
                 $sizeNames = $c->items
                     ->flatMap(fn ($item) => optional($item->product)->sizes ?? collect())
@@ -89,7 +91,8 @@ class CatalogController extends Controller
                 'genders:id,name',
                 'categories:id,name',
             ])
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->get(['id', 'name', 'price', 'images', 'is_featured', 'created_at'])
             ->map(fn ($p) => [
                 'id'          => $p->id,
