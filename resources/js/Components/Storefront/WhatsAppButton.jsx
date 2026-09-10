@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const WHATSAPP_NUMBER = '5491172397202';
 const WHATSAPP_MESSAGE = encodeURIComponent('\u00a1Hola! \u00bfQu\u00e9 tal? Tengo una consulta.');
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ revealed = true }) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [dismissed, setDismissed] = useState(false);
+    const nudgedRef = useRef(false);
 
+    // El globito de ayuda aparece reci\u00e9n cuando el bot\u00f3n se hace visible (no antes).
     useEffect(() => {
+        if (!revealed || nudgedRef.current) return;
+        nudgedRef.current = true;
         const timer = setTimeout(() => setShowTooltip(true), 1500);
         const hideTimer = setTimeout(() => {
             setShowTooltip(false);
@@ -18,10 +22,14 @@ export default function WhatsAppButton() {
             clearTimeout(timer);
             clearTimeout(hideTimer);
         };
-    }, []);
+    }, [revealed]);
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        <div
+            className={`fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 transition-all duration-300 ease-out ${
+                revealed ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
+            }`}
+        >
             {showTooltip && (
                 <div className="relative max-w-[220px] animate-fade-in rounded-2xl bg-white px-4 py-3 text-sm text-brand-text shadow-lg">
                     <span>{'\u00bfTen\u00e9s alguna duda o necesit\u00e1s ayuda? \u00a1Escribinos!'}</span>

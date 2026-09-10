@@ -5,36 +5,73 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // y `mobile` (vertical). Subí ambas a public/images/ y actualizá las rutas.
 //
 // `text` es opcional:
-//   • con `text`  → se superpone el título + párrafo + botón sobre la imagen
+//   • con `text`  → se superpone el título + párrafo + botones sobre la imagen
 //     (útil cuando la imagen es sólo un fondo).
 //   • `text: null` → se muestra sólo la imagen y todo el banner enlaza a `href`
 //     (útil cuando la imagen ya trae el texto y el botón «horneados»).
 //
+// `text.ctas` es la lista de botones. El primero va sólido; los que tengan
+// `variant: 'outline'` van con borde. Podés poner uno o varios por banner.
+//
 // Hoy los tres banners usan la imagen actual. Reemplazá `desktop`/`mobile` (y
 // opcionalmente `text`) de cada uno cuando tengas los nuevos.
 
-const CURRENT_BANNER = {
+const BANNER_IMAGE = {
     desktop: '/images/banner.png',
     mobile: '/images/banner-mobile.png',
     alt: 'Combos para armar',
     href: '/catalogo',
-    text: {
-        titleTop: 'COMBOS',
-        titleBottom: 'PARA ARMAR.',
-        paragraph: [
-            'Elegí el combo diseñado para vos.',
-            'Vos elegís las prendas, nosotros lo armamos.',
-        ],
-        ctaLabel: 'Ver combos',
-        ctaHref: '/catalogo',
-    },
+};
+
+const BANNER_TEXT = {
+    titleTop: 'COMBOS',
+    titleBottom: 'PARA ARMAR.',
+    paragraph: [
+        'Elegí el combo diseñado para vos.',
+        'Vos elegís las prendas, nosotros lo armamos.',
+    ],
 };
 
 const BANNERS = [
-    { id: 'banner-1', ...CURRENT_BANNER },
-    { id: 'banner-2', ...CURRENT_BANNER },
-    { id: 'banner-3', ...CURRENT_BANNER },
+    {
+        id: 'banner-1',
+        ...BANNER_IMAGE,
+        text: {
+            ...BANNER_TEXT,
+            ctas: [
+                { label: 'Ver combos', href: '/catalogo' },
+                { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
+            ],
+        },
+    },
+    {
+        id: 'banner-2',
+        ...BANNER_IMAGE,
+        text: { ...BANNER_TEXT, ctas: [{ label: 'Ver combos', href: '/catalogo' }] },
+    },
+    {
+        id: 'banner-3',
+        ...BANNER_IMAGE,
+        text: { ...BANNER_TEXT, ctas: [{ label: 'Ver combos', href: '/catalogo' }] },
+    },
 ];
+
+// Estilos de los botones. El tamaño/padding cambia entre mobile y desktop; la
+// «piel» (sólido u outline) según `variant`.
+const CTA_BASE =
+    'home-button inline-flex items-center justify-center px-7 py-3.5 text-sm font-bold uppercase tracking-wide shadow-md transition-colors sm:px-8 sm:py-4 sm:text-base';
+const CTA_SIZE = {
+    mobile: 'lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg',
+    desktop: 'lg:px-11 lg:py-[1.35rem] lg:text-lg xl:px-[3.25rem] xl:py-[1.65rem] xl:text-xl',
+};
+const CTA_SKIN = {
+    primary: 'bg-brand-cta text-white hover:bg-brand-cta-dark',
+    outline: 'bg-white/85 text-brand-cta ring-2 ring-inset ring-brand-cta hover:bg-brand-cta hover:text-white',
+};
+
+function ctaClass(variant, ctx) {
+    return `${CTA_BASE} ${CTA_SIZE[ctx]} ${CTA_SKIN[variant === 'outline' ? 'outline' : 'primary']}`;
+}
 
 const AUTOPLAY_MS = 6000;
 const SWIPE_THRESHOLD = 60; // px mínimos para pasar de banner
@@ -45,7 +82,7 @@ function SlideText({ text }) {
     if (!text) return null;
 
     const lines = Array.isArray(text.paragraph) ? text.paragraph : [text.paragraph];
-    const ctaHref = text.ctaHref ?? '/catalogo';
+    const ctas = text.ctas ?? [];
 
     return (
         <>
@@ -67,14 +104,13 @@ function SlideText({ text }) {
                             {lines.join(' ')}
                         </p>
 
-                        {text.ctaLabel && (
+                        {ctas.length > 0 && (
                             <div className="mt-6 flex flex-wrap gap-3">
-                                <a
-                                    href={ctaHref}
-                                    className="home-button inline-flex items-center justify-center bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-8 sm:py-4 sm:text-base lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg"
-                                >
-                                    {text.ctaLabel}
-                                </a>
+                                {ctas.map((cta) => (
+                                    <a key={cta.href} href={cta.href} className={ctaClass(cta.variant, 'mobile')}>
+                                        {cta.label}
+                                    </a>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -107,14 +143,13 @@ function SlideText({ text }) {
                                 ))}
                             </p>
 
-                            {text.ctaLabel && (
+                            {ctas.length > 0 && (
                                 <div className="mt-6 flex flex-wrap gap-3 sm:mt-5 sm:gap-3.5 lg:mt-6">
-                                    <a
-                                        href={ctaHref}
-                                        className="home-button inline-flex items-center justify-center bg-brand-cta px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md transition-colors hover:bg-brand-cta-dark sm:px-8 sm:py-4 sm:text-base lg:px-11 lg:py-[1.35rem] lg:text-lg xl:px-[3.25rem] xl:py-[1.65rem] xl:text-xl"
-                                    >
-                                        {text.ctaLabel}
-                                    </a>
+                                    {ctas.map((cta) => (
+                                        <a key={cta.href} href={cta.href} className={ctaClass(cta.variant, 'desktop')}>
+                                            {cta.label}
+                                        </a>
+                                    ))}
                                 </div>
                             )}
                         </div>
