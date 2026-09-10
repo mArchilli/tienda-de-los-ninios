@@ -85,15 +85,19 @@ class ProductController extends Controller
             'price'         => 'required|numeric|min:0',
             'is_featured'   => 'boolean',
             'images.*'      => 'nullable|image|max:5120',
-            'categories'    => 'nullable|array',
+            'categories'    => 'required|array',
             'categories.*'  => 'exists:categories,id',
-            'colors'        => 'nullable|array',
+            'colors'        => 'required|array',
             'colors.*'      => 'exists:colors,id',
-            'genders'       => 'nullable|array',
+            'genders'       => 'required|array',
             'genders.*'     => 'exists:genders,id',
             'sizes'         => 'nullable|array',
             'sizes.*.id'    => 'exists:sizes,id',
             'sizes.*.stock' => 'integer|min:0',
+        ], [
+            'genders.required'    => 'Seleccioná al menos un género para la prenda.',
+            'categories.required' => 'Seleccioná al menos una categoría para la prenda.',
+            'colors.required'     => 'Seleccioná al menos un color para la prenda.',
         ]);
 
         $imagePaths = $this->uploadImages($request->file('images') ?? []);

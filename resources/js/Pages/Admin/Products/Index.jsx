@@ -112,9 +112,9 @@ function FlashBanner({ message, onDismiss }) {
 
 // ─── Section panel ────────────────────────────────────────────────────────────
 
-function SectionPanel({ iconName, label, children }) {
+function SectionPanel({ iconName, label, children, error }) {
     return (
-        <div className="rounded-xl border border-gray-200 bg-brand-bg/60 p-4 space-y-2.5">
+        <div className={`rounded-xl border bg-brand-bg/60 p-4 space-y-2.5 ${error ? 'border-red-400' : 'border-gray-200'}`}>
             <p className="text-xs font-bold uppercase tracking-wide flex items-center gap-2 text-brand-text-muted">
                 <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary-surface text-brand-primary">
                     <Icon name={iconName} className="h-3.5 w-3.5" />
@@ -122,6 +122,7 @@ function SectionPanel({ iconName, label, children }) {
                 {label}
             </p>
             {children}
+            {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
     );
 }
@@ -510,11 +511,13 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
     const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-    const toggleMulti = (field, id) =>
+    const toggleMulti = (field, id) => {
         set(field, form[field].includes(id)
             ? form[field].filter((x) => x !== id)
             : [...form[field], id]
         );
+        setErrors((e) => (e[field] ? { ...e, [field]: undefined } : e));
+    };
 
     const toggleSize = (id) => {
         const next = { ...form.selectedSizes };
@@ -535,6 +538,19 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
     const submit = (e) => {
         e.preventDefault();
+
+        // Al crear una prenda, género, categoría y color son obligatorios.
+        if (!isEditing) {
+            const missing = {};
+            if (form.genders.length === 0)    missing.genders    = 'Seleccioná al menos un género para la prenda.';
+            if (form.categories.length === 0) missing.categories = 'Seleccioná al menos una categoría para la prenda.';
+            if (form.colors.length === 0)     missing.colors     = 'Seleccioná al menos un color para la prenda.';
+            if (Object.keys(missing).length > 0) {
+                setErrors((prev) => ({ ...prev, ...missing }));
+                return;
+            }
+        }
+
         setProcessing(true);
 
         const sizes = Object.entries(form.selectedSizes).map(([id, stock]) => ({ id: parseInt(id), stock }));
@@ -644,7 +660,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
                 {/* Género */}
                 {allGenders.length > 0 && (
-                    <SectionPanel iconName="gender" label="Género">
+                    <SectionPanel iconName="gender" label={isEditing ? 'Género' : 'Género *'} error={errors.genders}>
                         <div className="flex flex-wrap gap-2">
                             {allGenders.map((g) => (
                                 <CheckPill
@@ -660,7 +676,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
                 {/* Categorías */}
                 {allCategories.length > 0 && (
-                    <SectionPanel iconName="category" label="Categorías">
+                    <SectionPanel iconName="category" label={isEditing ? 'Categorías' : 'Categorías *'} error={errors.categories}>
                         <SearchablePills
                             items={allCategories}
                             selected={form.categories}
@@ -673,7 +689,7 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
 
                 {/* Colores */}
                 {allColors.length > 0 && (
-                    <SectionPanel iconName="color" label="Colores">
+                    <SectionPanel iconName="color" label={isEditing ? 'Colores' : 'Colores *'} error={errors.colors}>
                         <SearchablePills
                             items={allColors}
                             selected={form.colors}
