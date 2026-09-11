@@ -6,8 +6,9 @@ import FAQ from '@/Components/Storefront/FAQ';
 import PriceRangeSection from '@/Components/Storefront/PriceRangeSection';
 import FeaturedCombos from '@/Components/Storefront/FeaturedCombos';
 import CategoryShortcuts from '@/Components/Storefront/CategoryShortcuts';
+import Reviews from '@/Components/Storefront/Reviews';
 
-export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount }) {
+export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount, reviews = [], reviewStats }) {
     return (
         <StorefrontLayout cartCount={cartCount}>
             <Head title="La Tienda de Los Niños · Combos y ropa para los más chicos" />
@@ -18,6 +19,7 @@ export default function Welcome({ featuredCombos, featuredProducts, heroImage, c
                 <PriceRangeSection />
                 <CategoryShortcuts />
                 <About />
+                <Reviews reviews={reviews} stats={reviewStats} />
                 <FAQ />
             </div>
         </StorefrontLayout>

@@ -7,10 +7,12 @@ use App\Http\Controllers\Admin\ComboEmprendedorController;
 use App\Http\Controllers\Admin\MetricsController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\CartController;
 use App\Models\Combo;
 use App\Models\Product;
+use App\Models\Review;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
 use App\Http\Controllers\ComboEmprendedorController as StorefrontComboEmprendedorController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController as StorefrontProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -50,9 +53,32 @@ Route::get('/', function () {
         ])
         ->values();
 
+    $reviews = Review::where('is_visible', true)
+        ->orderByDesc('created_at')
+        ->orderByDesc('id')
+        ->limit(20)
+        ->get(['id', 'author_name', 'rating', 'body', 'created_at'])
+        ->map(fn ($r) => [
+            'id'          => $r->id,
+            'author_name' => $r->author_name,
+            'rating'      => (int) $r->rating,
+            'body'        => $r->body,
+            'created_at'  => optional($r->created_at)->toIso8601String(),
+        ])
+        ->values();
+
+    $reviewCount = Review::where('is_visible', true)->count();
+
     return Inertia::render('Welcome', [
         'featuredCombos'   => $combos,
         'featuredProducts' => $products,
+        'reviews'          => $reviews,
+        'reviewStats'      => [
+            'count'   => $reviewCount,
+            'average' => $reviewCount > 0
+                ? round((float) Review::where('is_visible', true)->avg('rating'), 1)
+                : 0.0,
+        ],
     ]);
 })->name('home');
 
@@ -63,6 +89,11 @@ Route::get('/contacto', function () {
 Route::get('/producto/{product}', [StorefrontProductController::class, 'show'])->name('product.show');
 Route::get('/combo/{combo}', [StorefrontComboController::class, 'show'])->name('combo.show');
 Route::get('/combo-emprendedor/{combo}', [StorefrontComboEmprendedorController::class, 'show'])->name('combo-emprendedor.show');
+
+Route::get('/reseñas', [ReviewController::class, 'create'])->name('reviews.create');
+Route::post('/reseñas', [ReviewController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('reviews.store');
 
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
 Route::post('/carrito/producto', [CartController::class, 'addProduct'])->name('cart.add-product');
@@ -131,6 +162,10 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+    Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+    Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'updateVisibility'])->name('reviews.update-visibility');
+    Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 require __DIR__.'/auth.php';
