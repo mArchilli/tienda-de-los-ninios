@@ -8,14 +8,14 @@ import FeaturedCombos from '@/Components/Storefront/FeaturedCombos';
 import CategoryShortcuts from '@/Components/Storefront/CategoryShortcuts';
 import Reviews from '@/Components/Storefront/Reviews';
 
-export default function Welcome({ featuredCombos, featuredProducts, heroImage, cartCount, reviews = [], reviewStats }) {
+export default function Welcome({ featuredCombos, combosTitle, featuredProducts, heroImage, cartCount, reviews = [], reviewStats }) {
     return (
         <StorefrontLayout cartCount={cartCount}>
             <Head title="La Tienda de Los Niños · Combos y ropa para los más chicos" />
 
             <div className="home-angular">
                 <Hero image={heroImage} />
-                <FeaturedCombos combos={featuredCombos} />
+                <FeaturedCombos combos={featuredCombos} title={combosTitle} />
                 <PriceRangeSection />
                 <CategoryShortcuts />
                 <About />

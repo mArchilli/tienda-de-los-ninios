@@ -43,7 +43,7 @@ function ComboCard({ combo }) {
     );
 }
 
-export default function FeaturedCombos({ combos }) {
+export default function FeaturedCombos({ combos, title = 'COMBOS DE ESTA SEMANA' }) {
     const scrollerRef = useRef(null);
     const items = combos ?? [];
 
@@ -65,7 +65,7 @@ export default function FeaturedCombos({ combos }) {
                     {/* Header */}
                     <div className="relative z-10 flex items-end justify-between gap-4">
                         <h2 className="home-section-title">
-                            {'COMBOS DE ESTA SEMANA'}
+                            {title}
                         </h2>
 
                         {/* Arrows: desktop only */}

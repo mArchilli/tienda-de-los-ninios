@@ -8,6 +8,7 @@ use App\Models\Combo;
 use App\Models\ComboItem;
 use App\Models\Gender;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\Size;
 use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
@@ -108,6 +109,45 @@ class ComboController extends Controller
                 ->values()
                 ->all(),
         ];
+    }
+
+    public function order()
+    {
+        $combos = Combo::orderBy('order')
+            ->orderByDesc('created_at')
+            ->get(['id', 'name', 'image', 'price', 'is_active', 'is_featured', 'order']);
+
+        return Inertia::render('Admin/Combos/Order', [
+            'combos'       => $combos,
+            'sectionTitle' => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
+        ]);
+    }
+
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:combos,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            foreach ($request->ids as $index => $id) {
+                Combo::where('id', $id)->update(['order' => $index + 1]);
+            }
+        });
+
+        return back()->with('success', 'Orden actualizado correctamente.');
+    }
+
+    public function updateSectionTitle(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:120',
+        ]);
+
+        Setting::set(Setting::LANDING_COMBOS_TITLE_KEY, trim($request->title));
+
+        return back()->with('success', 'Título actualizado correctamente.');
     }
 
     public function categoriesWithProducts(Request $request)
@@ -298,6 +338,7 @@ class ComboController extends Controller
             'is_featured' => $request->boolean('is_featured'),
             'image'       => $imagePath,
             'gender_id'   => $request->input('gender_id') ?: null,
+            'order'       => (int) Combo::max('order') + 1,
         ]);
 
         $combo->sizes()->sync($request->input('sizes', []));

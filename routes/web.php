@@ -13,6 +13,7 @@ use App\Http\Controllers\CartController;
 use App\Models\Combo;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\Setting;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
 use App\Http\Controllers\ComboEmprendedorController as StorefrontComboEmprendedorController;
@@ -28,8 +29,8 @@ Route::get('/images/products/{filename}', [ImageController::class, 'show'])->whe
 
 Route::get('/', function () {
     $combos = Combo::where('is_active', true)
-        ->orderByDesc('is_featured')
-        ->orderBy('name')
+        ->orderBy('order')
+        ->orderByDesc('created_at')
         ->get(['id', 'name', 'description', 'price', 'image', 'is_featured'])
         ->map(fn ($c) => [
             'id'         => $c->id,
@@ -71,6 +72,7 @@ Route::get('/', function () {
 
     return Inertia::render('Welcome', [
         'featuredCombos'   => $combos,
+        'combosTitle'      => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
         'featuredProducts' => $products,
         'reviews'          => $reviews,
         'reviewStats'      => [
@@ -142,6 +144,9 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::delete('/colors/{color}', [ColorController::class, 'destroy'])->name('colors.destroy');
 
     Route::get('/combos/categories-for-sizes', [ComboController::class, 'categoriesWithProducts'])->name('combos.categories-for-sizes');
+    Route::get('/combos/order', [ComboController::class, 'order'])->name('combos.order');
+    Route::post('/combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder');
+    Route::post('/combos/section-title', [ComboController::class, 'updateSectionTitle'])->name('combos.section-title');
     Route::get('/combos', [ComboController::class, 'index'])->name('combos.index');
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
     Route::post('/combos/{combo}', [ComboController::class, 'update'])->name('combos.update');
