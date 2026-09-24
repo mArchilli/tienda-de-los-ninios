@@ -12,12 +12,14 @@ use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ProductController extends Controller
 {
     public function __construct(private ImageProcessor $imageProcessor) {}
 
-    public function index(Request $request)
+    private function filteredQuery(Request $request)
     {
         $stockSubquery = DB::table('product_size')
             ->selectRaw('COALESCE(SUM(stock), 0)')
@@ -65,7 +67,12 @@ class ProductController extends Controller
             default      => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
         };
 
-        $products = $query->paginate(12)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $products = $this->filteredQuery($request)->paginate(12)->withQueryString();
 
         return Inertia::render('Admin/Products/Index', [
             'products'   => $products,
@@ -74,6 +81,48 @@ class ProductController extends Controller
             'colors'     => Color::orderBy('name')->get(['id', 'name']),
             'sizes'      => Size::orderBy('name')->get(['id', 'name']),
             'genders'    => Gender::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function export(Request $request)
+    {
+        $products = $this->filteredQuery($request)->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Prendas');
+
+        $headings = ['ID', 'Nombre', 'Precio', 'Categorías', 'Colores', 'Géneros', 'Talles y stock', 'Stock total', 'Destacada', 'Creada'];
+        $sheet->fromArray($headings, null, 'A1');
+        $sheet->getStyle('A1:J1')->getFont()->setBold(true);
+
+        $row = 2;
+        foreach ($products as $product) {
+            $sheet->fromArray([
+                $product->id,
+                $product->name,
+                (float) $product->price,
+                $product->categories->pluck('name')->implode(', '),
+                $product->colors->pluck('name')->implode(', '),
+                $product->genders->pluck('name')->implode(', '),
+                $product->sizes->map(fn($s) => $s->name . ': ' . ($s->pivot->stock ?? 0))->implode(', '),
+                (int) $product->total_stock,
+                $product->is_featured ? 'Sí' : 'No',
+                optional($product->created_at)->format('d/m/Y'),
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        foreach (range('A', 'J') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'prendas-' . now()->format('Y-m-d-His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 

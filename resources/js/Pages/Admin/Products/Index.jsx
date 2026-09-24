@@ -41,6 +41,7 @@ const Icons = {
     sort:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />,
     chevronLeft:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />,
     chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />,
+    download:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />,
 };
 
 const Icon = ({ name, className = 'h-4 w-4' }) => (
@@ -1285,6 +1286,12 @@ export default function Index({ products, filters, categories, colors, sizes, ge
         applyFilters(empty);
     };
 
+    const exportHref = useMemo(() => {
+        const params = {};
+        Object.entries(localFilters).forEach(([k, v]) => { if (v !== '' && v != null) params[k] = v; });
+        return route('admin.products.export', params);
+    }, [localFilters]);
+
     return (
         <AuthenticatedLayout
             header={
@@ -1325,6 +1332,13 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                         </div>
                     ) : (
                         <div className="flex items-center gap-2">
+                            <a
+                                href={exportHref}
+                                className="inline-flex items-center gap-2 rounded-lg bg-[#217346] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#1a5c38] transition-colors"
+                            >
+                                <Icon name="download" />
+                                Exportar a Excel
+                            </a>
                             <button
                                 onClick={() => setSelectionMode(true)}
                                 className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"

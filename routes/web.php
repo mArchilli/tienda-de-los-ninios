@@ -119,6 +119,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(function () {
+    Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::post('/products/{product}', [ProductController::class, 'update'])->name('products.update');
