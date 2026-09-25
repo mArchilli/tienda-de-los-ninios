@@ -84,6 +84,82 @@ class ComboOrderTest extends TestCase
             ->has('featuredCombos', 1));
     }
 
+    public function test_landing_hides_combos_with_show_on_landing_disabled(): void
+    {
+        $shown  = $this->makeCombo(['name' => 'Visible', 'order' => 1, 'show_on_landing' => true]);
+        $hidden = $this->makeCombo(['name' => 'Oculto', 'order' => 2, 'show_on_landing' => false]);
+
+        $this->get('/')->assertInertia(fn ($page) => $page
+            ->where('featuredCombos.0.id', $shown->id)
+            ->has('featuredCombos', 1));
+    }
+
+    public function test_new_combo_shows_on_landing_by_default(): void
+    {
+        $combo = $this->makeCombo(['name' => 'Default']);
+
+        $this->assertTrue($combo->fresh()->show_on_landing);
+    }
+
+    public function test_admin_can_toggle_show_on_landing(): void
+    {
+        $user  = User::factory()->create();
+        $combo = $this->makeCombo(['name' => 'Combo', 'show_on_landing' => true]);
+
+        $this->actingAs($user)
+            ->post("/admin/combos/{$combo->id}/toggle-landing", ['show_on_landing' => false])
+            ->assertRedirect();
+
+        $this->assertFalse($combo->fresh()->show_on_landing);
+
+        $this->actingAs($user)
+            ->post("/admin/combos/{$combo->id}/toggle-landing", ['show_on_landing' => true])
+            ->assertRedirect();
+
+        $this->assertTrue($combo->fresh()->show_on_landing);
+    }
+
+    public function test_guest_cannot_toggle_show_on_landing(): void
+    {
+        $combo = $this->makeCombo(['name' => 'Combo', 'show_on_landing' => true]);
+
+        $this->post("/admin/combos/{$combo->id}/toggle-landing", ['show_on_landing' => false])
+            ->assertRedirect('/login');
+
+        $this->assertTrue($combo->fresh()->show_on_landing);
+    }
+
+    public function test_admin_can_hide_and_show_all_combos_at_once(): void
+    {
+        $user = User::factory()->create();
+        $c1   = $this->makeCombo(['name' => 'Combo A', 'show_on_landing' => true]);
+        $c2   = $this->makeCombo(['name' => 'Combo B', 'show_on_landing' => false]);
+
+        $this->actingAs($user)
+            ->post('/admin/combos/toggle-landing-all', ['show_on_landing' => false])
+            ->assertRedirect();
+
+        $this->assertFalse($c1->fresh()->show_on_landing);
+        $this->assertFalse($c2->fresh()->show_on_landing);
+
+        $this->actingAs($user)
+            ->post('/admin/combos/toggle-landing-all', ['show_on_landing' => true])
+            ->assertRedirect();
+
+        $this->assertTrue($c1->fresh()->show_on_landing);
+        $this->assertTrue($c2->fresh()->show_on_landing);
+    }
+
+    public function test_guest_cannot_bulk_toggle_show_on_landing(): void
+    {
+        $combo = $this->makeCombo(['name' => 'Combo', 'show_on_landing' => true]);
+
+        $this->post('/admin/combos/toggle-landing-all', ['show_on_landing' => false])
+            ->assertRedirect('/login');
+
+        $this->assertTrue($combo->fresh()->show_on_landing);
+    }
+
     public function test_new_combo_is_appended_to_the_end_of_the_manual_order(): void
     {
         $user = User::factory()->create();

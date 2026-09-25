@@ -43,7 +43,15 @@ function GiftIcon() {
     );
 }
 
-function SortableRow({ combo, position, total, onPositionChange }) {
+function EyeOffIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 5.09A9.77 9.77 0 0112 5c5 0 9 4 10 7-.42 1.27-1.3 2.7-2.56 3.94M6.53 6.53C4.46 7.9 2.9 9.8 2 12c1 3 5 7 10 7 1.35 0 2.62-.28 3.75-.77" />
+        </svg>
+    );
+}
+
+function SortableRow({ combo, position, total, onPositionChange, onToggleLanding }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: combo.id });
 
     const style = {
@@ -77,9 +85,9 @@ function SortableRow({ combo, position, total, onPositionChange }) {
         <div
             ref={setNodeRef}
             style={style}
-            className={`flex items-center gap-4 rounded-xl border bg-white p-3 shadow-sm ${
+            className={`flex items-center gap-4 rounded-xl border bg-white p-3 shadow-sm transition-opacity ${
                 isDragging ? 'relative z-10 border-brand-primary shadow-md' : 'border-gray-200'
-            }`}
+            } ${combo.show_on_landing ? '' : 'opacity-60'}`}
         >
             <button
                 type="button"
@@ -117,6 +125,29 @@ function SortableRow({ combo, position, total, onPositionChange }) {
                 >
                     {combo.is_active ? 'Activo' : 'Inactivo'}
                 </span>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2 pl-1">
+                <span className="hidden items-center gap-1 text-[11px] font-medium text-brand-text-muted sm:flex">
+                    {!combo.show_on_landing && <EyeOffIcon />}
+                    Portada
+                </span>
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={combo.show_on_landing}
+                    aria-label={`Mostrar "${combo.name}" en el inicio`}
+                    onClick={() => onToggleLanding(combo.id, !combo.show_on_landing)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                        combo.show_on_landing ? 'bg-brand-primary' : 'bg-gray-300'
+                    }`}
+                >
+                    <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                            combo.show_on_landing ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                        }`}
+                    />
+                </button>
             </div>
 
             <input
@@ -270,6 +301,41 @@ export default function Order({ combos: initialCombos, sectionTitle }) {
         });
     };
 
+    const handleToggleLanding = (id, showOnLanding) => {
+        setCombos((prev) => prev.map((c) => (c.id === id ? { ...c, show_on_landing: showOnLanding } : c)));
+        setError(null);
+        router.post(
+            route('admin.combos.toggle-landing', id),
+            { show_on_landing: showOnLanding },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    setCombos((prev) => prev.map((c) => (c.id === id ? { ...c, show_on_landing: !showOnLanding } : c)));
+                    setError('No se pudo actualizar la visibilidad. Probá de nuevo.');
+                },
+            }
+        );
+    };
+
+    const handleToggleLandingAll = (showOnLanding) => {
+        const previous = combos;
+        setCombos((prev) => prev.map((c) => ({ ...c, show_on_landing: showOnLanding })));
+        setError(null);
+        router.post(
+            route('admin.combos.toggle-landing-all'),
+            { show_on_landing: showOnLanding },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    setCombos(previous);
+                    setError('No se pudo actualizar la visibilidad. Probá de nuevo.');
+                },
+            }
+        );
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -304,6 +370,30 @@ export default function Order({ combos: initialCombos, sectionTitle }) {
                 )}
                 <SectionTitleForm initialTitle={sectionTitle} />
 
+                {combos.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3">
+                        <p className="text-xs font-medium text-brand-text-muted">
+                            {combos.filter((c) => c.show_on_landing).length} de {combos.length} combos visibles en el inicio
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleToggleLandingAll(true)}
+                                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-brand-text-muted transition-colors hover:border-brand-primary hover:text-brand-primary"
+                            >
+                                Mostrar todos
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleToggleLandingAll(false)}
+                                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-brand-text-muted transition-colors hover:border-brand-primary hover:text-brand-primary"
+                            >
+                                Ocultar todos
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {saving && <p className="text-xs font-medium text-brand-text-muted">Guardando orden…</p>}
 
                 {combos.length === 0 ? (
@@ -321,6 +411,7 @@ export default function Order({ combos: initialCombos, sectionTitle }) {
                                         position={index + 1}
                                         total={combos.length}
                                         onPositionChange={handlePositionChange}
+                                        onToggleLanding={handleToggleLanding}
                                     />
                                 ))}
                             </div>
@@ -329,7 +420,8 @@ export default function Order({ combos: initialCombos, sectionTitle }) {
                 )}
 
                 <p className="text-xs text-brand-text-muted">
-                    Los combos inactivos no se muestran en el inicio, pero podés ordenarlos igual para cuando los actives.
+                    Usá el interruptor «Portada» para elegir qué combos aparecen en el inicio. Los combos inactivos
+                    tampoco se muestran ahí, pero podés ordenarlos y configurarlos igual para cuando los actives.
                 </p>
             </div>
         </AuthenticatedLayout>

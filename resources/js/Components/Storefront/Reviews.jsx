@@ -30,6 +30,8 @@ export default function Reviews({ reviews = [], stats }) {
     const trackRef = useRef(null);
     const [canPrev, setCanPrev] = useState(false);
     const [canNext, setCanNext] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const dragRef = useRef({ startX: 0, startScroll: 0, moved: false });
 
     const syncArrows = useCallback(() => {
         const el = trackRef.current;
@@ -56,6 +58,39 @@ export default function Reviews({ reviews = [], stats }) {
         const card = el.querySelector('[data-review-card]');
         const step = card ? card.offsetWidth + 16 : el.clientWidth * 0.85;
         el.scrollBy({ left: dir * step, behavior: 'smooth' });
+    };
+
+    const handlePointerDown = (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const el = trackRef.current;
+        if (!el) return;
+        dragRef.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false };
+        setIsDragging(true);
+        el.setPointerCapture(e.pointerId);
+    };
+
+    const handlePointerMove = (e) => {
+        if (!isDragging) return;
+        const el = trackRef.current;
+        if (!el) return;
+        const delta = e.clientX - dragRef.current.startX;
+        if (Math.abs(delta) > 3) dragRef.current.moved = true;
+        el.scrollLeft = dragRef.current.startScroll - delta;
+    };
+
+    const endDrag = (e) => {
+        if (!isDragging) return;
+        const el = trackRef.current;
+        if (el && e?.pointerId !== undefined) el.releasePointerCapture(e.pointerId);
+        setIsDragging(false);
+    };
+
+    const handleTrackClickCapture = (e) => {
+        if (dragRef.current.moved) {
+            e.preventDefault();
+            e.stopPropagation();
+            dragRef.current.moved = false;
+        }
     };
 
     return (
@@ -97,20 +132,33 @@ export default function Reviews({ reviews = [], stats }) {
                 </div>
 
                 {hasReviews ? (
-                    <div
-                        ref={trackRef}
-                        className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:thin]"
-                    >
-                        {shown.map((review) => (
-                            <div
-                                key={review.id}
-                                data-review-card
-                                className="w-[84vw] max-w-[320px] shrink-0 snap-start sm:w-[320px]"
-                            >
-                                <ReviewCard review={review} />
-                            </div>
-                        ))}
-                    </div>
+                    <>
+                        <div
+                            ref={trackRef}
+                            onPointerDown={handlePointerDown}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={endDrag}
+                            onPointerLeave={endDrag}
+                            onPointerCancel={endDrag}
+                            onClickCapture={handleTrackClickCapture}
+                            className={`mt-6 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:cursor-grab ${
+                                isDragging ? 'snap-none select-none sm:cursor-grabbing' : 'snap-x snap-mandatory'
+                            }`}
+                        >
+                            {shown.map((review) => (
+                                <div
+                                    key={review.id}
+                                    data-review-card
+                                    className="w-[84vw] max-w-[320px] shrink-0 snap-start sm:w-[320px]"
+                                >
+                                    <ReviewCard review={review} />
+                                </div>
+                            ))}
+                        </div>
+                        <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-brand-text-muted/50 sm:hidden">
+                            deslizá para ver más
+                        </p>
+                    </>
                 ) : (
                     <div className="mt-8 rounded-[1.6rem] border border-dashed border-brand-cta/40 bg-white px-6 py-12 text-center">
                         <p className="text-base font-bold text-brand-text">Todavía no hay reseñas</p>

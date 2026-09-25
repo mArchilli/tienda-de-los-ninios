@@ -115,7 +115,7 @@ class ComboController extends Controller
     {
         $combos = Combo::orderBy('order')
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'image', 'price', 'is_active', 'is_featured', 'order']);
+            ->get(['id', 'name', 'image', 'price', 'is_active', 'is_featured', 'order', 'show_on_landing']);
 
         return Inertia::render('Admin/Combos/Order', [
             'combos'       => $combos,
@@ -137,6 +137,29 @@ class ComboController extends Controller
         });
 
         return back()->with('success', 'Orden actualizado correctamente.');
+    }
+
+    public function toggleLanding(Request $request, Combo $combo)
+    {
+        $request->validate([
+            'show_on_landing' => 'required|boolean',
+        ]);
+
+        $combo->update(['show_on_landing' => $request->boolean('show_on_landing')]);
+
+        return back()->with('success', 'Visibilidad en el inicio actualizada.');
+    }
+
+    public function toggleLandingAll(Request $request)
+    {
+        $request->validate([
+            'show_on_landing' => 'required|boolean',
+        ]);
+
+        $value = $request->boolean('show_on_landing');
+        Combo::query()->update(['show_on_landing' => $value]);
+
+        return back()->with('success', $value ? 'Se mostrarán todos los combos en el inicio.' : 'Se ocultaron todos los combos del inicio.');
     }
 
     public function updateSectionTitle(Request $request)

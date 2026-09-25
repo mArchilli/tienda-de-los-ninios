@@ -21,7 +21,7 @@ export default function ReviewCard({ review }) {
     const date = formatDate(review.created_at);
 
     return (
-        <article className="flex h-full flex-col rounded-[1.5rem] border border-brand-secondary/60 bg-white p-5 shadow-[0_10px_28px_rgba(41,50,65,0.06)]">
+        <article className="flex h-full flex-col rounded-[1.5rem] border border-brand-secondary/60 bg-white p-5">
             <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary-surface text-sm font-bold text-brand-primary">
                     {initials(review.author_name)}

@@ -31,6 +31,7 @@ Route::get('/images/products/{filename}', [ImageController::class, 'show'])->whe
 
 Route::get('/', function () {
     $combos = Combo::where('is_active', true)
+        ->where('show_on_landing', true)
         ->orderBy('order')
         ->orderByDesc('created_at')
         ->get(['id', 'name', 'description', 'price', 'image', 'is_featured'])
@@ -151,6 +152,8 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::get('/combos/categories-for-sizes', [ComboController::class, 'categoriesWithProducts'])->name('combos.categories-for-sizes');
     Route::get('/combos/order', [ComboController::class, 'order'])->name('combos.order');
     Route::post('/combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder');
+    Route::post('/combos/{combo}/toggle-landing', [ComboController::class, 'toggleLanding'])->name('combos.toggle-landing');
+    Route::post('/combos/toggle-landing-all', [ComboController::class, 'toggleLandingAll'])->name('combos.toggle-landing-all');
     Route::post('/combos/section-title', [ComboController::class, 'updateSectionTitle'])->name('combos.section-title');
     Route::get('/combos', [ComboController::class, 'index'])->name('combos.index');
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
