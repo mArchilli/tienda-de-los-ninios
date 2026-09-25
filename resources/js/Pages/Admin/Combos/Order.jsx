@@ -85,86 +85,90 @@ function SortableRow({ combo, position, total, onPositionChange, onToggleLanding
         <div
             ref={setNodeRef}
             style={style}
-            className={`flex items-center gap-4 rounded-xl border bg-white p-3 shadow-sm transition-opacity ${
+            className={`flex flex-col gap-3 rounded-xl border bg-white p-3 shadow-sm transition-opacity sm:flex-row sm:items-center sm:gap-4 ${
                 isDragging ? 'relative z-10 border-brand-primary shadow-md' : 'border-gray-200'
             } ${combo.show_on_landing ? '' : 'opacity-60'}`}
         >
-            <button
-                type="button"
-                {...attributes}
-                {...listeners}
-                className="flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-brand-text-light hover:bg-gray-100 active:cursor-grabbing"
-                aria-label="Arrastrar para reordenar"
-            >
-                <DragHandleIcon />
-            </button>
-
-            <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-50">
-                {imgSrc ? (
-                    <img src={imgSrc} alt={combo.name} className="h-full w-full object-cover" />
-                ) : (
-                    <div className="flex h-full w-full items-center justify-center text-brand-text-light">
-                        <GiftIcon />
-                    </div>
-                )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-brand-text">{combo.name}</p>
-                <p className="text-xs text-brand-text-muted">{fmt(combo.price)}</p>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1.5">
-                {combo.is_featured && (
-                    <span className="rounded-full bg-brand-cta px-2 py-0.5 text-[10px] font-bold text-white">DESTACADO</span>
-                )}
-                <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                        combo.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'
-                    }`}
-                >
-                    {combo.is_active ? 'Activo' : 'Inactivo'}
-                </span>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2 pl-1">
-                <span className="hidden items-center gap-1 text-[11px] font-medium text-brand-text-muted sm:flex">
-                    {!combo.show_on_landing && <EyeOffIcon />}
-                    Portada
-                </span>
+            <div className="flex min-w-0 items-center gap-3 sm:flex-1">
                 <button
                     type="button"
-                    role="switch"
-                    aria-checked={combo.show_on_landing}
-                    aria-label={`Mostrar "${combo.name}" en el inicio`}
-                    onClick={() => onToggleLanding(combo.id, !combo.show_on_landing)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                        combo.show_on_landing ? 'bg-brand-primary' : 'bg-gray-300'
-                    }`}
+                    {...attributes}
+                    {...listeners}
+                    className="flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-brand-text-light hover:bg-gray-100 active:cursor-grabbing"
+                    aria-label="Arrastrar para reordenar"
                 >
-                    <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                            combo.show_on_landing ? 'translate-x-[18px]' : 'translate-x-[2px]'
-                        }`}
-                    />
+                    <DragHandleIcon />
                 </button>
+
+                <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                    {imgSrc ? (
+                        <img src={imgSrc} alt={combo.name} className="h-full w-full object-cover" />
+                    ) : (
+                        <div className="flex h-full w-full items-center justify-center text-brand-text-light">
+                            <GiftIcon />
+                        </div>
+                    )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-brand-text">{combo.name}</p>
+                    <p className="text-xs text-brand-text-muted">{fmt(combo.price)}</p>
+                </div>
             </div>
 
-            <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={total}
-                value={positionInput}
-                onChange={(e) => setPositionInput(e.target.value)}
-                onBlur={commitPosition}
-                onFocus={(e) => e.target.select()}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                aria-label={`Posición de ${combo.name}`}
-                className="w-14 shrink-0 rounded-lg border border-gray-200 py-1.5 text-center text-sm font-semibold text-brand-text outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-            />
+            <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap sm:justify-end sm:gap-4">
+                <div className="flex shrink-0 items-center gap-1.5">
+                    {combo.is_featured && (
+                        <span className="rounded-full bg-brand-cta px-2 py-0.5 text-[10px] font-bold text-white">DESTACADO</span>
+                    )}
+                    <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            combo.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'
+                        }`}
+                    >
+                        {combo.is_active ? 'Activo' : 'Inactivo'}
+                    </span>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-brand-text-muted">
+                        {!combo.show_on_landing && <EyeOffIcon />}
+                        Portada
+                    </span>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={combo.show_on_landing}
+                        aria-label={`Mostrar "${combo.name}" en el inicio`}
+                        onClick={() => onToggleLanding(combo.id, !combo.show_on_landing)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                            combo.show_on_landing ? 'bg-brand-primary' : 'bg-gray-300'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                                combo.show_on_landing ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                            }`}
+                        />
+                    </button>
+                </div>
+
+                <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={total}
+                    value={positionInput}
+                    onChange={(e) => setPositionInput(e.target.value)}
+                    onBlur={commitPosition}
+                    onFocus={(e) => e.target.select()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.currentTarget.blur();
+                    }}
+                    aria-label={`Posición de ${combo.name}`}
+                    className="ml-auto w-14 shrink-0 rounded-lg border border-gray-200 py-1.5 text-center text-sm font-semibold text-brand-text outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 sm:ml-0"
+                />
+            </div>
         </div>
     );
 }

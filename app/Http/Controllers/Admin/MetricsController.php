@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChannelSale;
 use App\Models\Combo;
 use App\Models\Order;
 use App\Models\Product;
@@ -69,6 +70,68 @@ class MetricsController extends Controller
         ]));
     }
 
+    /**
+     * Consolidado de facturación por canal de venta (Web, WhatsApp, Instagram,
+     * TikTok Live) para el período seleccionado, más su evolución histórica.
+     */
+    public function channels(Request $request)
+    {
+        $view = $request->query('view') === 'day' ? 'day' : 'month';
+
+        if ($view === 'day') {
+            $selected = $this->parseDay($request->query('day'));
+            $range = [$selected->copy()->startOfDay(), $selected->copy()->endOfDay()];
+
+            $viewData = [
+                'selectedPeriod' => $selected->format('Y-m-d'),
+                'selectedLabel'  => $this->dayLabel($selected),
+                'dayBounds'      => $this->dayBounds(),
+            ];
+
+            $history = $this->dailyHistory(30);
+        } else {
+            $selected = $this->parseMonth($request->query('month'));
+            $range = [$selected->copy()->startOfMonth(), $selected->copy()->endOfMonth()];
+
+            $viewData = [
+                'selectedPeriod'  => $selected->format('Y-m'),
+                'selectedLabel'   => $this->monthLabel($selected),
+                'availableMonths' => $this->availableMonths(),
+            ];
+
+            $history = $this->monthlyHistory(12);
+        }
+
+        $stats = $this->periodStats(...$range);
+
+        $channels = [
+            [
+                'key'         => 'web',
+                'label'       => 'Web',
+                'sales_count' => $stats['orders_count'],
+                'amount'      => $stats['online_revenue'],
+                'editable'    => false,
+            ],
+        ];
+        foreach ($stats['channel_sales'] as $key => $row) {
+            $channels[] = [
+                'key'         => $key,
+                'label'       => $row['label'],
+                'sales_count' => $row['sales_count'],
+                'amount'      => $row['amount'],
+                'editable'    => true,
+            ];
+        }
+
+        return Inertia::render('Admin/Metrics/Channels', array_merge($viewData, [
+            'view'            => $view,
+            'channels'        => $channels,
+            'totalRevenue'    => $stats['revenue'],
+            'totalSalesCount' => $stats['orders_count'] + $stats['channel_sales_count'],
+            'history'         => $history,
+        ]));
+    }
+
     private function parseMonth(?string $value): Carbon
     {
         if ($value && preg_match('/^\d{4}-\d{2}$/', $value)) {
@@ -123,50 +186,134 @@ class MetricsController extends Controller
     {
         $base = $this->billableQuery()->whereBetween('created_at', [$start, $end]);
 
-        $ordersCount = (clone $base)->count();
-        $revenue     = (float) (clone $base)->sum('total');
-        $itemsCount  = (int) DB::table('order_items')
+        $ordersCount   = (clone $base)->count();
+        $onlineRevenue = (float) (clone $base)->sum('total');
+        $itemsCount    = (int) DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', Order::STATUS_CANCELLED)
             ->whereBetween('orders.created_at', [$start, $end])
             ->sum('order_items.quantity');
 
-        $avgTicket = $ordersCount > 0 ? $revenue / $ordersCount : 0.0;
+        [$channelSales, $channelRevenue, $channelCount] = $this->channelSalesFor($start->toDateString(), $end->toDateString());
+
+        $grossRevenue = $onlineRevenue + $channelRevenue;
+        $avgTicket    = $ordersCount > 0 ? $onlineRevenue / $ordersCount : 0.0;
 
         return [
-            'revenue'      => round($revenue, 2),
-            'orders_count' => $ordersCount,
-            'items_count'  => $itemsCount,
-            'avg_ticket'   => round($avgTicket, 2),
+            'revenue'             => round($grossRevenue, 2),
+            'online_revenue'      => round($onlineRevenue, 2),
+            'channel_revenue'     => round($channelRevenue, 2),
+            'channel_sales'       => $channelSales,
+            'orders_count'        => $ordersCount,
+            'channel_sales_count' => $channelCount,
+            'items_count'         => $itemsCount,
+            'avg_ticket'          => round($avgTicket, 2),
         ];
+    }
+
+    /**
+     * Ventas cargadas a mano por canal (WhatsApp, Instagram, TikTok Live),
+     * siempre registradas por día, sumadas entre las dos fechas dadas (ambas
+     * incluidas). Un día sin carga cuenta como 0. Devuelve [detalle por canal,
+     * monto total, cantidad total].
+     *
+     * @return array{0: array<string, array>, 1: float, 2: int}
+     */
+    private function channelSalesFor(string $startDate, string $endDate): array
+    {
+        $rows = ChannelSale::whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('channel, SUM(sales_count) as sales_count, SUM(amount) as amount')
+            ->groupBy('channel')
+            ->get()
+            ->keyBy('channel');
+
+        $detail = [];
+        $totalAmount = 0.0;
+        $totalCount  = 0;
+
+        foreach (ChannelSale::CHANNELS as $key => $label) {
+            $row = $rows->get($key);
+            $count = $row ? (int) $row->sales_count : 0;
+            $amount = $row ? (float) $row->amount : 0.0;
+
+            $detail[$key] = [
+                'label'       => $label,
+                'sales_count' => $count,
+                'amount'      => round($amount, 2),
+            ];
+
+            $totalAmount += $amount;
+            $totalCount  += $count;
+        }
+
+        return [$detail, $totalAmount, $totalCount];
     }
 
     private function monthlyHistory(int $months): array
     {
         $start = Carbon::now()->startOfMonth()->subMonths($months - 1);
 
+        // Se agrupa en PHP (en vez de YEAR()/MONTH() en SQL) para no depender
+        // de funciones de fecha específicas del motor de base de datos.
         $rows = $this->billableQuery()
             ->where('created_at', '>=', $start)
-            ->selectRaw('YEAR(created_at) as y, MONTH(created_at) as m, SUM(total) as revenue, COUNT(*) as orders_count')
-            ->groupBy('y', 'm')
-            ->get()
-            ->keyBy(fn ($r) => sprintf('%04d-%02d', $r->y, $r->m));
+            ->get(['created_at', 'total'])
+            ->reduce(function (array $acc, Order $order) {
+                $key = $order->created_at->format('Y-m');
+                $acc[$key]['revenue']      = ($acc[$key]['revenue'] ?? 0.0) + (float) $order->total;
+                $acc[$key]['orders_count'] = ($acc[$key]['orders_count'] ?? 0) + 1;
+                return $acc;
+            }, []);
+
+        $channelByMonth = ChannelSale::where('date', '>=', $start->toDateString())
+            ->get(['date', 'channel', 'amount'])
+            ->reduce(function (array $acc, ChannelSale $row) {
+                $key = $row->date->format('Y-m');
+                $acc[$key][$row->channel] = ($acc[$key][$row->channel] ?? 0) + (float) $row->amount;
+                return $acc;
+            }, []);
 
         $result = [];
         for ($i = 0; $i < $months; $i++) {
             $d   = (clone $start)->addMonths($i);
             $key = $d->format('Y-m');
-            $row = $rows->get($key);
+            $row = $rows[$key] ?? null;
+            $onlineRevenue = $row ? (float) $row['revenue'] : 0.0;
+            $breakdown = $this->channelBreakdown($channelByMonth[$key] ?? []);
 
             $result[] = [
-                'period'       => $key,
-                'label'        => $this->shortMonthLabel($d),
-                'revenue'      => $row ? round((float) $row->revenue, 2) : 0.0,
-                'orders_count' => $row ? (int) $row->orders_count : 0,
+                'period'          => $key,
+                'label'           => $this->shortMonthLabel($d),
+                'revenue'         => round($onlineRevenue + $breakdown['total'], 2),
+                'orders_count'    => $row ? (int) $row['orders_count'] : 0,
+                'online_revenue'  => round($onlineRevenue, 2),
+                'channel_revenue' => round($breakdown['total'], 2),
+                'channels'        => $breakdown['channels'],
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Normaliza un mapa parcial [canal => monto] (algunos canales pueden faltar
+     * si no se cargó nada ese día/mes) contra la lista completa de canales.
+     *
+     * @param array<string, float> $amounts
+     * @return array{total: float, channels: array<string, float>}
+     */
+    private function channelBreakdown(array $amounts): array
+    {
+        $channels = [];
+        $total = 0.0;
+
+        foreach (ChannelSale::CHANNELS as $key => $label) {
+            $amount = round((float) ($amounts[$key] ?? 0), 2);
+            $channels[$key] = $amount;
+            $total += $amount;
+        }
+
+        return ['total' => $total, 'channels' => $channels];
     }
 
     private function dailyHistory(int $days): array
@@ -180,17 +327,30 @@ class MetricsController extends Controller
             ->get()
             ->keyBy('d');
 
+        $channelByDay = ChannelSale::where('date', '>=', $start->toDateString())
+            ->get(['date', 'channel', 'amount'])
+            ->reduce(function (array $acc, ChannelSale $row) {
+                $key = $row->date->toDateString();
+                $acc[$key][$row->channel] = ($acc[$key][$row->channel] ?? 0) + (float) $row->amount;
+                return $acc;
+            }, []);
+
         $result = [];
         for ($i = 0; $i < $days; $i++) {
             $d   = (clone $start)->addDays($i);
             $key = $d->toDateString();
             $row = $rows->get($key);
+            $onlineRevenue = $row ? (float) $row->revenue : 0.0;
+            $breakdown = $this->channelBreakdown($channelByDay[$key] ?? []);
 
             $result[] = [
-                'period'       => $key,
-                'label'        => $d->format('d/m'),
-                'revenue'      => $row ? round((float) $row->revenue, 2) : 0.0,
-                'orders_count' => $row ? (int) $row->orders_count : 0,
+                'period'          => $key,
+                'label'           => $d->format('d/m'),
+                'revenue'         => round($onlineRevenue + $breakdown['total'], 2),
+                'orders_count'    => $row ? (int) $row->orders_count : 0,
+                'online_revenue'  => round($onlineRevenue, 2),
+                'channel_revenue' => round($breakdown['total'], 2),
+                'channels'        => $breakdown['channels'],
             ];
         }
 
@@ -326,9 +486,14 @@ class MetricsController extends Controller
     {
         $base = $this->billableQuery();
 
+        $onlineRevenue  = (float) (clone $base)->sum('total');
+        $channelRevenue = (float) ChannelSale::sum('amount');
+
         return [
-            'revenue'      => round((float) (clone $base)->sum('total'), 2),
-            'orders_count' => (int) (clone $base)->count(),
+            'revenue'         => round($onlineRevenue + $channelRevenue, 2),
+            'online_revenue'  => round($onlineRevenue, 2),
+            'channel_revenue' => round($channelRevenue, 2),
+            'orders_count'    => (int) (clone $base)->count(),
         ];
     }
 
@@ -349,6 +514,8 @@ class MetricsController extends Controller
             $period = $month->format('Y-m');
             $label  = $this->monthLabel($month);
         }
+
+        $currentStats = $this->periodStats($start, $end);
 
         $orders = Order::with('items')
             ->whereBetween('created_at', [$start, $end])
@@ -372,8 +539,42 @@ class MetricsController extends Controller
             'period'       => $period,
             'periodLabel'  => $label,
             'orders'       => $orders,
-            'currentStats' => $this->periodStats($start, $end),
+            'currentStats' => $currentStats,
         ]);
+    }
+
+    /**
+     * Guarda (o actualiza) la cantidad de ventas y el monto facturado por cada
+     * canal manual —WhatsApp, Instagram, TikTok Live— para un día puntual. La
+     * carga siempre es diaria; la vista "Mes" de Métricas sólo suma los días
+     * ya cargados (un día sin carga cuenta como 0).
+     */
+    public function updateChannelSales(Request $request)
+    {
+        $data = $request->validate([
+            'date'                    => ['required', 'date_format:Y-m-d'],
+            'channels'                => ['required', 'array'],
+            'channels.*.sales_count'  => ['nullable', 'integer', 'min:0'],
+            'channels.*.amount'       => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $date = Carbon::createFromFormat('Y-m-d', $data['date'])->startOfDay();
+
+        foreach (ChannelSale::CHANNELS as $key => $label) {
+            $entry = $data['channels'][$key] ?? [];
+
+            ChannelSale::updateOrCreate(
+                ['channel' => $key, 'date' => $date],
+                [
+                    'sales_count' => (int) ($entry['sales_count'] ?? 0),
+                    'amount'      => (float) ($entry['amount'] ?? 0),
+                ]
+            );
+        }
+
+        return redirect()
+            ->route('admin.metrics.index', ['view' => 'day', 'day' => $date])
+            ->with('success', 'Ventas por canal actualizadas.');
     }
 
     public function updateOrders(Request $request, StockService $stock)

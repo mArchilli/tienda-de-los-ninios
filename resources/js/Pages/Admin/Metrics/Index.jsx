@@ -1,12 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtMoney(n) {
     const num = Number(n) || 0;
     return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// Sólo dígitos → separador de miles "es-AR" (punto) mientras se escribe.
+function digitsToArs(digits) {
+    if (!digits) return '';
+    return Number(digits).toLocaleString('es-AR');
 }
 
 function fmtMoneyCompact(n) {
@@ -292,6 +298,238 @@ function ViewToggle({ view, onChange }) {
     );
 }
 
+// ─── Peso input (separador de miles mientras se escribe) ─────────────────────
+
+function PesoInput({ value, onChange, id }) {
+    // El valor de referencia es siempre un entero en pesos; sólo formateamos
+    // la representación visual con separador de miles "es-AR".
+    const digits = value === '' || value === null || value === undefined ? '' : String(Math.trunc(Number(value) || 0));
+
+    return (
+        <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-brand-text-light">$</span>
+            <input
+                id={id}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={digitsToArs(digits)}
+                onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
+                placeholder="0"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-6 pr-3 text-right text-sm font-semibold text-brand-text outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+            />
+        </div>
+    );
+}
+
+// ─── Ventas por canal (WhatsApp / Instagram / TikTok Live) ───────────────────
+
+const CHANNEL_META = {
+    whatsapp: {
+        color: 'text-emerald-600 bg-emerald-50',
+        icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21l1.65-4.95A9 9 0 1112 21a8.96 8.96 0 01-4.95-1.5L3 21z" />,
+    },
+    instagram: {
+        color: 'text-fuchsia-600 bg-fuchsia-50',
+        icon: <><rect x="3" y="3" width="18" height="18" rx="5" strokeWidth={2} /><circle cx="12" cy="12" r="4" strokeWidth={2} /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></>,
+    },
+    tiktok: {
+        color: 'text-brand-text bg-gray-100',
+        icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 4v10.5a3.5 3.5 0 11-3.5-3.5c.35 0 .68.05 1 .14V8.5A6 6 0 1017 14V8a5 5 0 003 1V6a3 3 0 01-3-3h-3z" />,
+    },
+};
+
+function ChannelSalesHeader({ totalCount, totalAmount, savedAt }) {
+    return (
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+            <div>
+                <h2 className="text-base font-bold text-brand-text">Ventas por canal</h2>
+                <p className="text-xs text-brand-text-muted">
+                    WhatsApp, Instagram y TikTok Live — se suman al Facturado (Bruto).
+                </p>
+            </div>
+            <div className="flex items-center gap-2">
+                {savedAt && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                        Guardado
+                    </span>
+                )}
+                <span className="text-xs text-brand-text-muted">
+                    Total: <span className="font-bold text-brand-text">{totalCount} venta{totalCount === 1 ? '' : 's'}</span>
+                    {' · '}
+                    <span className="font-bold text-brand-text">{fmtMoney(totalAmount)}</span>
+                </span>
+            </div>
+        </div>
+    );
+}
+
+// La carga es siempre diaria: en la vista Día se edita el día que se está
+// mirando; en la vista Mes sólo se muestra el acumulado (suma de los días
+// del mes que ya se cargaron) de forma sólo-lectura, con un atajo al día.
+function ChannelSalesCard({ view, selectedPeriod, selectedStats }) {
+    if (view !== 'day') {
+        return <ChannelSalesSummary selectedStats={selectedStats} selectedPeriod={selectedPeriod} />;
+    }
+    return <ChannelSalesForm key={selectedPeriod} date={selectedPeriod} selectedStats={selectedStats} />;
+}
+
+function ChannelSalesSummary({ selectedStats, selectedPeriod }) {
+    const channelKeys = Object.keys(selectedStats.channel_sales ?? {});
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const jumpDay = todayStr.slice(0, 7) === selectedPeriod ? todayStr : `${selectedPeriod}-01`;
+
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <ChannelSalesHeader
+                totalCount={selectedStats.channel_sales_count}
+                totalAmount={selectedStats.channel_revenue}
+            />
+
+            <div className="space-y-2">
+                {channelKeys.map((key) => {
+                    const meta = CHANNEL_META[key] ?? {};
+                    const row = selectedStats.channel_sales[key];
+                    return (
+                        <div key={key} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2">
+                            <div className="flex items-center gap-2">
+                                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${meta.color ?? 'bg-gray-100 text-brand-text'}`}>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {meta.icon}
+                                    </svg>
+                                </span>
+                                <span className="text-sm font-semibold text-brand-text">{row.label}</span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-bold text-brand-text">{fmtMoney(row.amount)}</p>
+                                <p className="text-[11px] text-brand-text-muted">{row.sales_count} venta{row.sales_count === 1 ? '' : 's'}</p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                <p className="text-xs text-brand-text-muted">
+                    Es la suma de los días del mes ya cargados — los días sin carga cuentan como 0.
+                </p>
+                <button
+                    type="button"
+                    onClick={() => router.get(route('admin.metrics.index'), { view: 'day', day: jumpDay }, { preserveScroll: true })}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary-surface px-3 py-1.5 text-xs font-bold text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
+                >
+                    Cargar por día
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function ChannelSalesForm({ date, selectedStats }) {
+    const channelKeys = Object.keys(selectedStats.channel_sales ?? {});
+
+    const [form, setForm] = useState(() => Object.fromEntries(channelKeys.map((key) => {
+        const row = selectedStats.channel_sales[key];
+        return [key, { sales_count: String(row.sales_count ?? 0), amount: String(row.amount ?? 0) }];
+    })));
+    const [saving, setSaving] = useState(false);
+    const [savedAt, setSavedAt] = useState(null);
+
+    const setChannel = (key, field, val) => {
+        setForm((f) => ({ ...f, [key]: { ...f[key], [field]: val } }));
+        setSavedAt(null);
+    };
+
+    const totalCount = channelKeys.reduce((sum, k) => sum + (Number(form[k]?.sales_count) || 0), 0);
+    const totalAmount = channelKeys.reduce((sum, k) => sum + (Number(form[k]?.amount) || 0), 0);
+
+    const submit = (e) => {
+        e.preventDefault();
+        setSaving(true);
+
+        const payload = {
+            date,
+            channels: Object.fromEntries(channelKeys.map((k) => [k, {
+                sales_count: parseInt(form[k]?.sales_count, 10) || 0,
+                amount: parseInt(form[k]?.amount, 10) || 0,
+            }])),
+        };
+
+        router.post(route('admin.metrics.channel-sales.update'), payload, {
+            preserveScroll: true,
+            onSuccess: () => setSavedAt(Date.now()),
+            onFinish: () => setSaving(false),
+        });
+    };
+
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <ChannelSalesHeader totalCount={totalCount} totalAmount={totalAmount} savedAt={savedAt} />
+
+            <form onSubmit={submit} className="space-y-3">
+                <div className="hidden grid-cols-[1fr_140px_160px] gap-3 px-1 text-[11px] font-semibold uppercase tracking-wide text-brand-text-muted sm:grid">
+                    <span>Canal</span>
+                    <span className="text-right">Ventas</span>
+                    <span className="text-right">Monto</span>
+                </div>
+
+                {channelKeys.map((key) => {
+                    const meta = CHANNEL_META[key] ?? {};
+                    const label = selectedStats.channel_sales[key]?.label ?? key;
+                    return (
+                        <div key={key} className="grid grid-cols-1 items-center gap-2 rounded-xl border border-gray-100 p-2.5 sm:grid-cols-[1fr_140px_160px] sm:gap-3 sm:border-0 sm:p-0">
+                            <div className="flex items-center gap-2">
+                                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${meta.color ?? 'bg-gray-100 text-brand-text'}`}>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {meta.icon}
+                                    </svg>
+                                </span>
+                                <span className="text-sm font-semibold text-brand-text">{label}</span>
+                            </div>
+
+                            <div>
+                                <label htmlFor={`chan-count-${key}`} className="mb-1 block text-[10px] font-medium text-brand-text-muted sm:hidden">Ventas</label>
+                                <input
+                                    id={`chan-count-${key}`}
+                                    type="number"
+                                    min="0"
+                                    inputMode="numeric"
+                                    value={form[key]?.sales_count ?? ''}
+                                    onChange={(e) => setChannel(key, 'sales_count', e.target.value.replace(/\D/g, ''))}
+                                    placeholder="0"
+                                    className="w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-right text-sm font-semibold text-brand-text outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor={`chan-amount-${key}`} className="mb-1 block text-[10px] font-medium text-brand-text-muted sm:hidden">Monto</label>
+                                <PesoInput
+                                    id={`chan-amount-${key}`}
+                                    value={form[key]?.amount ?? ''}
+                                    onChange={(v) => setChannel(key, 'amount', v)}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+
+                <div className="flex justify-end border-t border-gray-100 pt-3">
+                    <button
+                        type="submit"
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {saving ? 'Guardando…' : 'Guardar ventas del día'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MetricsIndex({
@@ -353,6 +591,16 @@ export default function MetricsIndex({
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Link
+                            href={route('admin.metrics.channels', view === 'day' ? { view: 'day', day: selectedPeriod } : { month: selectedPeriod })}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-brand-text-muted shadow-sm transition-colors hover:border-brand-primary hover:text-brand-primary"
+                        >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                            </svg>
+                            Por canal
+                        </Link>
                         <ViewToggle view={view} onChange={switchView} />
 
                         {view === 'day' ? (
@@ -402,9 +650,17 @@ export default function MetricsIndex({
                 {/* KPI grid */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <KpiCard
-                        title="Facturado"
+                        title="Facturado (Bruto)"
                         value={fmtMoney(selectedStats.revenue)}
-                        sub={`${previousLabel}: ${fmtMoneyCompact(previousStats.revenue)}`}
+                        sub={
+                            <>
+                                {previousLabel}: {fmtMoneyCompact(previousStats.revenue)}
+                                <br />
+                                <span className="text-brand-text-light">
+                                    Online {fmtMoneyCompact(selectedStats.online_revenue)} · Canales {fmtMoneyCompact(selectedStats.channel_revenue)}
+                                </span>
+                            </>
+                        }
                         delta={revenueDelta}
                         deltaCaption={deltaCaption}
                         accent="cta"
@@ -465,6 +721,13 @@ export default function MetricsIndex({
                         }
                     />
                 </div>
+
+                {/* Ventas por canal */}
+                <ChannelSalesCard
+                    selectedStats={selectedStats}
+                    view={view}
+                    selectedPeriod={selectedPeriod}
+                />
 
                 {/* Chart */}
                 <PeriodChart

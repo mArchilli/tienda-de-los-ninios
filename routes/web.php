@@ -150,6 +150,7 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::delete('/colors/{color}', [ColorController::class, 'destroy'])->name('colors.destroy');
 
     Route::get('/combos/categories-for-sizes', [ComboController::class, 'categoriesWithProducts'])->name('combos.categories-for-sizes');
+    Route::get('/combos/for-categories', [ComboController::class, 'forCategories'])->name('combos.for-categories');
     Route::get('/combos/order', [ComboController::class, 'order'])->name('combos.order');
     Route::post('/combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder');
     Route::post('/combos/{combo}/toggle-landing', [ComboController::class, 'toggleLanding'])->name('combos.toggle-landing');
@@ -177,8 +178,10 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::delete('/combos-regalo/{combo}', [ComboRegaloController::class, 'destroy'])->name('combos-regalo.destroy');
 
     Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');
+    Route::get('/metrics/channels', [MetricsController::class, 'channels'])->name('metrics.channels');
     Route::get('/metrics/orders', [MetricsController::class, 'orders'])->name('metrics.orders');
     Route::patch('/metrics/orders', [MetricsController::class, 'updateOrders'])->name('metrics.orders.update');
+    Route::post('/metrics/channel-sales', [MetricsController::class, 'updateChannelSales'])->name('metrics.channel-sales.update');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

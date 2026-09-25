@@ -223,6 +223,43 @@ class ComboController extends Controller
     }
 
     /**
+     * Combos que ya ofrecen alguna de las categorías dadas, para que al cargar una
+     * prenda nueva se la pueda sumar directamente como opción de esos combos sin
+     * tener que ir al editor del combo. Sólo se muestran combos cuyo género (si
+     * tienen uno asignado) coincide con alguno de los géneros de la prenda.
+     */
+    public function forCategories(Request $request)
+    {
+        $categoryIds = array_values(array_filter((array) $request->input('categories', []), 'is_numeric'));
+        $genderIds   = array_values(array_filter((array) $request->input('genders', []), 'is_numeric'));
+
+        if (empty($categoryIds)) {
+            return response()->json([]);
+        }
+
+        $items = ComboItem::whereIn('category_id', $categoryIds)
+            ->with(['combo:id,name,image,price,is_active,gender_id', 'category:id,name'])
+            ->get()
+            ->filter(fn (ComboItem $item) => $item->combo && (
+                is_null($item->combo->gender_id) || in_array($item->combo->gender_id, $genderIds)
+            ))
+            ->unique(fn (ComboItem $item) => $item->combo_id . '-' . $item->category_id)
+            ->map(fn (ComboItem $item) => [
+                'combo_id'      => $item->combo_id,
+                'combo_name'    => $item->combo->name,
+                'combo_image'   => $item->combo->image ? '/' . ltrim($item->combo->image, '/') : null,
+                'combo_active'  => (bool) $item->combo->is_active,
+                'category_id'   => $item->category_id,
+                'category_name' => $item->category->name,
+                'quantity'      => $item->quantity,
+            ])
+            ->sortBy(fn ($row) => $row['combo_name'])
+            ->values();
+
+        return response()->json($items);
+    }
+
+    /**
      * Devuelve los talles seleccionados que NO tienen al menos una prenda con ese
      * talle entre los productos elegidos en cada categoría. Si la lista está
      * vacía, el combo es vendible en todos los talles seleccionados.

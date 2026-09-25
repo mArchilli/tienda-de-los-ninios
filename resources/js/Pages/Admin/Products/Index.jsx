@@ -42,6 +42,7 @@ const Icons = {
     chevronLeft:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />,
     chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />,
     download:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />,
+    combo:        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
 };
 
 const Icon = ({ name, className = 'h-4 w-4' }) => (
@@ -479,13 +480,104 @@ const EMPTY_FORM = {
     selectedSizes: {},
     existingImages: [],
     newImages: [],
+    addToCombos: [],
 };
+
+function comboPairKey(comboId, categoryId) {
+    return `${comboId}:${categoryId}`;
+}
+
+// ─── Combo picker (al cargar una prenda nueva) ────────────────────────────────
+
+function ComboPickerSection({ options, loading, selectedKeys, onToggle, categoriesCount, gendersCount }) {
+    if (categoriesCount === 0 || gendersCount === 0) {
+        return (
+            <p className="text-xs italic text-brand-text-muted">
+                Elegí género y categoría para ver en qué combos podés sumar esta prenda.
+            </p>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center gap-2 text-xs text-brand-text-muted">
+                <Spinner /> Buscando combos…
+            </div>
+        );
+    }
+
+    if (options.length === 0) {
+        return (
+            <p className="text-xs italic text-brand-text-muted">
+                Ningún combo ofrece todavía estas categorías.
+            </p>
+        );
+    }
+
+    const groups = options.reduce((acc, row) => {
+        (acc[row.category_id] ??= { name: row.category_name, rows: [] }).rows.push(row);
+        return acc;
+    }, {});
+
+    return (
+        <div className="space-y-4">
+            {Object.values(groups).map((group) => (
+                <div key={group.name} className="space-y-1.5">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">{group.name}</p>
+                    <div className="space-y-1.5">
+                        {group.rows.map((row) => {
+                            const key = comboPairKey(row.combo_id, row.category_id);
+                            const checked = selectedKeys.includes(key);
+                            return (
+                                <button
+                                    type="button"
+                                    key={key}
+                                    onClick={() => onToggle(row.combo_id, row.category_id)}
+                                    className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left transition-colors ${
+                                        checked ? 'border-brand-primary bg-brand-primary-surface' : 'border-gray-200 bg-white hover:border-brand-primary/40'
+                                    } ${row.combo_active ? '' : 'opacity-60'}`}
+                                >
+                                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                                        {row.combo_image ? (
+                                            <img src={glideUrl(row.combo_image, 80, 80)} alt={row.combo_name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center text-brand-text-light">
+                                                <Icon name="combo" className="h-4 w-4" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-semibold text-brand-text">{row.combo_name}</p>
+                                        <p className="text-[10px] text-brand-text-muted">
+                                            {!row.combo_active && 'Inactivo · '}Elige {row.quantity} de esta categoría
+                                        </p>
+                                    </div>
+                                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                                        checked ? 'border-brand-primary bg-brand-primary' : 'border-gray-300 bg-white'
+                                    }`}>
+                                        {checked && (
+                                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                {Icons.check}
+                                            </svg>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 function ProductModal({ open, onClose, product, allCategories, allColors, allSizes, allGenders }) {
     const isEditing = product !== null;
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+    const [comboOptions, setComboOptions] = useState([]);
+    const [comboOptionsLoading, setComboOptionsLoading] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -503,12 +595,47 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                 ),
                 existingImages: product.images ?? [],
                 newImages:      [],
+                addToCombos:    [],
             });
         } else {
             setForm(EMPTY_FORM);
         }
         setErrors({});
+        setComboOptions([]);
     }, [open, product]);
+
+    // Sólo tiene sentido ofrecer sumar a combos existentes al cargar una prenda
+    // nueva: una prenda en edición ya tiene su lugar resuelto en los combos.
+    useEffect(() => {
+        if (!open || isEditing) return;
+        if (form.categories.length === 0 || form.genders.length === 0) {
+            setComboOptions([]);
+            return;
+        }
+
+        const controller = new AbortController();
+        setComboOptionsLoading(true);
+
+        const params = new URLSearchParams();
+        form.categories.forEach((id) => params.append('categories[]', id));
+        form.genders.forEach((id) => params.append('genders[]', id));
+
+        fetch(`${route('admin.combos.for-categories')}?${params.toString()}`, {
+            signal: controller.signal,
+            headers: { Accept: 'application/json' },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setComboOptions(data);
+                const validKeys = new Set(data.map((row) => comboPairKey(row.combo_id, row.category_id)));
+                setForm((f) => ({ ...f, addToCombos: f.addToCombos.filter((k) => validKeys.has(k)) }));
+            })
+            .catch((err) => { if (err.name !== 'AbortError') setComboOptions([]); })
+            .finally(() => setComboOptionsLoading(false));
+
+        return () => controller.abort();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, isEditing, JSON.stringify(form.categories), JSON.stringify(form.genders)]);
 
     const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -518,6 +645,14 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
             : [...form[field], id]
         );
         setErrors((e) => (e[field] ? { ...e, [field]: undefined } : e));
+    };
+
+    const toggleCombo = (comboId, categoryId) => {
+        const key = comboPairKey(comboId, categoryId);
+        set('addToCombos', form.addToCombos.includes(key)
+            ? form.addToCombos.filter((k) => k !== key)
+            : [...form.addToCombos, key]
+        );
     };
 
     const toggleSize = (id) => {
@@ -555,17 +690,22 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
         setProcessing(true);
 
         const sizes = Object.entries(form.selectedSizes).map(([id, stock]) => ({ id: parseInt(id), stock }));
+        const addToCombos = form.addToCombos.map((key) => {
+            const [comboId, categoryId] = key.split(':');
+            return { combo_id: Number(comboId), category_id: Number(categoryId) };
+        });
 
         const payload = {
-            name:         form.name,
-            description:  form.description,
-            price:        form.price,
-            is_featured:  form.is_featured,
-            categories:   form.categories,
-            colors:       form.colors,
-            genders:      form.genders,
+            name:          form.name,
+            description:   form.description,
+            price:         form.price,
+            is_featured:   form.is_featured,
+            categories:    form.categories,
+            colors:        form.colors,
+            genders:       form.genders,
             sizes,
-            images:       form.newImages,
+            images:        form.newImages,
+            add_to_combos: addToCombos,
         };
 
         const options = {
@@ -684,6 +824,20 @@ function ProductModal({ open, onClose, product, allCategories, allColors, allSiz
                             onToggle={(id) => toggleMulti('categories', id)}
                             placeholder="Buscar categoría..."
                             initialCount={6}
+                        />
+                    </SectionPanel>
+                )}
+
+                {/* Sumar a combos existentes (sólo al crear) */}
+                {!isEditing && allCategories.length > 0 && (
+                    <SectionPanel iconName="combo" label="Sumar a combos existentes (opcional)">
+                        <ComboPickerSection
+                            options={comboOptions}
+                            loading={comboOptionsLoading}
+                            selectedKeys={form.addToCombos}
+                            onToggle={toggleCombo}
+                            categoriesCount={form.categories.length}
+                            gendersCount={form.genders.length}
                         />
                     </SectionPanel>
                 )}

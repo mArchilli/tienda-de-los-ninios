@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\ComboItem;
 use App\Models\Gender;
 use App\Models\Product;
 use App\Models\Size;
@@ -143,6 +144,9 @@ class ProductController extends Controller
             'sizes'         => 'nullable|array',
             'sizes.*.id'    => 'exists:sizes,id',
             'sizes.*.stock' => 'integer|min:0',
+            'add_to_combos'                => 'nullable|array',
+            'add_to_combos.*.combo_id'     => 'required|exists:combos,id',
+            'add_to_combos.*.category_id'  => 'required|exists:categories,id',
         ], [
             'genders.required'    => 'Seleccioná al menos un género para la prenda.',
             'categories.required' => 'Seleccioná al menos una categoría para la prenda.',
@@ -170,7 +174,37 @@ class ProductController extends Controller
                 ->mapWithKeys(fn($s) => [$s['id'] => ['stock' => $s['stock']]])
         );
 
+        $this->addToCombos($product, $request);
+
         return back()->with('success', 'Producto creado correctamente.');
+    }
+
+    /**
+     * Suma la prenda recién creada como opción elegible en los combos que el
+     * admin haya marcado desde el formulario de carga, respetando la cantidad
+     * ya definida para esa categoría dentro de cada combo.
+     */
+    private function addToCombos(Product $product, Request $request): void
+    {
+        $categoryIds = array_map('intval', $request->input('categories', []));
+
+        $pairs = collect($request->input('add_to_combos', []))
+            ->filter(fn ($pair) => in_array((int) ($pair['category_id'] ?? null), $categoryIds, true))
+            ->unique(fn ($pair) => $pair['combo_id'] . '-' . $pair['category_id']);
+
+        foreach ($pairs as $pair) {
+            $quantity = ComboItem::where('combo_id', $pair['combo_id'])
+                ->where('category_id', $pair['category_id'])
+                ->value('quantity') ?? 1;
+
+            ComboItem::firstOrCreate([
+                'combo_id'    => $pair['combo_id'],
+                'category_id' => $pair['category_id'],
+                'product_id'  => $product->id,
+            ], [
+                'quantity' => $quantity,
+            ]);
+        }
     }
 
     public function update(Request $request, Product $product)
