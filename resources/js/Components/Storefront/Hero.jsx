@@ -194,8 +194,10 @@ function HeroSlide({ banner }) {
 
 // ─── Hero (carrusel) ──────────────────────────────────────────────────────────
 
-export default function Hero() {
-    const slides = BANNERS;
+export default function Hero({ titleTop = BANNER_TEXT.titleTop, titleBottom = BANNER_TEXT.titleBottom }) {
+    const slides = BANNERS.map((banner) => (
+        banner.text ? { ...banner, text: { ...banner.text, titleTop, titleBottom } } : banner
+    ));
     const count = slides.length;
 
     const [active, setActive] = useState(0);

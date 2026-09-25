@@ -59,6 +59,11 @@ const Icon = {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25h18v7.5H3v-7.5Zm3.75 0v3m3-3v4.5m3-4.5v3m3-3v4.5m3-4.5v3" />
         </svg>
     ),
+    Landing: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75V19.5a1.5 1.5 0 001.5 1.5h3.75v-4.5a1.5 1.5 0 011.5-1.5h1.5a1.5 1.5 0 011.5 1.5V21h3.75a1.5 1.5 0 001.5-1.5V9.75M9 8.25h.008" />
+        </svg>
+    ),
     Volver: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -214,6 +219,7 @@ export default function AuthenticatedLayout({ header, children }) {
         { href: route('admin.categories.index'), active: route().current('admin.categories.*'), icon: Icon.Categorias, label: 'Categorías' },
         { href: route('admin.colors.index'), active: route().current('admin.colors.*'), icon: Icon.Colores, label: 'Colores' },
         { href: route('admin.sizes.index'), active: route().current('admin.sizes.*'), icon: Icon.Talles, label: 'Talles' },
+        { href: route('admin.landing.edit'), active: route().current('admin.landing.*'), icon: Icon.Landing, label: 'Landing' },
     ];
 
     return (

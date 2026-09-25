@@ -21,7 +21,7 @@ function ArrowButton({ dir, disabled, onClick }) {
     );
 }
 
-export default function Reviews({ reviews = [], stats }) {
+export default function Reviews({ reviews = [], stats, title = 'RESEÑAS DE CLIENTES' }) {
     const shown = reviews.slice(0, MAX_ON_LANDING);
     const hasReviews = shown.length > 0;
     const total = stats?.count ?? shown.length;
@@ -98,7 +98,7 @@ export default function Reviews({ reviews = [], stats }) {
             <div className="store-shell store-section">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h2 className="home-section-title">RESEÑAS DE CLIENTES</h2>
+                        <h2 className="home-section-title">{title}</h2>
                         {hasReviews && stats?.count > 0 && (
                             <div className="mt-3 flex flex-wrap items-center gap-2.5">
                                 <StarRating value={stats.average} size="md" />

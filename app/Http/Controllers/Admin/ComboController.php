@@ -8,7 +8,6 @@ use App\Models\Combo;
 use App\Models\ComboItem;
 use App\Models\Gender;
 use App\Models\Product;
-use App\Models\Setting;
 use App\Models\Size;
 use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
@@ -118,8 +117,7 @@ class ComboController extends Controller
             ->get(['id', 'name', 'image', 'price', 'is_active', 'is_featured', 'order', 'show_on_landing']);
 
         return Inertia::render('Admin/Combos/Order', [
-            'combos'       => $combos,
-            'sectionTitle' => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
+            'combos' => $combos,
         ]);
     }
 
@@ -160,17 +158,6 @@ class ComboController extends Controller
         Combo::query()->update(['show_on_landing' => $value]);
 
         return back()->with('success', $value ? 'Se mostrarán todos los combos en el inicio.' : 'Se ocultaron todos los combos del inicio.');
-    }
-
-    public function updateSectionTitle(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:120',
-        ]);
-
-        Setting::set(Setting::LANDING_COMBOS_TITLE_KEY, trim($request->title));
-
-        return back()->with('success', 'Título actualizado correctamente.');
     }
 
     public function categoriesWithProducts(Request $request)

@@ -209,11 +209,11 @@ function PeriodChart({ data, selectedPeriod, onSelect, title, subtitle }) {
                             type="button"
                             onClick={() => onSelect(d.period)}
                             className="group relative flex flex-1 flex-col items-center justify-end h-full min-w-[6px]"
-                            title={`${d.label}: ${fmtMoney(d.revenue)} · ${d.orders_count} pedidos`}
+                            title={`${d.label}: ${fmtMoney(d.revenue)} · ${d.total_sales_count} pedidos`}
                         >
                             {/* Tooltip */}
                             <span className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap rounded-md bg-brand-text px-2 py-1 text-[11px] text-white shadow-lg">
-                                {fmtMoney(d.revenue)} · {d.orders_count} ped.
+                                {fmtMoney(d.revenue)} · {d.total_sales_count} ped.
                             </span>
 
                             <span
@@ -670,7 +670,7 @@ export default function MetricsIndex({
     };
 
     const revenueDelta = pctDelta(selectedStats.revenue, previousStats.revenue);
-    const ordersDelta  = pctDelta(selectedStats.orders_count, previousStats.orders_count);
+    const ordersDelta  = pctDelta(selectedStats.total_sales_count, previousStats.total_sales_count);
     const ticketDelta  = pctDelta(selectedStats.avg_ticket, previousStats.avg_ticket);
     const netDelta     = pctDelta(netRevenue, previousNetRevenue);
 
@@ -752,7 +752,7 @@ export default function MetricsIndex({
                         </p>
                         <p className="text-lg font-bold text-brand-primary">{fmtMoney(allTime.revenue)}</p>
                         <p className="text-[11px] text-brand-text-muted">
-                            {allTime.orders_count} pedido{allTime.orders_count === 1 ? '' : 's'} confirmados
+                            {allTime.total_sales_count} venta{allTime.total_sales_count === 1 ? '' : 's'} · Web {allTime.orders_count} · Canales {allTime.channel_sales_count}
                         </p>
                     </div>
                 </div>
@@ -840,8 +840,16 @@ export default function MetricsIndex({
                     />
                     <KpiCard
                         title="Pedidos"
-                        value={selectedStats.orders_count}
-                        sub={`${previousLabel}: ${previousStats.orders_count}`}
+                        value={selectedStats.total_sales_count}
+                        sub={
+                            <>
+                                {previousLabel}: {previousStats.total_sales_count}
+                                <br />
+                                <span className="text-brand-text-light">
+                                    Web {selectedStats.orders_count} · Canales {selectedStats.channel_sales_count}
+                                </span>
+                            </>
+                        }
                         delta={ordersDelta}
                         deltaCaption={deltaCaption}
                         accent="primary"
@@ -849,6 +857,17 @@ export default function MetricsIndex({
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
+                        }
+                        action={
+                            <Link
+                                href={route('admin.metrics.channels', view === 'day' ? { view: 'day', day: selectedPeriod } : { month: selectedPeriod })}
+                                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-bold text-brand-text-muted hover:bg-gray-100 transition-colors"
+                            >
+                                Por canal
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
                         }
                     />
                     <KpiCard

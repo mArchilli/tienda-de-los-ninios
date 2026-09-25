@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Combo;
-use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -182,40 +181,6 @@ class ComboOrderTest extends TestCase
     {
         $this->get('/')->assertInertia(fn ($page) => $page
             ->where('combosTitle', 'COMBOS DE ESTA SEMANA'));
-    }
-
-    public function test_admin_can_update_section_title_and_it_reflects_on_landing_and_order_screen(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->post('/admin/combos/section-title', ['title' => '  Combos destacados  '])
-            ->assertRedirect();
-
-        $this->assertSame('Combos destacados', Setting::get(Setting::LANDING_COMBOS_TITLE_KEY));
-
-        $this->get('/')->assertInertia(fn ($page) => $page
-            ->where('combosTitle', 'Combos destacados'));
-
-        $this->actingAs($user)->get('/admin/combos/order')
-            ->assertInertia(fn ($page) => $page
-                ->component('Admin/Combos/Order')
-                ->where('sectionTitle', 'Combos destacados'));
-    }
-
-    public function test_section_title_cannot_be_saved_blank(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->post('/admin/combos/section-title', ['title' => '   '])
-            ->assertSessionHasErrors(['title']);
-    }
-
-    public function test_guest_cannot_update_section_title(): void
-    {
-        $this->post('/admin/combos/section-title', ['title' => 'Hackeado'])
-            ->assertRedirect('/login');
     }
 
     public function test_catalog_order_is_unaffected_by_manual_order(): void

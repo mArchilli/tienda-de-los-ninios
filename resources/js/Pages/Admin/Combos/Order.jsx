@@ -173,74 +173,26 @@ function SortableRow({ combo, position, total, onPositionChange, onToggleLanding
     );
 }
 
-function SectionTitleForm({ initialTitle }) {
-    const [savedTitle, setSavedTitle] = useState(initialTitle);
-    const [title, setTitle]           = useState(initialTitle);
-    const [saving, setSaving]         = useState(false);
-    const [error, setError]           = useState(null);
-
-    const trimmed = title.trim();
-    const dirty = trimmed.length > 0 && trimmed !== savedTitle;
-
-    const handleSave = () => {
-        if (!trimmed) {
-            setError('El título no puede estar vacío.');
-            return;
-        }
-        setSaving(true);
-        setError(null);
-        router.post(
-            route('admin.combos.section-title'),
-            { title: trimmed },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    setSavedTitle(trimmed);
-                    setTitle(trimmed);
-                    setSaving(false);
-                },
-                onError: () => {
-                    setSaving(false);
-                    setError('No se pudo guardar el título. Probá de nuevo.');
-                },
-            }
-        );
-    };
-
+function LandingTitleNotice() {
     return (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <label htmlFor="combos-section-title" className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-                Título de la sección en el inicio
-            </label>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input
-                    id="combos-section-title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSave();
-                    }}
-                    maxLength={120}
-                    placeholder="COMBOS DE ESTA SEMANA"
-                    className="w-full flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-text outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-                />
-                <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={!dirty || saving}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-cta-dark disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    {saving ? 'Guardando…' : 'Guardar'}
-                </button>
-            </div>
-            {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-sm text-brand-text-muted">
+                El título de esta sección (y los del resto de la landing) se editan desde Ajustes de la landing.
+            </p>
+            <Link
+                href={route('admin.landing.edit')}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-brand-text-muted transition-colors hover:border-brand-primary hover:text-brand-primary"
+            >
+                Editar títulos de la landing
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+            </Link>
         </div>
     );
 }
 
-export default function Order({ combos: initialCombos, sectionTitle }) {
+export default function Order({ combos: initialCombos }) {
     const { flash } = usePage().props;
 
     const [combos, setCombos]   = useState(initialCombos);
@@ -372,7 +324,7 @@ export default function Order({ combos: initialCombos, sectionTitle }) {
                         <span className="flex-1">{error}</span>
                     </div>
                 )}
-                <SectionTitleForm initialTitle={sectionTitle} />
+                <LandingTitleNotice />
 
                 {combos.length > 0 && (
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3">

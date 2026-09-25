@@ -152,4 +152,29 @@ class MetricsChannelSalesTest extends TestCase
             ->where('currentStats.revenue', 215000)
         );
     }
+
+    public function test_pedidos_and_ticket_promedio_blend_channel_sales_with_online_orders(): void
+    {
+        $user = User::factory()->create();
+
+        Carbon::setTestNow(Carbon::parse('2026-09-15 12:00:00'));
+        // 1 pedido online de $15000, más 10 ventas por canal por $200000
+        // (5+3+2 del payload por defecto): 11 "pedidos" en total, ticket
+        // promedio = (15000+200000)/11.
+        Order::create(['total' => 15000, 'status' => Order::STATUS_CONFIRMED]);
+        Carbon::setTestNow();
+
+        $this->actingAs($user)->post('/admin/metrics/channel-sales', [
+            'date' => '2026-09-15',
+            'channels' => $this->channelsPayload(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/admin/metrics/orders?month=2026-09');
+        $response->assertInertia(fn ($page) => $page
+            ->where('currentStats.orders_count', 1)
+            ->where('currentStats.channel_sales_count', 10)
+            ->where('currentStats.total_sales_count', 11)
+            ->where('currentStats.avg_ticket', round(215000 / 11, 2))
+        );
+    }
 }

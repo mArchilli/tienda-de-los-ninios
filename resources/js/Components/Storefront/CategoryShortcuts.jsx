@@ -20,16 +20,16 @@ function CircleSlot({ label, image }) {
     );
 }
 
-export default function CategoryShortcuts() {
+export default function CategoryShortcuts({ title = 'CATALOGO' }) {
     return (
         <section className="relative overflow-hidden bg-brand-bg">
-            
+
 
             <div className="store-shell store-section-bottom relative z-10">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)] lg:gap-8 xl:gap-10">
                     <div className="px-2 py-2 sm:px-0">
                         <h2 className="home-section-title">
-                            CATALOGO
+                            {title}
                         </h2>
 
                         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

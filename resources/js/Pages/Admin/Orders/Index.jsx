@@ -184,7 +184,7 @@ function DeltaBadge({ delta }) {
     );
 }
 
-function MetricCard({ title, value, sub, delta, accent = 'primary', icon }) {
+function MetricCard({ title, value, sub, delta, accent = 'primary', icon, className = '' }) {
     const accents = {
         primary: 'bg-brand-primary-surface text-brand-primary',
         amber: 'bg-amber-50 text-amber-600',
@@ -193,7 +193,7 @@ function MetricCard({ title, value, sub, delta, accent = 'primary', icon }) {
     };
 
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className={`relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow ${className}`}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-muted">{title}</p>
@@ -224,7 +224,7 @@ function Tabs({ active, onChange, counts }) {
     ];
 
     return (
-        <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+        <div className="flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm sm:inline-flex sm:w-auto">
             {tabs.map((t) => {
                 const isActive = active === t.key;
                 return (
@@ -233,14 +233,14 @@ function Tabs({ active, onChange, counts }) {
                         type="button"
                         onClick={() => onChange(t.key)}
                         className={
-                            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' +
+                            'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-colors sm:flex-initial sm:gap-2 sm:px-4 sm:text-sm ' +
                             (isActive ? 'bg-brand-primary text-white shadow' : 'text-brand-text-muted hover:bg-gray-50')
                         }
                     >
-                        {t.label}
+                        <span className="truncate">{t.label}</span>
                         <span
                             className={
-                                'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ' +
+                                'inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ' +
                                 (isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-brand-text-muted')
                             }
                         >
@@ -429,7 +429,7 @@ export default function OrdersIndex({
                 <FlashBanner message={flashMessage} onDismiss={() => setFlashMessage(null)} />
 
                 {/* KPIs */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
                     <MetricCard
                         title="Pedidos del mes"
                         value={metrics.orders_total ?? 0}
@@ -476,6 +476,7 @@ export default function OrdersIndex({
                         }
                     />
                     <MetricCard
+                        className="col-span-2 sm:col-span-1"
                         title="Despachados"
                         value={metrics.dispatched_count ?? 0}
                         sub="En camino / entregados"

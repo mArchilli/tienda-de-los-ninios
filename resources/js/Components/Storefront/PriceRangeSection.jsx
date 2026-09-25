@@ -12,14 +12,14 @@ const ENTREPRENEUR_COMBO = {
     image: '/images/combo-emprendedor.png',
 };
 
-export default function PriceRangeSection() {
+export default function PriceRangeSection({ title = 'COMBOS PARA EMPRENDEDORES' }) {
     return (
         <section className="bg-brand-bg">
             <div className="store-shell store-section !pt-4 lg:!pt-6">
                 <div className="relative px-2 py-2 sm:px-3 lg:px-4">
 
                     <h2 className="home-section-title relative z-10 text-left">
-                        COMBOS PARA EMPRENDEDORES
+                        {title}
                     </h2>
 
                     <div className="relative z-10 mt-8">

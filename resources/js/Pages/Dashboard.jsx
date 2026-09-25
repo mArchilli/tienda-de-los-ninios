@@ -126,10 +126,10 @@ function KpiCard({ title, value, valueClassName, sub, accent = 'primary', delta,
 function WeeklySparkline({ data }) {
     const max = useMemo(() => Math.max(1, ...data.map((d) => d.revenue)), [data]);
     const total = useMemo(() => data.reduce((s, d) => s + d.revenue, 0), [data]);
-    const orders = useMemo(() => data.reduce((s, d) => s + d.orders_count, 0), [data]);
+    const orders = useMemo(() => data.reduce((s, d) => s + d.total_sales_count, 0), [data]);
 
     return (
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <h2 className="text-base font-bold text-brand-text">Últimos 7 días</h2>
@@ -145,7 +145,7 @@ function WeeklySparkline({ data }) {
                 </Link>
             </div>
 
-            <div className="flex items-end gap-2 h-32 px-1">
+            <div className="flex flex-1 min-h-[8rem] items-end gap-2 px-1">
                 {data.map((d) => {
                     const heightPct = max > 0 ? (d.revenue / max) * 100 : 0;
                     return (
@@ -216,8 +216,8 @@ function QuickCard({ href, label, count, icon, accent }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Dashboard({
-    currentMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, avg_ticket: 0 },
-    previousMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, avg_ticket: 0 },
+    currentMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, channel_sales_count: 0, total_sales_count: 0, avg_ticket: 0 },
+    previousMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, channel_sales_count: 0, total_sales_count: 0, avg_ticket: 0 },
     monthLabel = '',
     pendingOrdersCount = 0,
     todayOrdersCount = 0,
@@ -227,7 +227,7 @@ export default function Dashboard({
     topProducts = [],
 }) {
     const revenueDelta = pctDelta(currentMonth.revenue, previousMonth.revenue);
-    const ordersDelta  = pctDelta(currentMonth.orders_count, previousMonth.orders_count);
+    const ordersDelta  = pctDelta(currentMonth.total_sales_count, previousMonth.total_sales_count);
 
     const today = new Date().toLocaleDateString('es-AR', {
         weekday: 'long',
@@ -288,8 +288,16 @@ export default function Dashboard({
                     />
                     <KpiCard
                         title="Pedidos del mes"
-                        value={currentMonth.orders_count}
-                        sub={`Ticket prom.: ${fmtMoneyCompact(currentMonth.avg_ticket)}`}
+                        value={currentMonth.total_sales_count}
+                        sub={
+                            <>
+                                Ticket prom.: {fmtMoneyCompact(currentMonth.avg_ticket)}
+                                <br />
+                                <span className="text-brand-text-light">
+                                    Web {currentMonth.orders_count} · Canales {currentMonth.channel_sales_count}
+                                </span>
+                            </>
+                        }
                         delta={ordersDelta}
                         accent="primary"
                         icon={

@@ -90,16 +90,16 @@ function ChannelCard({ channel }) {
     );
 }
 
-export default function About() {
+export default function About({ title = 'SOBRE NOSOTROS' }) {
     return (
         <section id="about" className="bg-brand-bg">
             <div className="store-shell store-section">
                 <div className="relative">
-                    
+
 
                     <div className="relative z-10">
                         <h2 className="home-section-title">
-                            SOBRE NOSOTROS
+                            {title}
                         </h2>
                     </div>
 

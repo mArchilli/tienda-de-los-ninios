@@ -147,7 +147,7 @@ class MetricsController extends Controller
             'view'            => $view,
             'channels'        => $channels,
             'totalRevenue'    => $stats['revenue'],
-            'totalSalesCount' => $stats['orders_count'] + $stats['channel_sales_count'],
+            'totalSalesCount' => $stats['total_sales_count'],
             'history'         => $history,
         ]));
     }
@@ -214,7 +214,12 @@ class MetricsController extends Controller
             ->sum('order_items.quantity');
 
         $revenueData = $this->finance->revenueFor($start, $end);
-        $avgTicket   = $ordersCount > 0 ? $revenueData['online_revenue'] / $ordersCount : 0.0;
+
+        // Las ventas de WhatsApp/Instagram/TikTok también son pedidos: el
+        // ticket promedio real es el Bruto total sobre TODAS las ventas, no
+        // sólo las de la tienda online.
+        $totalSalesCount = $ordersCount + $revenueData['channel_sales_count'];
+        $avgTicket       = $totalSalesCount > 0 ? $revenueData['revenue'] / $totalSalesCount : 0.0;
 
         return [
             'revenue'             => $revenueData['revenue'],
@@ -223,6 +228,7 @@ class MetricsController extends Controller
             'channel_sales'       => $revenueData['channel_sales'],
             'orders_count'        => $ordersCount,
             'channel_sales_count' => $revenueData['channel_sales_count'],
+            'total_sales_count'   => $totalSalesCount,
             'items_count'         => $itemsCount,
             'avg_ticket'          => round($avgTicket, 2),
         ];
@@ -245,10 +251,11 @@ class MetricsController extends Controller
             }, []);
 
         $channelByMonth = ChannelSale::where('date', '>=', $start->toDateString())
-            ->get(['date', 'channel', 'amount'])
+            ->get(['date', 'channel', 'amount', 'sales_count'])
             ->reduce(function (array $acc, ChannelSale $row) {
                 $key = $row->date->format('Y-m');
-                $acc[$key][$row->channel] = ($acc[$key][$row->channel] ?? 0) + (float) $row->amount;
+                $acc[$key][$row->channel]['amount'] = ($acc[$key][$row->channel]['amount'] ?? 0) + (float) $row->amount;
+                $acc[$key][$row->channel]['count']  = ($acc[$key][$row->channel]['count'] ?? 0) + (int) $row->sales_count;
                 return $acc;
             }, []);
 
@@ -258,16 +265,18 @@ class MetricsController extends Controller
             $key = $d->format('Y-m');
             $row = $rows[$key] ?? null;
             $onlineRevenue = $row ? (float) $row['revenue'] : 0.0;
+            $onlineOrders  = $row ? (int) $row['orders_count'] : 0;
             $breakdown = $this->channelBreakdown($channelByMonth[$key] ?? []);
 
             $result[] = [
-                'period'          => $key,
-                'label'           => $this->shortMonthLabel($d),
-                'revenue'         => round($onlineRevenue + $breakdown['total'], 2),
-                'orders_count'    => $row ? (int) $row['orders_count'] : 0,
-                'online_revenue'  => round($onlineRevenue, 2),
-                'channel_revenue' => round($breakdown['total'], 2),
-                'channels'        => $breakdown['channels'],
+                'period'             => $key,
+                'label'              => $this->shortMonthLabel($d),
+                'revenue'            => round($onlineRevenue + $breakdown['total'], 2),
+                'orders_count'       => $onlineOrders,
+                'total_sales_count'  => $onlineOrders + $breakdown['totalCount'],
+                'online_revenue'     => round($onlineRevenue, 2),
+                'channel_revenue'    => round($breakdown['total'], 2),
+                'channels'           => $breakdown['channels'],
             ];
         }
 
@@ -275,24 +284,27 @@ class MetricsController extends Controller
     }
 
     /**
-     * Normaliza un mapa parcial [canal => monto] (algunos canales pueden faltar
-     * si no se cargó nada ese día/mes) contra la lista completa de canales.
+     * Normaliza un mapa parcial [canal => ['amount'=>x,'count'=>y]] (algunos
+     * canales pueden faltar si no se cargó nada ese día/mes) contra la lista
+     * completa de canales.
      *
-     * @param array<string, float> $amounts
-     * @return array{total: float, channels: array<string, float>}
+     * @param array<string, array{amount?: float, count?: int}> $byChannel
+     * @return array{total: float, totalCount: int, channels: array<string, float>}
      */
-    private function channelBreakdown(array $amounts): array
+    private function channelBreakdown(array $byChannel): array
     {
         $channels = [];
         $total = 0.0;
+        $totalCount = 0;
 
         foreach (ChannelSale::CHANNELS as $key => $label) {
-            $amount = round((float) ($amounts[$key] ?? 0), 2);
+            $amount = round((float) ($byChannel[$key]['amount'] ?? 0), 2);
             $channels[$key] = $amount;
             $total += $amount;
+            $totalCount += (int) ($byChannel[$key]['count'] ?? 0);
         }
 
-        return ['total' => $total, 'channels' => $channels];
+        return ['total' => $total, 'totalCount' => $totalCount, 'channels' => $channels];
     }
 
     private function dailyHistory(int $days): array
@@ -307,10 +319,11 @@ class MetricsController extends Controller
             ->keyBy('d');
 
         $channelByDay = ChannelSale::where('date', '>=', $start->toDateString())
-            ->get(['date', 'channel', 'amount'])
+            ->get(['date', 'channel', 'amount', 'sales_count'])
             ->reduce(function (array $acc, ChannelSale $row) {
                 $key = $row->date->toDateString();
-                $acc[$key][$row->channel] = ($acc[$key][$row->channel] ?? 0) + (float) $row->amount;
+                $acc[$key][$row->channel]['amount'] = ($acc[$key][$row->channel]['amount'] ?? 0) + (float) $row->amount;
+                $acc[$key][$row->channel]['count']  = ($acc[$key][$row->channel]['count'] ?? 0) + (int) $row->sales_count;
                 return $acc;
             }, []);
 
@@ -320,16 +333,18 @@ class MetricsController extends Controller
             $key = $d->toDateString();
             $row = $rows->get($key);
             $onlineRevenue = $row ? (float) $row->revenue : 0.0;
+            $onlineOrders  = $row ? (int) $row->orders_count : 0;
             $breakdown = $this->channelBreakdown($channelByDay[$key] ?? []);
 
             $result[] = [
-                'period'          => $key,
-                'label'           => $d->format('d/m'),
-                'revenue'         => round($onlineRevenue + $breakdown['total'], 2),
-                'orders_count'    => $row ? (int) $row->orders_count : 0,
-                'online_revenue'  => round($onlineRevenue, 2),
-                'channel_revenue' => round($breakdown['total'], 2),
-                'channels'        => $breakdown['channels'],
+                'period'            => $key,
+                'label'             => $d->format('d/m'),
+                'revenue'           => round($onlineRevenue + $breakdown['total'], 2),
+                'orders_count'      => $onlineOrders,
+                'total_sales_count' => $onlineOrders + $breakdown['totalCount'],
+                'online_revenue'    => round($onlineRevenue, 2),
+                'channel_revenue'   => round($breakdown['total'], 2),
+                'channels'          => $breakdown['channels'],
             ];
         }
 
@@ -467,12 +482,16 @@ class MetricsController extends Controller
 
         $onlineRevenue  = (float) (clone $base)->sum('total');
         $channelRevenue = (float) ChannelSale::sum('amount');
+        $ordersCount    = (int) (clone $base)->count();
+        $channelCount   = (int) ChannelSale::sum('sales_count');
 
         return [
-            'revenue'         => round($onlineRevenue + $channelRevenue, 2),
-            'online_revenue'  => round($onlineRevenue, 2),
-            'channel_revenue' => round($channelRevenue, 2),
-            'orders_count'    => (int) (clone $base)->count(),
+            'revenue'             => round($onlineRevenue + $channelRevenue, 2),
+            'online_revenue'      => round($onlineRevenue, 2),
+            'channel_revenue'     => round($channelRevenue, 2),
+            'orders_count'        => $ordersCount,
+            'channel_sales_count' => $channelCount,
+            'total_sales_count'   => $ordersCount + $channelCount,
         ];
     }
 

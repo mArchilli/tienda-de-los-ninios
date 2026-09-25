@@ -40,4 +40,25 @@ class DashboardNetRevenueTest extends TestCase
             ->where('currentMonth.revenue', 90000)
         );
     }
+
+    public function test_dashboard_pedidos_blend_channel_sales_with_online_orders(): void
+    {
+        $user = User::factory()->create();
+
+        Carbon::setTestNow(Carbon::now()->startOfMonth()->addDays(2));
+        Order::create(['total' => 100000, 'status' => Order::STATUS_CONFIRMED]);
+        ChannelSale::create(['channel' => 'whatsapp', 'date' => Carbon::now()->toDateString(), 'sales_count' => 2, 'amount' => 20000]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        Carbon::setTestNow();
+
+        // 1 pedido online + 2 ventas de WhatsApp = 3 "pedidos" en total;
+        // ticket promedio = Bruto (120000) / 3.
+        $response->assertInertia(fn ($page) => $page
+            ->where('currentMonth.orders_count', 1)
+            ->where('currentMonth.channel_sales_count', 2)
+            ->where('currentMonth.total_sales_count', 3)
+            ->where('currentMonth.avg_ticket', 40000)
+        );
+    }
 }

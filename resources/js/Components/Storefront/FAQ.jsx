@@ -110,7 +110,7 @@ function FaqItem({ item, featured = false }) {
     );
 }
 
-export default function FAQ() {
+export default function FAQ({ title = 'PREGUNTAS FRECUENTES' }) {
     return (
         <section id="faq" className="bg-brand-bg">
             <div className="store-shell store-section">
@@ -119,7 +119,7 @@ export default function FAQ() {
                     <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-2xl">
                             <h2 className="home-section-title">
-                                PREGUNTAS FRECUENTES
+                                {title}
                             </h2>
                         </div>
                     </div>

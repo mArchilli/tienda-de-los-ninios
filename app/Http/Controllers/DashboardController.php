@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\ChannelSale;
 use App\Models\Color;
 use App\Models\Combo;
 use App\Models\Order;
@@ -68,12 +69,17 @@ class DashboardController extends Controller
 
         $netRevenue = round($revenueData['revenue'] - $expenses['total'], 2);
 
+        // Las ventas de WhatsApp/Instagram/TikTok también son pedidos.
+        $totalSales = $orders + $revenueData['channel_sales_count'];
+
         return [
-            'revenue'        => $netRevenue,
-            'gross_revenue'  => $revenueData['revenue'],
-            'expenses_total' => $expenses['total'],
-            'orders_count'   => $orders,
-            'avg_ticket'     => $orders > 0 ? round($revenueData['online_revenue'] / $orders, 2) : 0.0,
+            'revenue'             => $netRevenue,
+            'gross_revenue'       => $revenueData['revenue'],
+            'expenses_total'      => $expenses['total'],
+            'orders_count'        => $orders,
+            'channel_sales_count' => $revenueData['channel_sales_count'],
+            'total_sales_count'   => $totalSales,
+            'avg_ticket'          => $totalSales > 0 ? round($revenueData['revenue'] / $totalSales, 2) : 0.0,
         ];
     }
 
@@ -99,6 +105,15 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('d');
 
+        $channelByDay = ChannelSale::where('date', '>=', $start->toDateString())
+            ->get(['date', 'amount', 'sales_count'])
+            ->reduce(function (array $acc, ChannelSale $row) {
+                $key = $row->date->toDateString();
+                $acc[$key]['amount'] = ($acc[$key]['amount'] ?? 0.0) + (float) $row->amount;
+                $acc[$key]['count']  = ($acc[$key]['count'] ?? 0) + (int) $row->sales_count;
+                return $acc;
+            }, []);
+
         $diasCortos = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
         $result = [];
@@ -106,12 +121,15 @@ class DashboardController extends Controller
             $d   = (clone $start)->addDays($i);
             $key = $d->toDateString();
             $row = $rows->get($key);
+            $channel = $channelByDay[$key] ?? ['amount' => 0.0, 'count' => 0];
+
             $result[] = [
-                'date'         => $key,
-                'label'        => $diasCortos[(int) $d->dayOfWeekIso - 1] . ' ' . $d->format('d/m'),
-                'short'        => $d->format('d/m'),
-                'revenue'      => $row ? round((float) $row->revenue, 2) : 0.0,
-                'orders_count' => $row ? (int) $row->orders_count : 0,
+                'date'              => $key,
+                'label'             => $diasCortos[(int) $d->dayOfWeekIso - 1] . ' ' . $d->format('d/m'),
+                'short'             => $d->format('d/m'),
+                'revenue'           => round(($row ? (float) $row->revenue : 0.0) + $channel['amount'], 2),
+                'orders_count'      => $row ? (int) $row->orders_count : 0,
+                'total_sales_count' => ($row ? (int) $row->orders_count : 0) + $channel['count'],
             ];
         }
         return $result;

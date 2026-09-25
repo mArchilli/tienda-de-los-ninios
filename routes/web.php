@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\ComboEmprendedorController;
 use App\Http\Controllers\Admin\ComboRegaloController;
+use App\Http\Controllers\Admin\LandingController;
 use App\Http\Controllers\Admin\MetricsController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -74,11 +75,18 @@ Route::get('/', function () {
     $reviewCount = Review::where('is_visible', true)->count();
 
     return Inertia::render('Welcome', [
-        'featuredCombos'   => $combos,
-        'combosTitle'      => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
-        'featuredProducts' => $products,
-        'reviews'          => $reviews,
-        'reviewStats'      => [
+        'featuredCombos'    => $combos,
+        'combosTitle'       => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
+        'heroTitleTop'      => Setting::get(Setting::LANDING_HERO_TITLE_TOP_KEY, Setting::LANDING_HERO_TITLE_TOP_DEFAULT),
+        'heroTitleBottom'   => Setting::get(Setting::LANDING_HERO_TITLE_BOTTOM_KEY, Setting::LANDING_HERO_TITLE_BOTTOM_DEFAULT),
+        'priceRangeTitle'   => Setting::get(Setting::LANDING_PRICE_RANGE_TITLE_KEY, Setting::LANDING_PRICE_RANGE_TITLE_DEFAULT),
+        'catalogTitle'      => Setting::get(Setting::LANDING_CATALOG_TITLE_KEY, Setting::LANDING_CATALOG_TITLE_DEFAULT),
+        'aboutTitle'        => Setting::get(Setting::LANDING_ABOUT_TITLE_KEY, Setting::LANDING_ABOUT_TITLE_DEFAULT),
+        'reviewsTitle'      => Setting::get(Setting::LANDING_REVIEWS_TITLE_KEY, Setting::LANDING_REVIEWS_TITLE_DEFAULT),
+        'faqTitle'          => Setting::get(Setting::LANDING_FAQ_TITLE_KEY, Setting::LANDING_FAQ_TITLE_DEFAULT),
+        'featuredProducts'  => $products,
+        'reviews'           => $reviews,
+        'reviewStats'       => [
             'count'   => $reviewCount,
             'average' => $reviewCount > 0
                 ? round((float) Review::where('is_visible', true)->avg('rating'), 1)
@@ -124,6 +132,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(function () {
+    Route::get('/landing', [LandingController::class, 'edit'])->name('landing.edit');
+    Route::post('/landing', [LandingController::class, 'update'])->name('landing.update');
+
     Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
@@ -155,7 +166,6 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::post('/combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder');
     Route::post('/combos/{combo}/toggle-landing', [ComboController::class, 'toggleLanding'])->name('combos.toggle-landing');
     Route::post('/combos/toggle-landing-all', [ComboController::class, 'toggleLandingAll'])->name('combos.toggle-landing-all');
-    Route::post('/combos/section-title', [ComboController::class, 'updateSectionTitle'])->name('combos.section-title');
     Route::get('/combos', [ComboController::class, 'index'])->name('combos.index');
     Route::post('/combos', [ComboController::class, 'store'])->name('combos.store');
     Route::post('/combos/{combo}', [ComboController::class, 'update'])->name('combos.update');
