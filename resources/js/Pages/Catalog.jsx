@@ -13,7 +13,7 @@ const CATALOG_SNAPSHOT_KEY = 'catalog:snapshot';
 
 // Rutas de ficha de detalle: el snapshot solo se conserva al ir a una de ellas (para
 // restaurar al volver). Cualquier otra navegación descarta el snapshot.
-const DETAIL_URL_RE = /^\/(producto|combo|combo-emprendedor)\//;
+const DETAIL_URL_RE = /^\/(producto|combo|combo-emprendedor|combo-regalo)\//;
 
 function readCatalogSnapshot() {
     if (typeof window === 'undefined') return null;
@@ -132,14 +132,16 @@ const ProductCard = memo(function ProductCard({ item, priority = false }) {
     const href =
         item.type === 'combo'             ? `/combo/${item.id}` :
         item.type === 'combo-emprendedor' ? `/combo-emprendedor/${item.id}` :
+        item.type === 'combo-regalo'      ? `/combo-regalo/${item.id}` :
         `/producto/${item.id}`;
 
     const badgeLabel =
         item.type === 'combo'             ? 'Combo' :
         item.type === 'combo-emprendedor' ? 'Emprendedor' :
+        item.type === 'combo-regalo'      ? 'Regalo' :
         null;
 
-    const isCombo = item.type === 'combo' || item.type === 'combo-emprendedor';
+    const isCombo = item.type === 'combo' || item.type === 'combo-emprendedor' || item.type === 'combo-regalo';
     const genderLabel = isCombo ? comboGenderLabel(item.genders ?? []) : '';
 
     return (
@@ -487,7 +489,7 @@ function FiltersPanel({ setFiltersOpen, allSizes, selectedSizes, toggleSize, all
     );
 }
 
-export default function Catalog({ combos = [], combosEmprendedor = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
+export default function Catalog({ combos = [], combosEmprendedor = [], combosRegalo = [], products = [], cartCount, allSizes = [], allCategories = [] }) {
     const { url } = usePage();
     const queryState = useMemo(() => parseCatalogQueryState(url), [url]);
 
@@ -625,6 +627,10 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         () => combosEmprendedor.map((c) => ({ ...c, type: 'combo-emprendedor' })),
         [combosEmprendedor]
     );
+    const typedCombosRegalo = useMemo(
+        () => combosRegalo.map((c) => ({ ...c, type: 'combo-regalo' })),
+        [combosRegalo]
+    );
     const typedProducts = useMemo(
         () => products.map((p) => ({ ...p, type: 'product' })),
         [products]
@@ -652,6 +658,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     // Filtrado y ordenamiento separados — cambiar el sort no fuerza re-filtrar.
     const filteredCombos = useMemo(() => typedCombos.filter(filterItem), [typedCombos, filterItem]);
     const filteredCombosEmprendedor = useMemo(() => typedCombosEmprendedor.filter(filterItem), [typedCombosEmprendedor, filterItem]);
+    const filteredCombosRegalo = useMemo(() => typedCombosRegalo.filter(filterItem), [typedCombosRegalo, filterItem]);
     const filteredProducts = useMemo(() => typedProducts.filter(filterItem), [typedProducts, filterItem]);
 
     const sortedCombos = useMemo(
@@ -662,6 +669,10 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
         () => [...filteredCombosEmprendedor].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
         [filteredCombosEmprendedor, sort]
     );
+    const sortedCombosRegalo = useMemo(
+        () => [...filteredCombosRegalo].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
+        [filteredCombosRegalo, sort]
+    );
     const sortedProducts = useMemo(
         () => [...filteredProducts].sort(SORTERS[sort] ?? SORTERS[DEFAULT_SORT]),
         [filteredProducts, sort]
@@ -669,6 +680,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
 
     const showCombos = typeFilter !== 'productos';
     const showCombosEmprendedor = typeFilter !== 'productos';
+    const showCombosRegalo = typeFilter !== 'productos';
     const showProducts = typeFilter !== 'combos';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
     const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;
@@ -719,12 +731,14 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
     const isEmpty =
         (showCombos ? sortedCombos.length === 0 : true) &&
         (showCombosEmprendedor ? sortedCombosEmprendedor.length === 0 : true) &&
+        (showCombosRegalo ? sortedCombosRegalo.length === 0 : true) &&
         (showProducts ? sortedProducts.length === 0 : true);
 
     // Identifica la primera sección visible para priorizar el LCP (above-the-fold).
     const firstSection =
         showCombos && sortedCombos.length > 0 ? 'combos' :
         showCombosEmprendedor && sortedCombosEmprendedor.length > 0 ? 'emprendedor' :
+        showCombosRegalo && sortedCombosRegalo.length > 0 ? 'regalo' :
         showProducts && sortedProducts.length > 0 ? 'products' :
         null;
 
@@ -1072,6 +1086,24 @@ export default function Catalog({ combos = [], combosEmprendedor = [], products 
                                                 key={`${item.type}-${item.id}`}
                                                 item={item}
                                                 priority={firstSection === 'emprendedor' && i < PRIORITY_IMAGE_COUNT}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {showCombosRegalo && sortedCombosRegalo.length > 0 && (
+                                <div>
+                                    <SectionHeading
+                                        title="Combos de Regalo"
+                                        subtitle={`${sortedCombosRegalo.length} ${sortedCombosRegalo.length === 1 ? 'combo' : 'combos'} · Con tarjeta y mensaje personalizado`}
+                                    />
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5 xl:gap-5 2xl:grid-cols-6">
+                                        {sortedCombosRegalo.map((item, i) => (
+                                            <ProductCard
+                                                key={`${item.type}-${item.id}`}
+                                                item={item}
+                                                priority={firstSection === 'regalo' && i < PRIORITY_IMAGE_COUNT}
                                             />
                                         ))}
                                     </div>

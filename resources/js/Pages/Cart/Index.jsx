@@ -6,6 +6,12 @@ function fmt(price) {
     return '$' + Number(price).toLocaleString('es-AR') + ' ARS';
 }
 
+const COMBO_VARIANT_LABELS = {
+    combo: 'Combo',
+    emprendedor: 'Combo Emprendedor',
+    regalo: 'Combo de Regalo',
+};
+
 function QuantityStepper({ value, onChange, min = 1, max = 99 }) {
     const dec = () => onChange(Math.max(min, value - 1));
     const inc = () => onChange(Math.min(max, value + 1));
@@ -118,7 +124,7 @@ function CartLine({ item }) {
 
                                 {item.type === 'combo' && (
                                     <span className="inline-flex items-center rounded-full border border-brand-primary/20 bg-brand-secondary-surface px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand-text-muted sm:px-3 sm:text-[12px]">
-                                        Combo
+                                        {COMBO_VARIANT_LABELS[item.variant] ?? 'Combo'}
                                     </span>
                                 )}
                             </div>
@@ -140,6 +146,13 @@ function CartLine({ item }) {
                                     <span className="text-brand-text">{group.products.join(', ')}</span>
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {item.variant === 'regalo' && item.gift_message && (
+                        <div className="mt-3 rounded-[0.9rem] border border-brand-cta/25 bg-brand-cta-surface/40 px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-cta">Mensaje de la tarjeta</p>
+                            <p className="mt-0.5 text-xs italic text-brand-text">&quot;{item.gift_message}&quot;</p>
                         </div>
                     )}
                 </div>

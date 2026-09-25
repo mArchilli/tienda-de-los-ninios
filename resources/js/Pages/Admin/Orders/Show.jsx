@@ -40,6 +40,12 @@ const STATUS_LABEL = {
     cancelled:  'Cancelado',
 };
 
+const COMBO_VARIANT_LABELS = {
+    combo: 'Combo',
+    emprendedor: 'Combo Emprendedor',
+    regalo: 'Combo de Regalo',
+};
+
 // ─── Flash banner ─────────────────────────────────────────────────────────────
 
 function FlashBanner({ message, onDismiss }) {
@@ -199,7 +205,7 @@ function ComboItem({ item, onImageClick }) {
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <span className="inline-flex items-center rounded-full border border-brand-cta/30 bg-brand-cta-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-cta">
-                                {item.variant === 'emprendedor' ? 'Combo Emprendedor' : 'Combo'}
+                                {COMBO_VARIANT_LABELS[item.variant] ?? 'Combo'}
                             </span>
                             <p className="mt-1 font-semibold text-brand-text">{item.name}</p>
                         </div>
@@ -217,6 +223,13 @@ function ComboItem({ item, onImageClick }) {
                         <p className="mt-2 text-xs leading-relaxed text-brand-text-muted line-clamp-3">
                             {item.description}
                         </p>
+                    )}
+
+                    {item.variant === 'regalo' && item.gift_message && (
+                        <div className="mt-3 rounded-xl border border-pink-200 bg-pink-50 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-pink-600">Mensaje de la tarjeta de regalo</p>
+                            <p className="mt-1 whitespace-pre-wrap text-sm text-brand-text">{item.gift_message}</p>
+                        </div>
                     )}
                 </div>
             </div>

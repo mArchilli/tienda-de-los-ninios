@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
 use App\Models\ComboEmprendedor;
+use App\Models\ComboRegalo;
 use App\Models\Order;
 use App\Models\Product;
 use Carbon\Carbon;
@@ -39,6 +40,7 @@ class OrderController extends Controller
             'shipping_status' => $o->shipping_status,
             'status'          => $o->status,
             'items_count'     => (int) $o->items->sum('quantity'),
+            'type_summary'    => $this->orderTypeLabels($o),
             'created_at'      => optional($o->created_at)->toIso8601String(),
         ];
 
@@ -91,6 +93,33 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Etiquetas únicas de los tipos de ítems que trae un pedido (combos de cada
+     * variante y/o productos sueltos), para mostrarlas en la preview del listado
+     * sin tener que entrar al detalle. Requiere que `items` venga precargado.
+     *
+     * @return array<int, string>
+     */
+    private function orderTypeLabels(Order $order): array
+    {
+        $variantLabels = [
+            'emprendedor' => 'Combo Emprendedor',
+            'regalo'      => 'Combo de Regalo',
+        ];
+
+        $labels = [];
+        foreach ($order->items as $item) {
+            if ($item->combo_data) {
+                $variant = $item->combo_data['variant'] ?? 'combo';
+                $labels[$variantLabels[$variant] ?? 'Combo'] = true;
+            } else {
+                $labels['Productos sueltos'] = true;
+            }
+        }
+
+        return array_keys($labels);
+    }
+
     private function parseMonth(?string $value): Carbon
     {
         if ($value && preg_match('/^\d{4}-\d{2}$/', $value)) {
@@ -136,10 +165,12 @@ class OrderController extends Controller
         $order->load('items.product.colors');
 
         // Recopilamos ids para bulk-load. Diferenciamos entre combos tradicionales
-        // (picks = {catId: [productId,...]}) y combos emprendedor
-        // (picks = [{product_id, size_id, size_name}, ...]).
+        // (picks = {catId: [productId,...]}), combos emprendedor
+        // (picks = [{product_id, size_id, size_name}, ...]) y combos de regalo
+        // (misma forma que los tradicionales).
         $traditionalComboIds  = [];
         $emprendedorComboIds  = [];
+        $giftComboIds         = [];
         $pickIds              = [];
 
         foreach ($order->items as $item) {
@@ -155,7 +186,11 @@ class OrderController extends Controller
                     if ($pid > 0) $pickIds[] = $pid;
                 }
             } else {
-                if ($comboId) $traditionalComboIds[] = $comboId;
+                if ($variant === 'regalo') {
+                    if ($comboId) $giftComboIds[] = $comboId;
+                } elseif ($comboId) {
+                    $traditionalComboIds[] = $comboId;
+                }
                 foreach (($item->combo_data['picks'] ?? []) as $ids) {
                     foreach ((array) $ids as $id) {
                         $pickIds[] = (int) $id;
@@ -188,6 +223,18 @@ class OrderController extends Controller
                 });
         }
 
+        // Combos de regalo indexados por id.
+        $giftById = [];
+        if (! empty($giftComboIds)) {
+            ComboRegalo::whereIn('id', array_unique($giftComboIds))
+                ->get()->each(function (ComboRegalo $c) use (&$giftById) {
+                    $giftById[$c->id] = [
+                        'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
+                        'description' => $c->description ?? null,
+                    ];
+                });
+        }
+
         // Productos de picks indexados por id.
         $picksById = [];
         if (! empty($pickIds)) {
@@ -201,7 +248,7 @@ class OrderController extends Controller
             });
         }
 
-        $items = $order->items->map(function ($item) use ($combosById, $emprendedorById, $picksById) {
+        $items = $order->items->map(function ($item) use ($combosById, $emprendedorById, $giftById, $picksById) {
             $isCombo = ! is_null($item->combo_data);
             $variant = $isCombo ? ($item->combo_data['variant'] ?? 'combo') : null;
 
@@ -236,30 +283,33 @@ class OrderController extends Controller
             }
 
             $comboId = $isCombo ? (int) ($item->combo_data['combo_id'] ?? 0) : 0;
-            $comboMeta = $variant === 'emprendedor'
-                ? ($emprendedorById[$comboId] ?? null)
-                : ($combosById[$comboId] ?? null);
+            $comboMeta = match ($variant) {
+                'emprendedor' => $emprendedorById[$comboId] ?? null,
+                'regalo'      => $giftById[$comboId] ?? null,
+                default       => $combosById[$comboId] ?? null,
+            };
 
             return [
-                'id'          => $item->id,
-                'type'        => $isCombo ? 'combo' : 'product',
-                'variant'     => $variant,
-                'name'        => $isCombo
+                'id'           => $item->id,
+                'type'         => $isCombo ? 'combo' : 'product',
+                'variant'      => $variant,
+                'name'         => $isCombo
                     ? ($item->combo_data['name'] ?? 'Combo')
                     : ($item->product?->name ?? 'Producto eliminado'),
-                'description' => $isCombo
+                'description'  => $isCombo
                     ? ($comboMeta['description'] ?? null)
                     : ($item->product?->description ?? null),
-                'image'       => $isCombo
+                'image'        => $isCombo
                     ? ($comboMeta['image'] ?? null)
                     : ($item->product?->images[0] ?? null),
-                'quantity'    => (int) $item->quantity,
-                'price'       => (float) $item->price,
-                'subtotal'    => (float) $item->price * (int) $item->quantity,
-                'size'        => $item->size,
-                'color'       => $isCombo ? null : ($item->product?->colors->pluck('name')->implode(', ') ?: null),
-                'gender'      => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
-                'picks'       => $picks,
+                'quantity'     => (int) $item->quantity,
+                'price'        => (float) $item->price,
+                'subtotal'     => (float) $item->price * (int) $item->quantity,
+                'size'         => $item->size,
+                'color'        => $isCombo ? null : ($item->product?->colors->pluck('name')->implode(', ') ?: null),
+                'gender'       => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
+                'gift_message' => $isCombo ? ($item->combo_data['gift_message'] ?? null) : null,
+                'picks'        => $picks,
             ];
         })->values();
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\ComboEmprendedorController;
+use App\Http\Controllers\Admin\ComboRegaloController;
 use App\Http\Controllers\Admin\MetricsController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -17,6 +18,7 @@ use App\Models\Setting;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComboController as StorefrontComboController;
 use App\Http\Controllers\ComboEmprendedorController as StorefrontComboEmprendedorController;
+use App\Http\Controllers\ComboRegaloController as StorefrontComboRegaloController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController as StorefrontProductController;
@@ -91,6 +93,7 @@ Route::get('/contacto', function () {
 Route::get('/producto/{product}', [StorefrontProductController::class, 'show'])->name('product.show');
 Route::get('/combo/{combo}', [StorefrontComboController::class, 'show'])->name('combo.show');
 Route::get('/combo-emprendedor/{combo}', [StorefrontComboEmprendedorController::class, 'show'])->name('combo-emprendedor.show');
+Route::get('/combo-regalo/{combo}', [StorefrontComboRegaloController::class, 'show'])->name('combo-regalo.show');
 
 Route::get('/reseñas', [ReviewController::class, 'create'])->name('reviews.create');
 Route::post('/reseñas', [ReviewController::class, 'store'])
@@ -101,6 +104,7 @@ Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
 Route::post('/carrito/producto', [CartController::class, 'addProduct'])->name('cart.add-product');
 Route::post('/carrito/combo', [CartController::class, 'addCombo'])->name('cart.add-combo');
 Route::post('/carrito/combo-emprendedor', [CartController::class, 'addComboEmprendedor'])->name('cart.add-combo-emprendedor');
+Route::post('/carrito/combo-regalo', [CartController::class, 'addComboRegalo'])->name('cart.add-combo-regalo');
 Route::patch('/carrito/{key}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/carrito/{key}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
@@ -160,6 +164,14 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::post('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'update'])->name('combos-emprendedor.update');
     Route::delete('/combos-emprendedor/bulk', [ComboEmprendedorController::class, 'bulkDestroy'])->name('combos-emprendedor.bulk-destroy');
     Route::delete('/combos-emprendedor/{combo}', [ComboEmprendedorController::class, 'destroy'])->name('combos-emprendedor.destroy');
+
+    Route::get('/combos-regalo/categories-for-sizes', [ComboRegaloController::class, 'categoriesWithProducts'])->name('combos-regalo.categories-for-sizes');
+    Route::post('/combos-regalo/gift-message-settings', [ComboRegaloController::class, 'updateGiftMessageSettings'])->name('combos-regalo.gift-message-settings');
+    Route::get('/combos-regalo', [ComboRegaloController::class, 'index'])->name('combos-regalo.index');
+    Route::post('/combos-regalo', [ComboRegaloController::class, 'store'])->name('combos-regalo.store');
+    Route::post('/combos-regalo/{combo}', [ComboRegaloController::class, 'update'])->name('combos-regalo.update');
+    Route::delete('/combos-regalo/bulk', [ComboRegaloController::class, 'bulkDestroy'])->name('combos-regalo.bulk-destroy');
+    Route::delete('/combos-regalo/{combo}', [ComboRegaloController::class, 'destroy'])->name('combos-regalo.destroy');
 
     Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');
     Route::get('/metrics/orders', [MetricsController::class, 'orders'])->name('metrics.orders');

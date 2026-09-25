@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Combo;
 use App\Models\ComboEmprendedor;
+use App\Models\ComboRegalo;
 use App\Models\Gender;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\Size;
 use App\Services\StockService;
 use Illuminate\Http\Request;
@@ -354,6 +356,7 @@ class CartController extends Controller
                 'gender_name'  => $i['gender_name'] ?? null,
                 'picks'        => $i['picks'] ?? [],
                 'picks_display'=> $picksDisplay,
+                'gift_message' => $i['gift_message'] ?? null,
                 'price'        => (float) $i['price'],
                 'quantity'     => (int) $i['quantity'],
                 'subtotal'     => (float) $i['price'] * (int) $i['quantity'],
@@ -604,6 +607,71 @@ class CartController extends Controller
         ]);
     }
 
+    public function addComboRegalo(Request $request)
+    {
+        $data = $request->validate([
+            'combo_regalo_id' => ['required', 'integer', 'exists:combo_regalos,id'],
+            'size_id'         => ['required', 'integer', 'exists:sizes,id'],
+            'picks'           => ['required', 'array'],
+            'picks.*'         => ['array'],
+            'picks.*.*'       => ['integer', 'exists:products,id'],
+            'gift_message'    => [
+                'nullable', 'string',
+                'max:' . (int) Setting::get(Setting::GIFT_MESSAGE_MAX_LENGTH_KEY, (string) Setting::GIFT_MESSAGE_MAX_LENGTH_DEFAULT),
+            ],
+            'quantity'        => ['nullable', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        $combo  = ComboRegalo::with('gender')->findOrFail($data['combo_regalo_id']);
+        $size   = Size::find($data['size_id']);
+        $gender = $combo->gender;
+
+        $giftMessage = $data['gift_message'] ?? null;
+        $giftMessage = $giftMessage !== null ? trim($giftMessage) : null;
+        $giftMessage = $giftMessage !== '' ? $giftMessage : null;
+
+        // El mensaje forma parte de la clave del ítem: dos combos idénticos con
+        // mensajes distintos son regalos distintos y no deben fusionarse (si no,
+        // al sumar cantidad se perdería el segundo mensaje).
+        $picksHash = md5(json_encode($data['picks']));
+        $genderKey = $gender ? $gender->id : 'na';
+        $messageKey = md5((string) $giftMessage);
+        $key = 'cr-' . $combo->id . '-' . $data['size_id'] . '-' . $genderKey . '-' . $picksHash . '-' . $messageKey;
+
+        $cart = $this->getCart();
+        $qty  = (int) ($data['quantity'] ?? 1);
+
+        if (isset($cart['combos'][$key])) {
+            $cart['combos'][$key]['quantity'] += $qty;
+        } else {
+            $cart['combos'][$key] = [
+                'key'          => $key,
+                'variant'      => 'regalo',
+                'combo_id'     => $combo->id,
+                'name'         => $combo->name,
+                'image'        => $combo->image ? '/' . ltrim($combo->image, '/') : null,
+                'size_id'      => $size->id,
+                'size_name'    => $size->name,
+                'gender_id'    => $gender?->id,
+                'gender_name'  => $gender?->name,
+                'picks'        => $data['picks'],
+                'gift_message' => $giftMessage,
+                'price'        => (float) $combo->price,
+                'quantity'     => $qty,
+            ];
+        }
+
+        if ($err = self::stockErrorMessage($cart)) {
+            return back()->withErrors(['picks' => $err]);
+        }
+
+        $this->saveCart($cart);
+
+        return back()->with('flash', [
+            'cart_added' => 'Combo de regalo agregado al carrito.',
+        ]);
+    }
+
     public function update(Request $request, string $key)
     {
         $data = $request->validate([
@@ -739,12 +807,13 @@ class CartController extends Controller
                         'price'      => $item['price'],
                         'size'       => $item['size_name'] ?? null,
                         'combo_data' => [
-                            'variant'     => $item['variant'] ?? 'combo',
-                            'combo_id'    => $item['combo_id'] ?? null,
-                            'name'        => $item['name'],
-                            'gender_id'   => $item['gender_id'] ?? null,
-                            'gender_name' => $item['gender_name'] ?? null,
-                            'picks'       => $item['picks'] ?? [],
+                            'variant'      => $item['variant'] ?? 'combo',
+                            'combo_id'     => $item['combo_id'] ?? null,
+                            'name'         => $item['name'],
+                            'gender_id'    => $item['gender_id'] ?? null,
+                            'gender_name'  => $item['gender_name'] ?? null,
+                            'picks'        => $item['picks'] ?? [],
+                            'gift_message' => $item['gift_message'] ?? null,
                         ],
                     ]);
                 } else {
@@ -860,11 +929,13 @@ class CartController extends Controller
 
             return [
                 'type'          => $isCombo ? 'combo' : 'product',
+                'variant'       => $isCombo ? ($item->combo_data['variant'] ?? 'combo') : null,
                 'name'          => $isCombo
                     ? ($item->combo_data['name'] ?? 'Combo')
                     : ($item->product?->name ?? 'Producto'),
                 'size_name'     => $item->size ?? null,
                 'gender_name'   => $isCombo ? ($item->combo_data['gender_name'] ?? null) : null,
+                'gift_message'  => $isCombo ? ($item->combo_data['gift_message'] ?? null) : null,
                 'quantity'      => (int) $item->quantity,
                 'price'         => (float) $item->price,
                 'subtotal'      => (float) $item->price * (int) $item->quantity,
@@ -900,10 +971,32 @@ class CartController extends Controller
         $shippingLabel = $order->shipping_method === 'home' ? 'A Domicilio' : 'A Sucursal';
         $fmt = fn ($n) => '$' . number_format((float) $n, 2, ',', '.') . ' ARS';
 
+        $variantLabels = [
+            'emprendedor' => 'Combo Emprendedor',
+            'regalo'      => 'Combo de Regalo',
+        ];
+        $variantPrefixes = [
+            'emprendedor' => '[Emprendedor] ',
+            'regalo'      => '[Regalo] ',
+        ];
+
+        // Resumen de los tipos de ítems que trae el pedido (combos de cada variante
+        // y/o productos sueltos), para que se vea de un vistazo sin leer todo el detalle.
+        $orderTypeLabels = [];
+        foreach ($order->items as $item) {
+            if ($item->combo_data) {
+                $variant = $item->combo_data['variant'] ?? 'combo';
+                $orderTypeLabels[$variantLabels[$variant] ?? 'Combo'] = true;
+            } else {
+                $orderTypeLabels['Productos sueltos'] = true;
+            }
+        }
+
         $lines = [];
-        $lines[] = "\u{00A1}Hola! \u{00BF}Qu\u{00E9} tal? Tengo una consulta.";
-        $lines[] = '';
         $lines[] = '*Nuevo Pedido #' . $order->id . '*';
+        if (! empty($orderTypeLabels)) {
+            $lines[] = 'Incluye: ' . implode(', ', array_keys($orderTypeLabels));
+        }
         $lines[] = '';
         $lines[] = '*Cliente*';
         $lines[] = 'Nombre: ' . $order->first_name . ' ' . $order->last_name;
@@ -954,7 +1047,7 @@ class CartController extends Controller
         foreach ($order->items as $item) {
             $isCombo = ! is_null($item->combo_data);
             $variant = $isCombo ? ($item->combo_data['variant'] ?? 'combo') : null;
-            $label   = $variant === 'emprendedor' ? 'Combo Emprendedor' : ($isCombo ? 'Combo' : 'Producto');
+            $label   = $isCombo ? ($variantLabels[$variant] ?? 'Combo') : 'Producto';
             $name    = $isCombo
                 ? ($item->combo_data['name'] ?? $label)
                 : ($item->product?->name ?? 'Producto');
@@ -969,8 +1062,12 @@ class CartController extends Controller
             $detailsStr = $details ? ' (' . implode(' / ', $details) . ')' : '';
 
             $subtotal = (float) $item->price * (int) $item->quantity;
-            $prefix   = $variant === 'emprendedor' ? '[Emprendedor] ' : '';
+            $prefix   = $variantPrefixes[$variant] ?? '';
             $lines[]  = '• ' . $prefix . $name . $detailsStr . ' x ' . $item->quantity . ' — ' . $fmt($subtotal);
+
+            if ($isCombo && ! empty($item->combo_data['gift_message'])) {
+                $lines[] = '   💌 Mensaje de regalo: "' . $item->combo_data['gift_message'] . '"';
+            }
 
             if ($isCombo && ! empty($item->combo_data['picks'])) {
                 if ($variant === 'emprendedor') {

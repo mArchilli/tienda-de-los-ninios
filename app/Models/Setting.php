@@ -9,6 +9,9 @@ class Setting extends Model
     const LANDING_COMBOS_TITLE_KEY = 'landing_combos_title';
     const LANDING_COMBOS_TITLE_DEFAULT = 'COMBOS DE ESTA SEMANA';
 
+    const GIFT_MESSAGE_MAX_LENGTH_KEY = 'gift_message_max_length';
+    const GIFT_MESSAGE_MAX_LENGTH_DEFAULT = 150;
+
     protected $fillable = ['key', 'value'];
 
     public static function get(string $key, ?string $default = null): ?string

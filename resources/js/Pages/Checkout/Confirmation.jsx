@@ -11,6 +11,12 @@ function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
 }
 
+const COMBO_VARIANT_LABELS = {
+    combo: 'Combo',
+    emprendedor: 'Combo Emprendedor',
+    regalo: 'Combo de Regalo',
+};
+
 function PicksList({ picksDisplay }) {
     if (!picksDisplay?.length) return null;
     return (
@@ -94,7 +100,7 @@ export default function Confirmation({ order, items = [], whatsapp_url, whatsapp
                                                 <p className="text-sm font-bold text-brand-text">{it.name}</p>
                                                 {it.type === 'combo' && (
                                                     <span className="inline-flex items-center border border-brand-primary/20 bg-brand-secondary-surface px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-text-muted">
-                                                        Combo
+                                                        {COMBO_VARIANT_LABELS[it.variant] ?? 'Combo'}
                                                     </span>
                                                 )}
                                                 {it.gender_name && (
@@ -107,6 +113,11 @@ export default function Confirmation({ order, items = [], whatsapp_url, whatsapp
                                                 <p className="mt-0.5 text-xs text-brand-text-muted">Talle: {it.size_name}</p>
                                             )}
                                             <PicksList picksDisplay={it.picks_display} />
+                                            {it.variant === 'regalo' && it.gift_message && (
+                                                <p className="mt-0.5 text-xs italic text-brand-text-muted">
+                                                    Mensaje: &quot;{it.gift_message}&quot;
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="shrink-0 text-right text-xs">
                                             <p className="text-brand-text-muted">x{it.quantity}</p>

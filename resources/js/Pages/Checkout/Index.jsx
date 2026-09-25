@@ -5,6 +5,12 @@ function fmt(p) {
     return '$' + Number(p).toLocaleString('es-AR') + ' ARS';
 }
 
+const COMBO_VARIANT_LABELS = {
+    combo: 'Combo',
+    emprendedor: 'Combo Emprendedor',
+    regalo: 'Combo de Regalo',
+};
+
 const PROVINCES = [
     'Buenos Aires', 'CABA', 'Catamarca', 'Chaco', 'Chubut', 'Cordoba', 'Corrientes',
     'Entre Rios', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones',
@@ -75,11 +81,16 @@ function ProductsCard({ items }) {
                                         </span>
                                     )}
                                     <span className="inline-flex items-center rounded-full border border-brand-primary/20 bg-brand-secondary-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-text-muted">
-                                        Combo
+                                        {COMBO_VARIANT_LABELS[it.variant] ?? 'Combo'}
                                     </span>
                                 </div>
                             )}
                             <PicksList picksDisplay={it.picks_display} />
+                            {it.variant === 'regalo' && it.gift_message && (
+                                <p className="mt-1 text-xs italic text-brand-text-muted">
+                                    Mensaje: &quot;{it.gift_message}&quot;
+                                </p>
+                            )}
                             <p className="mt-1 text-xs text-brand-text-muted">
                                 {it.size_name && <>Talle: {it.size_name} · </>}
                                 Cantidad: {it.quantity}

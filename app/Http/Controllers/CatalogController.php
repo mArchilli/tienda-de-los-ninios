@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Combo;
 use App\Models\ComboEmprendedor;
+use App\Models\ComboRegalo;
 use App\Models\Product;
 use App\Models\Size;
 use Inertia\Inertia;
@@ -85,6 +86,32 @@ class CatalogController extends Controller
             })
             ->values();
 
+        $combosRegalo = ComboRegalo::where('is_active', true)
+            ->with(['sizes:id,name', 'gender:id,name', 'items.product.genders:id,name'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'price', 'image', 'is_featured', 'gender_id', 'created_at'])
+            ->map(function ($c) {
+                $genders = $c->gender
+                    ? collect([$c->gender->name])
+                    : $c->items
+                        ->flatMap(fn ($item) => optional($item->product)->genders ?? collect())
+                        ->pluck('name')
+                        ->unique()
+                        ->values();
+
+                return [
+                    'id'          => $c->id,
+                    'name'        => $c->name,
+                    'price'       => $c->price,
+                    'image'       => $c->image ? '/' . ltrim($c->image, '/') : null,
+                    'is_featured' => (bool) $c->is_featured,
+                    'genders'     => $genders->values(),
+                    'sizes'       => $c->sizes->pluck('name')->values(),
+                ];
+            })
+            ->values();
+
         $products = Product::whereHas('sizes', fn ($q) => $q->where('product_size.stock', '>', 0))
             ->with([
                 'sizes'      => fn ($q) => $q->where('product_size.stock', '>', 0),
@@ -109,6 +136,7 @@ class CatalogController extends Controller
         return Inertia::render('Catalog', [
             'combos'             => $combos,
             'combosEmprendedor'  => $combosEmprendedor,
+            'combosRegalo'       => $combosRegalo,
             'products'           => $products,
             'allSizes'           => $allSizes,
             'allCategories'      => $allCategories,

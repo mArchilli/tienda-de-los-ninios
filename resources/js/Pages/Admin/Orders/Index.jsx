@@ -287,6 +287,18 @@ function OrderCard({ o }) {
                             </span>
                         </div>
                         <p className="mt-2 truncate text-base font-bold text-brand-text">{o.first_name} {o.last_name}</p>
+                        {o.type_summary?.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                {o.type_summary.map((label) => (
+                                    <span
+                                        key={label}
+                                        className="inline-flex items-center rounded-full border border-brand-cta/25 bg-brand-cta-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-cta"
+                                    >
+                                        {label}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div className="text-right shrink-0">
                         <p className="text-lg font-bold text-brand-primary">{fmt(o.total)}</p>
