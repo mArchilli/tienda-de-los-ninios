@@ -28,12 +28,29 @@ function fmtDate(iso) {
     }
 }
 
+// Ganancia (verde) si el neto es positivo, pérdida (rojo) si todavía no
+// cubrimos los gastos, y neutro (amarillo) si los cubrimos justo (neto = 0).
+function netProfitState(net) {
+    const n = Number(net) || 0;
+    if (n > 0.005) return 'positive';
+    if (n < -0.005) return 'negative';
+    return 'neutral';
+}
+
+const NET_STATE_TEXT_CLASS = {
+    positive: 'text-emerald-600',
+    negative: 'text-rose-600',
+    neutral:  'text-amber-500',
+};
+
 function pctDelta(curr, prev) {
     const c = Number(curr) || 0;
     const p = Number(prev) || 0;
     if (p === 0 && c === 0) return { value: 0, kind: 'flat' };
-    if (p === 0) return { value: 100, kind: 'up' };
-    const d = ((c - p) / p) * 100;
+    if (p === 0) return { value: 100, kind: c > 0 ? 'up' : 'down' };
+    // Se divide por |prev| para que el signo siga la dirección real del
+    // cambio aunque el mes anterior haya sido negativo (Neto en pérdida).
+    const d = ((c - p) / Math.abs(p)) * 100;
     if (Math.abs(d) < 0.05) return { value: 0, kind: 'flat' };
     return { value: d, kind: d > 0 ? 'up' : 'down' };
 }
@@ -71,12 +88,15 @@ function DeltaBadge({ delta }) {
     );
 }
 
-function KpiCard({ title, value, sub, accent = 'primary', delta, icon }) {
+function KpiCard({ title, value, valueClassName, sub, accent = 'primary', delta, icon }) {
     const accents = {
         primary:   'bg-brand-primary-surface text-brand-primary',
         cta:       'bg-brand-cta-surface text-brand-cta',
         secondary: 'bg-brand-secondary-surface text-brand-primary-dark',
         amber:     'bg-amber-50 text-amber-600',
+        positive:  'bg-emerald-50 text-emerald-600',
+        negative:  'bg-rose-50 text-rose-600',
+        neutral:   'bg-amber-50 text-amber-600',
     };
 
     return (
@@ -84,7 +104,7 @@ function KpiCard({ title, value, sub, accent = 'primary', delta, icon }) {
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-muted">{title}</p>
-                    <p className="mt-2 text-2xl font-bold text-brand-text truncate">{value}</p>
+                    <p className={`mt-2 text-2xl font-bold truncate ${valueClassName ?? 'text-brand-text'}`}>{value}</p>
                     {sub && <p className="mt-1 text-xs text-brand-text-muted">{sub}</p>}
                 </div>
                 <span className={'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' + (accents[accent] ?? accents.primary)}>
@@ -196,8 +216,8 @@ function QuickCard({ href, label, count, icon, accent }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Dashboard({
-    currentMonth = { revenue: 0, orders_count: 0, avg_ticket: 0 },
-    previousMonth = { revenue: 0, orders_count: 0, avg_ticket: 0 },
+    currentMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, avg_ticket: 0 },
+    previousMonth = { revenue: 0, gross_revenue: 0, expenses_total: 0, orders_count: 0, avg_ticket: 0 },
     monthLabel = '',
     pendingOrdersCount = 0,
     todayOrdersCount = 0,
@@ -254,11 +274,12 @@ export default function Dashboard({
                 {/* KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <KpiCard
-                        title={`Facturado · ${monthLabel}`}
+                        title={`Facturación Neta · ${monthLabel}`}
                         value={fmtMoney(currentMonth.revenue)}
-                        sub={`Mes anterior: ${fmtMoneyCompact(previousMonth.revenue)}`}
+                        valueClassName={NET_STATE_TEXT_CLASS[netProfitState(currentMonth.revenue)]}
+                        sub={`Bruto ${fmtMoneyCompact(currentMonth.gross_revenue)} − Gastos ${fmtMoneyCompact(currentMonth.expenses_total)} · Mes anterior: ${fmtMoneyCompact(previousMonth.revenue)}`}
                         delta={revenueDelta}
-                        accent="cta"
+                        accent={netProfitState(currentMonth.revenue)}
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m-9-4h18" />

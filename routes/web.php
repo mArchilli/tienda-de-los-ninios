@@ -182,6 +182,11 @@ Route::prefix('admin')->middleware(['auth', 'verified'])->name('admin.')->group(
     Route::get('/metrics/orders', [MetricsController::class, 'orders'])->name('metrics.orders');
     Route::patch('/metrics/orders', [MetricsController::class, 'updateOrders'])->name('metrics.orders.update');
     Route::post('/metrics/channel-sales', [MetricsController::class, 'updateChannelSales'])->name('metrics.channel-sales.update');
+    Route::get('/metrics/expenses', [MetricsController::class, 'expenses'])->name('metrics.expenses');
+    Route::post('/metrics/expenses', [MetricsController::class, 'storeExpense'])->name('metrics.expenses.store');
+    Route::put('/metrics/expenses/{expense}', [MetricsController::class, 'updateExpense'])->name('metrics.expenses.update');
+    Route::delete('/metrics/expenses/{expense}', [MetricsController::class, 'destroyExpense'])->name('metrics.expenses.destroy');
+    Route::post('/metrics/expenses/copy-fixed', [MetricsController::class, 'copyFixedExpenses'])->name('metrics.expenses.copy-fixed');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

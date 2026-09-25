@@ -22,12 +22,95 @@ function fmtMoneyCompact(n) {
     return '$' + num.toFixed(0);
 }
 
+const AMOUNTS_HIDDEN_KEY = 'metrics:amounts-hidden';
+const MASK = '••••••';
+
+function loadAmountsHidden() {
+    try {
+        return localStorage.getItem(AMOUNTS_HIDDEN_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function saveAmountsHidden(hidden) {
+    try {
+        localStorage.setItem(AMOUNTS_HIDDEN_KEY, hidden ? '1' : '0');
+    } catch {
+        // localStorage no disponible (privado/bloqueado): el toggle sigue
+        // funcionando en memoria durante la sesión, sólo no persiste.
+    }
+}
+
+function EyeToggleButton({ hidden, onToggle }) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            aria-label={hidden ? 'Mostrar montos' : 'Ocultar montos'}
+            title={hidden ? 'Mostrar montos' : 'Ocultar montos'}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-brand-text-light transition-colors hover:text-brand-primary"
+        >
+            {hidden ? (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 5.09A9.77 9.77 0 0112 5c5 0 9 4 10 7-.42 1.27-1.3 2.7-2.56 3.94M6.53 6.53C4.46 7.9 2.9 9.8 2 12c1 3 5 7 10 7 1.35 0 2.62-.28 3.75-.77" />
+                </svg>
+            ) : (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            )}
+        </button>
+    );
+}
+
+// Ganancia (verde) si el neto es positivo, pérdida (rojo) si todavía no
+// cubrimos los gastos, y neutro (amarillo) si los cubrimos justo (neto = 0).
+function netProfitState(net) {
+    const n = Number(net) || 0;
+    if (n > 0.005) return 'positive';
+    if (n < -0.005) return 'negative';
+    return 'neutral';
+}
+
+const NET_STATE_TEXT_CLASS = {
+    positive: 'text-emerald-600',
+    negative: 'text-rose-600',
+    neutral:  'text-amber-500',
+};
+
+const NET_STATE_BADGE_CLASS = {
+    positive: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    negative: 'bg-rose-50 text-rose-700 border-rose-200',
+    neutral:  'bg-amber-50 text-amber-700 border-amber-200',
+};
+
+const NET_STATE_LABEL = {
+    positive: 'Ganancia',
+    negative: 'Pérdida',
+    neutral:  'Neutro',
+};
+
+function NetStateBadge({ state }) {
+    return (
+        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold ${NET_STATE_BADGE_CLASS[state]}`}>
+            {NET_STATE_LABEL[state]}
+        </span>
+    );
+}
+
 function pctDelta(curr, prev) {
     const c = Number(curr) || 0;
     const p = Number(prev) || 0;
     if (p === 0 && c === 0) return { value: 0, kind: 'flat' };
-    if (p === 0) return { value: 100, kind: 'up' };
-    const d = ((c - p) / p) * 100;
+    if (p === 0) return { value: 100, kind: c > 0 ? 'up' : 'down' };
+    // Se divide por |prev| (no por prev) para que el signo del resultado
+    // siempre siga la dirección real del cambio, incluso cuando el período
+    // anterior fue negativo (por ejemplo, el Neto venía en pérdida): una
+    // mejora debe verse "up" en verde, nunca "down" en rojo por casualidad
+    // de signos.
+    const d = ((c - p) / Math.abs(p)) * 100;
     if (Math.abs(d) < 0.05) return { value: 0, kind: 'flat' };
     return { value: d, kind: d > 0 ? 'up' : 'down' };
 }
@@ -40,22 +123,26 @@ function shiftDay(ymd, delta) {
 
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ title, value, sub, delta, deltaCaption, accent = 'primary', icon, action }) {
+function KpiCard({ title, titleAction, value, valueClassName, sub, delta, deltaCaption, accent = 'primary', icon, action }) {
     const accents = {
         primary:   'bg-brand-primary-surface text-brand-primary',
         cta:       'bg-brand-cta-surface text-brand-cta',
         secondary: 'bg-brand-secondary-surface text-brand-primary-dark',
         text:      'bg-gray-100 text-brand-text',
+        positive:  'bg-emerald-50 text-emerald-600',
+        negative:  'bg-rose-50 text-rose-600',
+        neutral:   'bg-amber-50 text-amber-600',
     };
 
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-muted">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-brand-text-muted">
                         {title}
+                        {titleAction}
                     </p>
-                    <p className="mt-2 text-2xl font-bold text-brand-text truncate">{value}</p>
+                    <p className={`mt-2 text-2xl font-bold truncate ${valueClassName ?? 'text-brand-text'}`}>{value}</p>
                     {sub && <p className="mt-1 text-xs text-brand-text-muted">{sub}</p>}
                 </div>
                 <span className={'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' + (accents[accent] ?? accents.primary)}>
@@ -63,7 +150,7 @@ function KpiCard({ title, value, sub, delta, deltaCaption, accent = 'primary', i
                 </span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                 {delta ? (
                     <div className="flex items-center gap-1.5">
                         <DeltaBadge delta={delta} />
@@ -545,7 +632,20 @@ export default function MetricsIndex({
     topProducts = [],
     topCombos = [],
     allTime,
+    expenses,
+    netRevenue,
+    previousNetRevenue,
 }) {
+    const [amountsHidden, setAmountsHidden] = useState(loadAmountsHidden);
+
+    const toggleAmountsHidden = () => {
+        setAmountsHidden((prev) => {
+            const next = !prev;
+            saveAmountsHidden(next);
+            return next;
+        });
+    };
+
     const navigate = (params) => {
         router.get(route('admin.metrics.index'), params, {
             preserveScroll: true,
@@ -553,6 +653,7 @@ export default function MetricsIndex({
             only: [
                 'view', 'selectedPeriod', 'selectedLabel', 'previousLabel',
                 'selectedStats', 'previousStats', 'history', 'availableMonths',
+                'expenses', 'netRevenue', 'previousNetRevenue',
                 'dayBounds', 'topProducts', 'topCombos',
             ],
         });
@@ -571,7 +672,7 @@ export default function MetricsIndex({
     const revenueDelta = pctDelta(selectedStats.revenue, previousStats.revenue);
     const ordersDelta  = pctDelta(selectedStats.orders_count, previousStats.orders_count);
     const ticketDelta  = pctDelta(selectedStats.avg_ticket, previousStats.avg_ticket);
-    const itemsDelta   = pctDelta(selectedStats.items_count, previousStats.items_count);
+    const netDelta     = pctDelta(netRevenue, previousNetRevenue);
 
     const deltaCaption = view === 'day' ? 'vs. día anterior' : 'vs. mes anterior';
     const chartTitle = view === 'day' ? 'Facturación diaria' : 'Facturación mensual';
@@ -600,6 +701,15 @@ export default function MetricsIndex({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                             </svg>
                             Por canal
+                        </Link>
+                        <Link
+                            href={route('admin.metrics.expenses', view === 'month' ? { month: selectedPeriod } : {})}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-brand-text-muted shadow-sm transition-colors hover:border-brand-primary hover:text-brand-primary"
+                        >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5-1h.01M15 15h.01M4 6h16v12H4z" />
+                            </svg>
+                            Gastos
                         </Link>
                         <ViewToggle view={view} onChange={switchView} />
 
@@ -649,17 +759,64 @@ export default function MetricsIndex({
 
                 {/* KPI grid */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {view === 'month' && expenses && (
+                        <KpiCard
+                            title="Facturación Neta"
+                            titleAction={<EyeToggleButton hidden={amountsHidden} onToggle={toggleAmountsHidden} />}
+                            value={amountsHidden ? MASK : fmtMoney(netRevenue)}
+                            valueClassName={amountsHidden ? 'text-brand-text-light' : NET_STATE_TEXT_CLASS[netProfitState(netRevenue)]}
+                            sub={
+                                amountsHidden ? (
+                                    <NetStateBadge state={netProfitState(netRevenue)} />
+                                ) : (
+                                    <>
+                                        <NetStateBadge state={netProfitState(netRevenue)} />
+                                        <br />
+                                        <span className="mt-1 inline-block">
+                                            Bruto {fmtMoneyCompact(selectedStats.revenue)} − Gastos {fmtMoneyCompact(expenses.total)}
+                                        </span>
+                                        <br />
+                                        <span className="text-brand-text-light">
+                                            Fijos {fmtMoneyCompact(expenses.fixed_total)} · Variables {fmtMoneyCompact(expenses.variable_total)}
+                                        </span>
+                                    </>
+                                )
+                            }
+                            accent={netProfitState(netRevenue)}
+                            delta={netDelta}
+                            deltaCaption={deltaCaption}
+                            icon={
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5-1h.01M15 15h.01M4 6h16v12H4z" />
+                                </svg>
+                            }
+                            action={
+                                <Link
+                                    href={route('admin.metrics.expenses', { month: selectedPeriod })}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-bold text-brand-text-muted hover:bg-gray-100 transition-colors"
+                                >
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Gastos
+                                </Link>
+                            }
+                        />
+                    )}
                     <KpiCard
                         title="Facturado (Bruto)"
-                        value={fmtMoney(selectedStats.revenue)}
+                        value={amountsHidden ? MASK : fmtMoney(selectedStats.revenue)}
+                        valueClassName={amountsHidden ? 'text-brand-text-light' : undefined}
                         sub={
-                            <>
-                                {previousLabel}: {fmtMoneyCompact(previousStats.revenue)}
-                                <br />
-                                <span className="text-brand-text-light">
-                                    Online {fmtMoneyCompact(selectedStats.online_revenue)} · Canales {fmtMoneyCompact(selectedStats.channel_revenue)}
-                                </span>
-                            </>
+                            amountsHidden ? undefined : (
+                                <>
+                                    {previousLabel}: {fmtMoneyCompact(previousStats.revenue)}
+                                    <br />
+                                    <span className="text-brand-text-light">
+                                        Online {fmtMoneyCompact(selectedStats.online_revenue)} · Canales {fmtMoneyCompact(selectedStats.channel_revenue)}
+                                    </span>
+                                </>
+                            )
                         }
                         delta={revenueDelta}
                         deltaCaption={deltaCaption}
@@ -696,27 +853,15 @@ export default function MetricsIndex({
                     />
                     <KpiCard
                         title="Ticket promedio"
-                        value={fmtMoney(selectedStats.avg_ticket)}
-                        sub={`${previousLabel}: ${fmtMoneyCompact(previousStats.avg_ticket)}`}
+                        value={amountsHidden ? MASK : fmtMoney(selectedStats.avg_ticket)}
+                        valueClassName={amountsHidden ? 'text-brand-text-light' : undefined}
+                        sub={amountsHidden ? undefined : `${previousLabel}: ${fmtMoneyCompact(previousStats.avg_ticket)}`}
                         delta={ticketDelta}
                         deltaCaption={deltaCaption}
                         accent="secondary"
                         icon={
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                        }
-                    />
-                    <KpiCard
-                        title="Unidades"
-                        value={selectedStats.items_count}
-                        sub={`${previousLabel}: ${previousStats.items_count}`}
-                        delta={itemsDelta}
-                        deltaCaption={deltaCaption}
-                        accent="text"
-                        icon={
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                         }
                     />

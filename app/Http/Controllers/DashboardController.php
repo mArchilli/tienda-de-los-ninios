@@ -9,12 +9,15 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Size;
+use App\Services\FinanceMetricsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    public function __construct(private FinanceMetricsService $finance) {}
+
     public function index()
     {
         $now      = Carbon::now();
@@ -49,19 +52,28 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Facturación del mes para el dashboard: siempre se muestra en términos
+     * de Neto (Bruto —tienda online + canales manuales— menos los gastos
+     * cargados en Métricas), consistente con la sección de Métricas.
+     */
     private function monthRevenue(Carbon $start, Carbon $end): array
     {
-        $base = Order::query()
-            ->where('status', '!=', Order::STATUS_CANCELLED)
-            ->whereBetween('created_at', [$start, $end]);
+        $orders = (int) Order::where('status', '!=', Order::STATUS_CANCELLED)
+            ->whereBetween('created_at', [$start, $end])
+            ->count();
 
-        $revenue = (float) (clone $base)->sum('total');
-        $orders  = (int) (clone $base)->count();
+        $revenueData = $this->finance->revenueFor($start, $end);
+        $expenses    = $this->finance->expensesFor($start->format('Y-m'));
+
+        $netRevenue = round($revenueData['revenue'] - $expenses['total'], 2);
 
         return [
-            'revenue'      => round($revenue, 2),
-            'orders_count' => $orders,
-            'avg_ticket'   => $orders > 0 ? round($revenue / $orders, 2) : 0.0,
+            'revenue'        => $netRevenue,
+            'gross_revenue'  => $revenueData['revenue'],
+            'expenses_total' => $expenses['total'],
+            'orders_count'   => $orders,
+            'avg_ticket'     => $orders > 0 ? round($revenueData['online_revenue'] / $orders, 2) : 0.0,
         ];
     }
 

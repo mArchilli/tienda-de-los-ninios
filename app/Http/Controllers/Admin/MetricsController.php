@@ -5,16 +5,21 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ChannelSale;
 use App\Models\Combo;
+use App\Models\Expense;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\FinanceMetricsService;
 use App\Services\StockService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class MetricsController extends Controller
 {
+    public function __construct(private FinanceMetricsService $finance) {}
+
     public function index(Request $request)
     {
         $view = $request->query('view') === 'day' ? 'day' : 'month';
@@ -59,14 +64,29 @@ class MetricsController extends Controller
 
         $allTime = $this->allTimeStats();
 
+        // Los gastos son un concepto mensual (los fijos "están presentes todos
+        // los meses"), así que el Neto sólo se calcula en la vista Mes.
+        $expenses           = null;
+        $netRevenue         = null;
+        $previousNetRevenue = null;
+        if ($view === 'month') {
+            $expenses           = $this->finance->expensesFor($selected->format('Y-m'));
+            $previousExpenses   = $this->finance->expensesFor($previous->format('Y-m'));
+            $netRevenue         = round($selectedStats['revenue'] - $expenses['total'], 2);
+            $previousNetRevenue = round($previousStats['revenue'] - $previousExpenses['total'], 2);
+        }
+
         return Inertia::render('Admin/Metrics/Index', array_merge($viewData, [
-            'view'          => $view,
-            'selectedStats' => $selectedStats,
-            'previousStats' => $previousStats,
-            'history'       => $history,
-            'topProducts'   => $topProducts,
-            'topCombos'     => $topCombos,
-            'allTime'       => $allTime,
+            'view'               => $view,
+            'selectedStats'      => $selectedStats,
+            'previousStats'      => $previousStats,
+            'history'            => $history,
+            'topProducts'        => $topProducts,
+            'topCombos'          => $topCombos,
+            'allTime'            => $allTime,
+            'expenses'           => $expenses,
+            'netRevenue'         => $netRevenue,
+            'previousNetRevenue' => $previousNetRevenue,
         ]));
     }
 
@@ -186,67 +206,26 @@ class MetricsController extends Controller
     {
         $base = $this->billableQuery()->whereBetween('created_at', [$start, $end]);
 
-        $ordersCount   = (clone $base)->count();
-        $onlineRevenue = (float) (clone $base)->sum('total');
-        $itemsCount    = (int) DB::table('order_items')
+        $ordersCount = (clone $base)->count();
+        $itemsCount  = (int) DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', Order::STATUS_CANCELLED)
             ->whereBetween('orders.created_at', [$start, $end])
             ->sum('order_items.quantity');
 
-        [$channelSales, $channelRevenue, $channelCount] = $this->channelSalesFor($start->toDateString(), $end->toDateString());
-
-        $grossRevenue = $onlineRevenue + $channelRevenue;
-        $avgTicket    = $ordersCount > 0 ? $onlineRevenue / $ordersCount : 0.0;
+        $revenueData = $this->finance->revenueFor($start, $end);
+        $avgTicket   = $ordersCount > 0 ? $revenueData['online_revenue'] / $ordersCount : 0.0;
 
         return [
-            'revenue'             => round($grossRevenue, 2),
-            'online_revenue'      => round($onlineRevenue, 2),
-            'channel_revenue'     => round($channelRevenue, 2),
-            'channel_sales'       => $channelSales,
+            'revenue'             => $revenueData['revenue'],
+            'online_revenue'      => $revenueData['online_revenue'],
+            'channel_revenue'     => $revenueData['channel_revenue'],
+            'channel_sales'       => $revenueData['channel_sales'],
             'orders_count'        => $ordersCount,
-            'channel_sales_count' => $channelCount,
+            'channel_sales_count' => $revenueData['channel_sales_count'],
             'items_count'         => $itemsCount,
             'avg_ticket'          => round($avgTicket, 2),
         ];
-    }
-
-    /**
-     * Ventas cargadas a mano por canal (WhatsApp, Instagram, TikTok Live),
-     * siempre registradas por día, sumadas entre las dos fechas dadas (ambas
-     * incluidas). Un día sin carga cuenta como 0. Devuelve [detalle por canal,
-     * monto total, cantidad total].
-     *
-     * @return array{0: array<string, array>, 1: float, 2: int}
-     */
-    private function channelSalesFor(string $startDate, string $endDate): array
-    {
-        $rows = ChannelSale::whereBetween('date', [$startDate, $endDate])
-            ->selectRaw('channel, SUM(sales_count) as sales_count, SUM(amount) as amount')
-            ->groupBy('channel')
-            ->get()
-            ->keyBy('channel');
-
-        $detail = [];
-        $totalAmount = 0.0;
-        $totalCount  = 0;
-
-        foreach (ChannelSale::CHANNELS as $key => $label) {
-            $row = $rows->get($key);
-            $count = $row ? (int) $row->sales_count : 0;
-            $amount = $row ? (float) $row->amount : 0.0;
-
-            $detail[$key] = [
-                'label'       => $label,
-                'sales_count' => $count,
-                'amount'      => round($amount, 2),
-            ];
-
-            $totalAmount += $amount;
-            $totalCount  += $count;
-        }
-
-        return [$detail, $totalAmount, $totalCount];
     }
 
     private function monthlyHistory(int $months): array
@@ -629,5 +608,92 @@ class MetricsController extends Controller
         return redirect()
             ->route('admin.metrics.orders', $redirectParams)
             ->with('success', 'Métricas actualizadas.');
+    }
+
+    /**
+     * Pantalla de gastos: fijos (se repiten todos los meses) y variables, con
+     * el Bruto/Neto del mes seleccionado.
+     */
+    public function expenses(Request $request)
+    {
+        $selected = $this->parseMonth($request->query('month'));
+        $month    = $selected->format('Y-m');
+
+        $range = [$selected->copy()->startOfMonth(), $selected->copy()->endOfMonth()];
+        $stats = $this->periodStats(...$range);
+        $expenses = $this->finance->expensesFor($month);
+
+        $previous = (clone $selected)->subMonthNoOverflow();
+        $canCopyFixed = Expense::where('month', $previous->format('Y-m'))->where('type', 'fixed')->exists();
+
+        return Inertia::render('Admin/Metrics/Expenses', [
+            'selectedPeriod'    => $month,
+            'selectedLabel'     => $this->monthLabel($selected),
+            'availableMonths'   => $this->availableMonths(),
+            'grossRevenue'      => $stats['revenue'],
+            'expenses'          => $expenses,
+            'netRevenue'        => round($stats['revenue'] - $expenses['total'], 2),
+            'canCopyFixed'      => $canCopyFixed,
+            'previousMonthLabel' => $this->monthLabel($previous),
+        ]);
+    }
+
+    public function storeExpense(Request $request)
+    {
+        $data = $request->validate([
+            'title'  => ['required', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'type'   => ['required', Rule::in(array_keys(Expense::TYPES))],
+            'month'  => ['required', 'regex:/^\d{4}-\d{2}$/'],
+        ]);
+
+        Expense::create($data);
+
+        return back()->with('success', 'Gasto agregado correctamente.');
+    }
+
+    public function updateExpense(Request $request, Expense $expense)
+    {
+        $data = $request->validate([
+            'title'  => ['required', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'type'   => ['required', Rule::in(array_keys(Expense::TYPES))],
+        ]);
+
+        $expense->update($data);
+
+        return back()->with('success', 'Gasto actualizado correctamente.');
+    }
+
+    public function destroyExpense(Expense $expense)
+    {
+        $expense->delete();
+
+        return back()->with('success', 'Gasto eliminado correctamente.');
+    }
+
+    /**
+     * Copia los gastos fijos del mes anterior al mes indicado, para no tener
+     * que volver a tipearlos cada vez (son idempotentes por título+mes).
+     */
+    public function copyFixedExpenses(Request $request)
+    {
+        $data = $request->validate([
+            'month' => ['required', 'regex:/^\d{4}-\d{2}$/'],
+        ]);
+
+        $month    = $this->parseMonth($data['month']);
+        $previous = (clone $month)->subMonthNoOverflow()->format('Y-m');
+
+        $fixedExpenses = Expense::where('month', $previous)->where('type', 'fixed')->get();
+
+        foreach ($fixedExpenses as $expense) {
+            Expense::firstOrCreate(
+                ['month' => $data['month'], 'type' => 'fixed', 'title' => $expense->title],
+                ['amount' => $expense->amount]
+            );
+        }
+
+        return back()->with('success', 'Gastos fijos copiados del mes anterior.');
     }
 }
