@@ -1462,21 +1462,21 @@ export default function Index({ combos, sizes, categories, genders = [], filters
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setSelectionMode(true)}
-                                disabled={comboList.length === 0}
-                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <Icon name="check" />
-                                Seleccionar
-                            </button>
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                             <button
                                 onClick={() => setCreateOpen(true)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                                className="order-1 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors sm:order-2 sm:w-auto"
                             >
                                 <Icon name="plus" />
                                 Nuevo Combo de Regalo
+                            </button>
+                            <button
+                                onClick={() => setSelectionMode(true)}
+                                disabled={comboList.length === 0}
+                                className="order-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors sm:order-1 sm:w-auto"
+                            >
+                                <Icon name="check" />
+                                Seleccionar
                             </button>
                         </div>
                     )}

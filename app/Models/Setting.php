@@ -9,12 +9,6 @@ class Setting extends Model
     const LANDING_COMBOS_TITLE_KEY = 'landing_combos_title';
     const LANDING_COMBOS_TITLE_DEFAULT = 'COMBOS DE ESTA SEMANA';
 
-    const LANDING_HERO_TITLE_TOP_KEY = 'landing_hero_title_top';
-    const LANDING_HERO_TITLE_TOP_DEFAULT = 'COMBOS';
-
-    const LANDING_HERO_TITLE_BOTTOM_KEY = 'landing_hero_title_bottom';
-    const LANDING_HERO_TITLE_BOTTOM_DEFAULT = 'PARA ARMAR.';
-
     const LANDING_PRICE_RANGE_TITLE_KEY = 'landing_price_range_title';
     const LANDING_PRICE_RANGE_TITLE_DEFAULT = 'COMBOS PARA EMPRENDEDORES';
 

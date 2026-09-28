@@ -14,8 +14,6 @@ class LandingSettingsTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'hero_title_top'     => 'COMBOS',
-            'hero_title_bottom'  => 'PARA ARMAR.',
             'combos_title'       => 'COMBOS DE ESTA SEMANA',
             'price_range_title'  => 'COMBOS PARA EMPRENDEDORES',
             'catalog_title'      => 'CATALOGO',
@@ -42,8 +40,6 @@ class LandingSettingsTest extends TestCase
         $this->actingAs($user)->get('/admin/landing')
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Landing/Index')
-                ->where('titles.hero_title_top', 'COMBOS')
-                ->where('titles.hero_title_bottom', 'PARA ARMAR.')
                 ->where('titles.combos_title', 'COMBOS DE ESTA SEMANA')
                 ->where('titles.price_range_title', 'COMBOS PARA EMPRENDEDORES')
                 ->where('titles.catalog_title', 'CATALOGO')
@@ -90,8 +86,6 @@ class LandingSettingsTest extends TestCase
     {
         $this->get('/')->assertInertia(fn ($page) => $page
             ->where('combosTitle', 'COMBOS DE ESTA SEMANA')
-            ->where('heroTitleTop', 'COMBOS')
-            ->where('heroTitleBottom', 'PARA ARMAR.')
             ->where('priceRangeTitle', 'COMBOS PARA EMPRENDEDORES')
             ->where('catalogTitle', 'CATALOGO')
             ->where('aboutTitle', 'SOBRE NOSOTROS')

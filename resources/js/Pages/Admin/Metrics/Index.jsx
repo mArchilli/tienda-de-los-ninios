@@ -259,7 +259,7 @@ function TopSellersCard({ title, subtitle, items, emptyText, accent }) {
     const maxUnits = Math.max(1, ...items.map((i) => i.units || 0));
 
     return (
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4">
                 <h2 className="text-base font-bold text-brand-text">{title}</h2>
                 {subtitle && <p className="text-xs text-brand-text-muted">{subtitle}</p>}
@@ -631,7 +631,6 @@ export default function MetricsIndex({
     dayBounds,
     topProducts = [],
     topCombos = [],
-    allTime,
     expenses,
     netRevenue,
     previousNetRevenue,
@@ -685,13 +684,13 @@ export default function MetricsIndex({
             header={
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
-                        <h1 className="text-xl font-bold text-brand-text">Métricas</h1>
+                        <h1 className="text-xl font-bold text-brand-text">{selectedLabel}</h1>
                         <p className="text-sm text-brand-text-muted">
                             Resumen de facturación y prendas más vendidas
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
                         <Link
                             href={route('admin.metrics.channels', view === 'day' ? { view: 'day', day: selectedPeriod } : { month: selectedPeriod })}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-brand-text-muted shadow-sm transition-colors hover:border-brand-primary hover:text-brand-primary"
@@ -735,28 +734,9 @@ export default function MetricsIndex({
                 </div>
             }
         >
-            <Head title="Métricas" />
+            <Head title={`Métricas · ${selectedLabel}`} />
 
             <div className="p-6 space-y-6">
-                {/* Period banner */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-primary/20 bg-brand-primary-surface/60 px-5 py-4">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-dark">
-                            Período seleccionado
-                        </p>
-                        <p className="text-lg font-bold text-brand-text">{selectedLabel}</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-muted">
-                            Histórico total
-                        </p>
-                        <p className="text-lg font-bold text-brand-primary">{fmtMoney(allTime.revenue)}</p>
-                        <p className="text-[11px] text-brand-text-muted">
-                            {allTime.total_sales_count} venta{allTime.total_sales_count === 1 ? '' : 's'} · Web {allTime.orders_count} · Canales {allTime.channel_sales_count}
-                        </p>
-                    </div>
-                </div>
-
                 {/* KPI grid */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {view === 'month' && expenses && (
@@ -903,7 +883,7 @@ export default function MetricsIndex({
                 />
 
                 {/* Top sellers */}
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
                     <TopSellersCard
                         title="Prendas más vendidas"
                         subtitle={`Top 10 · ${selectedLabel}`}

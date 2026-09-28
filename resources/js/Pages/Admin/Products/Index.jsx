@@ -1485,28 +1485,30 @@ export default function Index({ products, filters, categories, colors, sizes, ge
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
-                            <a
-                                href={exportHref}
-                                className="inline-flex items-center gap-2 rounded-lg bg-[#217346] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#1a5c38] transition-colors"
-                            >
-                                <Icon name="download" />
-                                Exportar a Excel
-                            </a>
-                            <button
-                                onClick={() => setSelectionMode(true)}
-                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
-                            >
-                                <Icon name="check" />
-                                Seleccionar
-                            </button>
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                             <button
                                 onClick={() => setCreateOpen(true)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors"
+                                className="order-1 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-cta-dark transition-colors sm:order-3 sm:w-auto"
                             >
                                 <Icon name="plus" />
                                 Nueva Prenda
                             </button>
+                            <div className="order-2 grid grid-cols-2 gap-2 sm:contents">
+                                <a
+                                    href={exportHref}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#217346] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#1a5c38] transition-colors sm:order-1"
+                                >
+                                    <Icon name="download" />
+                                    Exportar a Excel
+                                </a>
+                                <button
+                                    onClick={() => setSelectionMode(true)}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors sm:order-2"
+                                >
+                                    <Icon name="check" />
+                                    Seleccionar
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

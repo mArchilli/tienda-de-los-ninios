@@ -11,8 +11,6 @@ import Reviews from '@/Components/Storefront/Reviews';
 export default function Welcome({
     featuredCombos,
     combosTitle,
-    heroTitleTop,
-    heroTitleBottom,
     priceRangeTitle,
     catalogTitle,
     aboutTitle,
@@ -29,7 +27,7 @@ export default function Welcome({
             <Head title="La Tienda de Los Niños · Combos y ropa para los más chicos" />
 
             <div className="home-angular">
-                <Hero image={heroImage} titleTop={heroTitleTop} titleBottom={heroTitleBottom} />
+                <Hero image={heroImage} />
                 <FeaturedCombos combos={featuredCombos} title={combosTitle} />
                 <PriceRangeSection title={priceRangeTitle} />
                 <CategoryShortcuts title={catalogTitle} />

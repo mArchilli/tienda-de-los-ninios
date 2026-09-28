@@ -77,8 +77,6 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'featuredCombos'    => $combos,
         'combosTitle'       => Setting::get(Setting::LANDING_COMBOS_TITLE_KEY, Setting::LANDING_COMBOS_TITLE_DEFAULT),
-        'heroTitleTop'      => Setting::get(Setting::LANDING_HERO_TITLE_TOP_KEY, Setting::LANDING_HERO_TITLE_TOP_DEFAULT),
-        'heroTitleBottom'   => Setting::get(Setting::LANDING_HERO_TITLE_BOTTOM_KEY, Setting::LANDING_HERO_TITLE_BOTTOM_DEFAULT),
         'priceRangeTitle'   => Setting::get(Setting::LANDING_PRICE_RANGE_TITLE_KEY, Setting::LANDING_PRICE_RANGE_TITLE_DEFAULT),
         'catalogTitle'      => Setting::get(Setting::LANDING_CATALOG_TITLE_KEY, Setting::LANDING_CATALOG_TITLE_DEFAULT),
         'aboutTitle'        => Setting::get(Setting::LANDING_ABOUT_TITLE_KEY, Setting::LANDING_ABOUT_TITLE_DEFAULT),

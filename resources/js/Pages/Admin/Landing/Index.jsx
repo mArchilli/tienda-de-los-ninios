@@ -30,13 +30,6 @@ function TitleField({ id, label, hint, value, onChange, error }) {
 
 const SECTIONS = [
     {
-        heading: 'Banner principal',
-        fields: [
-            { field: 'hero_title_top', label: 'Título — línea 1', hint: 'Ej: COMBOS' },
-            { field: 'hero_title_bottom', label: 'Título — línea 2', hint: 'Ej: PARA ARMAR.' },
-        ],
-    },
-    {
         heading: 'Combos de la semana',
         fields: [{ field: 'combos_title', label: 'Título de la sección' }],
     },

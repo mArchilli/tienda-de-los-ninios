@@ -14,14 +14,6 @@ class LandingController extends Controller
      * landing, para no repartir esta configuración por distintas pantallas.
      */
     private const SECTIONS = [
-        'hero_title_top' => [
-            'key'     => Setting::LANDING_HERO_TITLE_TOP_KEY,
-            'default' => Setting::LANDING_HERO_TITLE_TOP_DEFAULT,
-        ],
-        'hero_title_bottom' => [
-            'key'     => Setting::LANDING_HERO_TITLE_BOTTOM_KEY,
-            'default' => Setting::LANDING_HERO_TITLE_BOTTOM_DEFAULT,
-        ],
         'combos_title' => [
             'key'     => Setting::LANDING_COMBOS_TITLE_KEY,
             'default' => Setting::LANDING_COMBOS_TITLE_DEFAULT,
