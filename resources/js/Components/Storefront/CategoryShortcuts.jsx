@@ -5,20 +5,15 @@ const CATEGORIES = [
     { label: 'NENA',   href: '/catalogo?audiencia=nina&tipo=productos', image: '/images/filtro-nena.png'   },
     { label: 'BEBE',   href: '/catalogo?audiencia=bebe&tipo=productos', image: '/images/filtro-bebe.png'   },
     { label: 'BEBA',   href: '/catalogo?audiencia=beba&tipo=productos', image: '/images/filtro-beba.png'   },
-    { label: 'COMBOS', href: '/catalogo?tipo=combos',                   image: '/images/filtro-combos.png' },
 ];
 
-function CircleSlot({ label, image, large = false }) {
+function CircleSlot({ label, image }) {
     return (
-        <div className={large
-            ? 'relative aspect-[5/6] w-full overflow-hidden rounded-[1.3rem] sm:aspect-auto sm:flex sm:h-28 sm:w-28 sm:items-center sm:justify-center sm:overflow-visible sm:rounded-none lg:h-32 lg:w-32'
-            : 'flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28 lg:h-32 lg:w-32'}>
+        <div className="relative aspect-[5/6] w-full overflow-hidden rounded-[1.3rem] sm:aspect-auto sm:flex sm:h-28 sm:w-28 sm:items-center sm:justify-center sm:overflow-visible sm:rounded-none lg:h-32 lg:w-32">
             <img
                 src={image}
                 alt={`Filtro ${label.toLowerCase()}`}
-                className={`object-contain ${large
-                    ? 'absolute inset-0 h-full w-full object-cover sm:static sm:h-28 sm:w-28 sm:object-contain lg:h-32 lg:w-32'
-                    : 'h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24'}`}
+                className="absolute inset-0 h-full w-full object-cover sm:static sm:h-28 sm:w-28 sm:object-contain lg:h-32 lg:w-32"
             />
         </div>
     );
@@ -36,21 +31,16 @@ export default function CategoryShortcuts({ title = 'CATALOGO' }) {
                             {title}
                         </h2>
 
-                        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                             {CATEGORIES.map((category) => (
                                 <Link
                                     key={category.label}
                                     href={category.href}
-                                    className={`group relative flex flex-col items-center transition duration-300 hover:-translate-y-1 hover:border-brand-cta ${
-                                        category.label === 'COMBOS'
-                                            ? 'col-span-2 mx-auto w-full rounded-[1.3rem] px-3 py-4 sm:col-span-1 sm:mx-0'
-                                            : 'sm:rounded-[1.3rem] sm:px-3 sm:py-4'
-                                    }`}
+                                    className="group relative flex flex-col items-center transition duration-300 hover:-translate-y-1 hover:border-brand-cta sm:rounded-[1.3rem] sm:px-3 sm:py-4"
                                 >
                                     <CircleSlot
                                         label={category.label}
                                         image={category.image}
-                                        large={category.label !== 'COMBOS'}
                                     />
                                     <span className="relative mt-3 text-center text-[11px] font-bold leading-tight tracking-[0.14em] text-brand-text transition-colors group-hover:text-brand-primary sm:text-xs sm:tracking-[0.18em]">
                                         {category.label}
