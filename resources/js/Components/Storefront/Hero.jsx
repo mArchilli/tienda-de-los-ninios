@@ -93,7 +93,7 @@ function GiftSlideContent() {
         <div className="pointer-events-none absolute inset-0 z-10">
             <div className="store-shell flex h-full flex-col items-center pt-[calc(2%+40px)] text-center md:items-start md:justify-center md:pt-0 md:text-left">
                 <div className="w-full md:ml-auto md:w-[45%] md:-translate-y-8">
-                    <h1 aria-label="COMBOS PARA REGALAR" className="font-extrabold leading-[0.9] text-[#26354A] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] md:drop-shadow-none">
+                    <h1 aria-label="COMBOS PARA REGALAR" className="font-extrabold leading-[0.9] text-[#26354A]">
                         <span className="block text-[clamp(2.5rem,13.5vw,4.5rem)] md:text-[clamp(4rem,5.8vw,7rem)]">
                             COMBOS
                         </span>
@@ -106,7 +106,7 @@ function GiftSlideContent() {
                             </span>
                         </span>
                     </h1>
-                    <p className="mx-auto mt-2 max-w-xl text-[clamp(0.875rem,4vw,1rem)] leading-tight text-[#26354A] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] md:mx-0 md:mt-6 md:text-lg md:leading-relaxed md:drop-shadow-none lg:text-xl xl:text-2xl">
+                    <p className="mx-auto mt-2 max-w-xl text-[clamp(0.875rem,4vw,1rem)] leading-tight text-[#26354A] md:mx-0 md:mt-6 md:text-lg md:leading-relaxed lg:text-xl xl:text-2xl">
                         Armá un combo para tu hijo, sobrino, nieto o alguien especial. Elegí las prendas y regalá algo único.
                     </p>
                     <BannerButtons ctas={GIFT_CTAS} largeMobile className="mt-2 justify-center sm:mt-4 md:mt-7 md:justify-start md:gap-3" />
@@ -260,7 +260,7 @@ export default function Hero() {
 
                     {/* Indicadores y control de reproducción */}
                     <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 md:bottom-6">
-                        <div className="flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 backdrop-blur-sm">
+                        <div className="flex items-center gap-0.5 rounded-full bg-black/30 px-1 py-0.5 backdrop-blur-sm md:gap-1 md:px-2 md:py-1">
                             {slides.map((banner, i) => (
                                 <button
                                     key={banner.id}
@@ -270,12 +270,12 @@ export default function Hero() {
                                     aria-current={i === active}
                                     className="group flex h-8 w-8 items-center justify-center"
                                 >
-                                    <span className={`h-2 rounded-full transition-all duration-300 ${
-                                        i === active ? 'w-6 bg-brand-cta' : 'w-2 bg-white/70 group-hover:bg-white'
+                                    <span className={`h-1.5 rounded-full transition-all duration-300 md:h-2 ${
+                                        i === active ? 'w-5 bg-brand-cta md:w-6' : 'w-1.5 bg-white/70 group-hover:bg-white md:w-2'
                                     }`} />
                                 </button>
                             ))}
-                            <span className="mx-1 h-5 w-px bg-white/50" aria-hidden="true" />
+                            <span className="mx-0.5 h-4 w-px bg-white/50 md:mx-1 md:h-5" aria-hidden="true" />
                             <button
                                 type="button"
                                 onClick={() => setPaused((value) => !value)}
@@ -285,11 +285,11 @@ export default function Hero() {
                                 className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20"
                             >
                                 {paused ? (
-                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <svg className="h-3.5 w-3.5 md:h-4 md:w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path d="M8 5v14l11-7L8 5Z" />
                                     </svg>
                                 ) : (
-                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <svg className="h-3.5 w-3.5 md:h-4 md:w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
                                     </svg>
                                 )}

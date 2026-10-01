@@ -678,10 +678,10 @@ export default function Catalog({ combos = [], combosEmprendedor = [], combosReg
         [filteredProducts, sort]
     );
 
-    const showCombos = typeFilter !== 'productos';
-    const showCombosEmprendedor = typeFilter !== 'productos';
+    const showCombos = typeFilter !== 'productos' && typeFilter !== 'regalo';
+    const showCombosEmprendedor = typeFilter !== 'productos' && typeFilter !== 'regalo';
     const showCombosRegalo = typeFilter !== 'productos';
-    const showProducts = typeFilter !== 'combos';
+    const showProducts = typeFilter !== 'combos' && typeFilter !== 'regalo';
     const visibleProductList = sortedProducts.slice(0, visibleProducts);
     const hasMoreProducts = showProducts && visibleProducts < sortedProducts.length;
     const activeFilterCount =
@@ -819,10 +819,11 @@ export default function Catalog({ combos = [], combosEmprendedor = [], combosReg
                             })}
                         </div>
 
-                        {/* Tipo: Combos / Prendas */}
-                        <div className="grid grid-cols-2 gap-2.5">
+                        {/* Tipo: Combos / Regalos / Prendas */}
+                        <div className="grid grid-cols-3 gap-2.5">
                             {[
                                 { key: 'combos', label: 'Combos' },
+                                { key: 'regalo', label: 'Regalos' },
                                 { key: 'productos', label: 'Prendas' },
                             ].map((t) => {
                                 const active = typeFilter === t.key;
@@ -1012,7 +1013,7 @@ export default function Catalog({ combos = [], combosEmprendedor = [], combosReg
                             </div>
                         </div>
 
-                        {/* Fila 2: Tipo (Combos / Prendas) */}
+                        {/* Fila 2: Tipo (Combos / Regalos / Prendas) */}
                         <div className="flex items-center gap-2 pb-3 overflow-x-auto">
                             <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-text-muted">
                                 Ver:
@@ -1021,6 +1022,11 @@ export default function Catalog({ combos = [], combosEmprendedor = [], combosReg
                                 label="Combos"
                                 active={typeFilter === 'combos'}
                                 onClick={() => toggleType('combos')}
+                            />
+                            <FilterChip
+                                label="Regalos"
+                                active={typeFilter === 'regalo'}
+                                onClick={() => toggleType('regalo')}
                             />
                             <FilterChip
                                 label="Prendas"
