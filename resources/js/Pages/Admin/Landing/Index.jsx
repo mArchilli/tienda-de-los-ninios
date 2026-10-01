@@ -34,7 +34,7 @@ const SECTIONS = [
         fields: [{ field: 'combos_title', label: 'Título de la sección' }],
     },
     {
-        heading: 'Combos para emprendedores',
+        heading: 'Combos para regalo',
         fields: [{ field: 'price_range_title', label: 'Título de la sección' }],
     },
     {

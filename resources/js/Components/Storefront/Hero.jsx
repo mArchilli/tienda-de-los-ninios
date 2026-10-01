@@ -1,198 +1,142 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// ─── Banners del hero ─────────────────────────────────────────────────────────
-// Cada banner necesita 2 imágenes: `desktop` (horizontal, se muestra desde md:)
-// y `mobile` (vertical). Subí ambas a public/images/ y actualizá las rutas.
-//
-// `text` es opcional:
-//   • con `text`  → se superpone el título + párrafo + botones sobre la imagen
-//     (útil cuando la imagen es sólo un fondo).
-//   • `text: null` → se muestra sólo la imagen y todo el banner enlaza a `href`
-//     (útil cuando la imagen ya trae el texto y el botón «horneados»).
-//
-// `text.ctas` es la lista de botones. El primero va sólido; los que tengan
-// `variant: 'outline'` van con borde. Podés poner uno o varios por banner.
-//
-// Hoy los tres banners usan la imagen actual. Reemplazá `desktop`/`mobile` (y
-// opcionalmente `text`) de cada uno cuando tengas los nuevos.
-
+// Cada slide muestra las imágenes del banner para desktop y mobile.
 const BANNER_IMAGE = {
     desktop: '/images/banner.png',
     mobile: '/images/banner-mobile.png',
     alt: 'Combos para armar',
-    href: '/catalogo',
-};
-
-const BANNER_TEXT = {
-    titleTop: 'COMBOS',
-    titleBottom: 'PARA ARMAR.',
-    paragraph: [
-        'Elegí el combo diseñado para vos.',
-        'Vos elegís las prendas, nosotros lo armamos.',
-    ],
 };
 
 const BANNERS = [
-    {
-        id: 'banner-1',
-        ...BANNER_IMAGE,
-        text: {
-            ...BANNER_TEXT,
-            ctas: [
-                { label: 'Ver combos', href: '/catalogo' },
-                { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
-            ],
-        },
-    },
+    { id: 'banner-1', ...BANNER_IMAGE },
     {
         id: 'banner-2',
-        ...BANNER_IMAGE,
-        text: { ...BANNER_TEXT, ctas: [{ label: 'Ver combos', href: '/catalogo' }] },
+        desktop: '/images/banner-2-desktop.png',
+        mobile: '/images/banner-2-mobile.png',
+        alt: 'Combo de ropa para armar',
+        content: 'build',
     },
     {
         id: 'banner-3',
-        ...BANNER_IMAGE,
-        text: { ...BANNER_TEXT, ctas: [{ label: 'Ver combos', href: '/catalogo' }] },
+        desktop: '/images/banner-3-desktop.png',
+        mobile: '/images/banner-3-mobile.png',
+        alt: 'Combo para regalar con bolsa y tarjeta',
+        content: 'gift',
     },
 ];
 
-// Estilos de los botones. El tamaño/padding cambia entre mobile y desktop; la
-// «piel» (sólido u outline) según `variant`.
+const BANNER_CTAS = [
+    { label: 'Ver combos', href: '/catalogo' },
+    { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
+];
+const GIFT_CTAS = [
+    { label: 'Ver combos', href: '/catalogo?tipo=combos' },
+    { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
+];
+const GIFT_LETTER_COLORS = ['#E63954', '#D97916', '#B88900', '#46A343', '#148CC4', '#72B829', '#E56638'];
+
 const CTA_BASE =
-    'home-button inline-flex items-center justify-center px-7 py-3.5 text-sm font-bold uppercase tracking-wide shadow-md transition-colors sm:px-8 sm:py-4 sm:text-base';
+    'home-button pointer-events-auto inline-flex items-center justify-center font-bold uppercase tracking-wide shadow-md transition-colors';
 const CTA_SIZE = {
-    mobile: 'lg:px-10 lg:py-5 lg:text-base xl:px-12 xl:py-6 xl:text-lg',
-    desktop: 'lg:px-11 lg:py-[1.35rem] lg:text-lg xl:px-[3.25rem] xl:py-[1.65rem] xl:text-xl',
+    standard: 'px-5 py-2.5 text-base sm:px-8 sm:py-4 lg:px-11 lg:py-[1.35rem] lg:text-lg',
+    largeMobile: 'px-5 py-3.5 text-[clamp(1rem,4.5vw,1.125rem)] sm:px-8 sm:py-4 md:text-base lg:px-11 lg:py-[1.35rem] lg:text-lg',
 };
 const CTA_SKIN = {
     primary: 'bg-brand-cta text-white hover:bg-brand-cta-dark',
     outline: 'bg-white/85 text-brand-cta ring-2 ring-inset ring-brand-cta hover:bg-brand-cta hover:text-white',
 };
 
-function ctaClass(variant, ctx) {
-    return `${CTA_BASE} ${CTA_SIZE[ctx]} ${CTA_SKIN[variant === 'outline' ? 'outline' : 'primary']}`;
-}
-
 const AUTOPLAY_MS = 6000;
-const SWIPE_THRESHOLD = 60; // px mínimos para pasar de banner
+const SWIPE_THRESHOLD = 60;
 
-// ─── Contenido superpuesto (título + párrafo + CTA) ───────────────────────────
-
-function SlideText({ text }) {
-    if (!text) return null;
-
-    const lines = Array.isArray(text.paragraph) ? text.paragraph : [text.paragraph];
-    const ctas = text.ctas ?? [];
-
+function BannerButtons({ className = '', ctas = BANNER_CTAS, largeMobile = false }) {
     return (
-        <>
-            {/* Mobile: anclado abajo */}
-            <div className="absolute inset-0 md:hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-brand-bg/8 via-transparent to-brand-bg/35" />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/28 via-brand-primary/10 via-[38%] to-white/8" />
-
-                <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-5">
-                    <div className="flex max-w-[352px] flex-col items-start text-left">
-                        <h1 className="font-extrabold leading-[0.9] drop-shadow-[0_3px_12px_rgba(0,0,0,0.28)]">
-                            <span className="block text-[4.1rem] text-brand-text">{text.titleTop}</span>
-                            <span className="mt-1 block whitespace-nowrap text-[3.35rem] text-brand-cta">
-                                {text.titleBottom}
-                            </span>
-                        </h1>
-
-                        <p className="mt-3 max-w-[19rem] text-sm leading-relaxed text-brand-text-muted drop-shadow-[0_2px_10px_rgba(0,0,0,0.18)]">
-                            {lines.join(' ')}
-                        </p>
-
-                        {ctas.length > 0 && (
-                            <div className="mt-6 flex flex-wrap gap-3">
-                                {ctas.map((cta) => (
-                                    <a key={cta.href} href={cta.href} className={ctaClass(cta.variant, 'mobile')}>
-                                        {cta.label}
-                                    </a>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Desktop: a la izquierda */}
-            <div className="absolute inset-0 hidden md:block">
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-bg/94 via-brand-bg/76 via-[40%] to-brand-bg/18" />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/20 via-transparent to-white/12" />
-
-                <div className="store-shell relative z-10 flex h-full flex-col pb-5 pt-2 sm:py-7 lg:py-8 xl:py-10">
-                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(220px,0.9fr)] lg:items-start">
-                        <div className="relative max-w-xl self-start pt-0 md:pt-2 lg:max-w-3xl lg:pt-4 xl:max-w-4xl xl:pt-6">
-                            <h1 className="font-extrabold leading-[0.9] text-brand-text">
-                                <span className="block text-[4rem] sm:text-[5rem] lg:text-[7.6rem] xl:text-[9.1rem]">
-                                    {text.titleTop}
-                                </span>
-                                <span className="mt-1.5 block text-[3.2rem] text-brand-cta sm:text-[4.2rem] lg:text-[6.7rem] xl:text-[8rem]">
-                                    {text.titleBottom}
-                                </span>
-                            </h1>
-
-                            <p className="mt-4 max-w-xl text-base leading-relaxed text-brand-text-muted sm:text-lg lg:text-xl xl:text-2xl">
-                                {lines.map((line, i) => (
-                                    <span key={i}>
-                                        {line}
-                                        {i < lines.length - 1 && <br />}
-                                    </span>
-                                ))}
-                            </p>
-
-                            {ctas.length > 0 && (
-                                <div className="mt-6 flex flex-wrap gap-3 sm:mt-5 sm:gap-3.5 lg:mt-6">
-                                    {ctas.map((cta) => (
-                                        <a key={cta.href} href={cta.href} className={ctaClass(cta.variant, 'desktop')}>
-                                            {cta.label}
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="relative hidden h-full lg:block" />
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-}
-
-// ─── Un banner (imagen mobile + desktop + texto opcional) ──────────────────────
-
-function HeroSlide({ banner }) {
-    // <picture> => sólo se descarga la imagen del breakpoint actual (mobile o desktop).
-    const media = (
-        <picture>
-            <source media="(min-width: 768px)" srcSet={banner.desktop} />
-            <img
-                src={banner.mobile}
-                alt={banner.alt}
-                className="absolute inset-0 h-full w-full object-cover object-center md:object-top"
-                draggable="false"
-            />
-        </picture>
-    );
-
-    return (
-        <div className="relative h-full w-full overflow-hidden">
-            {banner.text ? (
-                media
-            ) : (
-                <a href={banner.href ?? '/catalogo'} className="absolute inset-0 block" aria-label={banner.alt}>
-                    {media}
+        <div className={`pointer-events-none flex items-center gap-2 ${className}`}>
+            {ctas.map((cta) => (
+                <a
+                    key={cta.href}
+                    href={cta.href}
+                    className={`${CTA_BASE} ${CTA_SIZE[largeMobile ? 'largeMobile' : 'standard']} ${CTA_SKIN[cta.variant === 'outline' ? 'outline' : 'primary']}`}
+                >
+                    {cta.label}
                 </a>
-            )}
-            <SlideText text={banner.text} />
+            ))}
         </div>
     );
 }
 
-// ─── Hero (carrusel) ──────────────────────────────────────────────────────────
+function BuildSlideContent() {
+    return (
+        <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="store-shell flex h-full flex-col items-start pt-[calc(3%+20px)] text-left md:justify-center md:pt-0">
+                <div className="w-full translate-x-3 -translate-y-1 md:max-w-[55%] md:translate-x-16 md:-translate-y-8">
+                    <h1 className="font-extrabold leading-[0.9]">
+                        <span className="block text-[clamp(2.75rem,14.5vw,4.8rem)] text-[#536B4E] md:text-[clamp(4.4rem,6.3vw,7.6rem)]">
+                            COMBOS
+                        </span>
+                        <span className="mt-1 block whitespace-nowrap text-[clamp(2.2rem,12.2vw,4rem)] text-brand-cta md:mt-2 md:text-[clamp(3.3rem,5.5vw,6.6rem)]">
+                            PARA ARMAR.
+                        </span>
+                    </h1>
+                    <p className="mt-2 text-[clamp(0.875rem,4vw,1rem)] leading-tight text-brand-text-muted md:mt-6 md:text-lg md:leading-relaxed lg:text-xl xl:text-2xl">
+                        <span className="block">Elegí el combo diseñado para vos.</span>
+                        <span className="block">Vos elegís las prendas, nosotros lo armamos.</span>
+                    </p>
+                    <BannerButtons largeMobile className="mt-2 sm:mt-4 md:mt-7 md:gap-3" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function GiftSlideContent() {
+    return (
+        <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="store-shell flex h-full flex-col items-center pt-[calc(2%+40px)] text-center md:items-start md:justify-center md:pt-0 md:text-left">
+                <div className="w-full md:ml-auto md:w-[45%] md:-translate-y-8">
+                    <h1 aria-label="COMBOS PARA REGALAR" className="font-extrabold leading-[0.9] text-[#26354A] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] md:drop-shadow-none">
+                        <span className="block text-[clamp(2.5rem,13.5vw,4.5rem)] md:text-[clamp(4rem,5.8vw,7rem)]">
+                            COMBOS
+                        </span>
+                        <span className="mt-1 block whitespace-nowrap text-[clamp(1.8rem,9.8vw,3.5rem)] md:mt-2 md:text-[clamp(3rem,4.5vw,5.6rem)]">
+                            PARA{' '}
+                            <span className="inline-block" aria-hidden="true">
+                                {'REGALAR'.split('').map((letter, index) => (
+                                    <span key={index} style={{ color: GIFT_LETTER_COLORS[index] }}>{letter}</span>
+                                ))}
+                            </span>
+                        </span>
+                    </h1>
+                    <p className="mx-auto mt-2 max-w-xl text-[clamp(0.875rem,4vw,1rem)] leading-tight text-[#26354A] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] md:mx-0 md:mt-6 md:text-lg md:leading-relaxed md:drop-shadow-none lg:text-xl xl:text-2xl">
+                        Armá un combo para tu hijo, sobrino, nieto o alguien especial. Elegí las prendas y regalá algo único.
+                    </p>
+                    <BannerButtons ctas={GIFT_CTAS} largeMobile className="mt-2 justify-center sm:mt-4 md:mt-7 md:justify-start md:gap-3" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function HeroSlide({ banner }) {
+    return (
+        <div className="relative h-full w-full overflow-hidden">
+            <picture>
+                <source media="(min-width: 768px)" srcSet={banner.desktop} />
+                <img
+                    src={banner.mobile}
+                    alt={banner.alt}
+                    className="absolute inset-0 h-full w-full object-cover object-center md:object-top"
+                    draggable="false"
+                />
+            </picture>
+            {banner.content === 'build' && <BuildSlideContent />}
+            {banner.content === 'gift' && <GiftSlideContent />}
+            {!banner.content && (
+                <BannerButtons className="absolute inset-x-0 top-[39%] z-10 justify-center px-2 md:inset-x-auto md:left-[10%] md:top-[calc(75%+10px)] md:-translate-x-10 md:justify-start md:gap-3 md:px-0 xl:left-[12%] 2xl:left-[18%]" />
+            )}
+        </div>
+    );
+}
 
 export default function Hero() {
     const slides = BANNERS;
@@ -201,6 +145,7 @@ export default function Hero() {
     const [active, setActive] = useState(0);
     const [drag, setDrag] = useState(0);       // desplazamiento en px durante el swipe
     const [dragging, setDragging] = useState(false);
+    const [paused, setPaused] = useState(false);
 
     const touch = useRef(null);
     const trackRef = useRef(null);
@@ -213,17 +158,17 @@ export default function Hero() {
     const prev = useCallback(() => setActive((a) => (a - 1 + count) % count), [count]);
 
     // Cambio automático de banner. Se reinicia en cada cambio (manual o auto) y se
-    // frena sólo mientras el usuario está arrastrando, o si el sistema pide
+    // frena mientras el usuario arrastra, pausa el carrusel o el sistema pide
     // reducir el movimiento.
     useEffect(() => {
-        if (count <= 1 || dragging) return undefined;
+        if (count <= 1 || dragging || paused) return undefined;
         if (typeof window !== 'undefined'
             && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
             return undefined;
         }
         const t = window.setTimeout(next, AUTOPLAY_MS);
         return () => window.clearTimeout(t);
-    }, [active, dragging, count, next]);
+    }, [active, dragging, paused, count, next]);
 
     // ─── Swipe táctil ─────────────────────────────────────────────────────────
     const onTouchStart = (e) => {
@@ -293,12 +238,11 @@ export default function Hero() {
 
             {count > 1 && (
                 <>
-                    {/* Flechas (desktop) */}
                     <button
                         type="button"
                         onClick={prev}
                         aria-label="Banner anterior"
-                        className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-brand-text shadow-md backdrop-blur-sm transition-colors hover:bg-white md:flex"
+                        className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-brand-text shadow-md backdrop-blur-sm transition-colors hover:bg-white md:left-3 md:h-10 md:w-10"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -308,16 +252,16 @@ export default function Hero() {
                         type="button"
                         onClick={next}
                         aria-label="Banner siguiente"
-                        className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-brand-text shadow-md backdrop-blur-sm transition-colors hover:bg-white md:flex"
+                        className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-brand-text shadow-md backdrop-blur-sm transition-colors hover:bg-white md:right-3 md:h-10 md:w-10"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
 
-                    {/* Puntos */}
-                    <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 md:top-auto md:bottom-6">
-                        <div className="flex items-center gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-sm">
+                    {/* Indicadores y control de reproducción */}
+                    <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 md:bottom-6">
+                        <div className="flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 backdrop-blur-sm">
                             {slides.map((banner, i) => (
                                 <button
                                     key={banner.id}
@@ -325,11 +269,32 @@ export default function Hero() {
                                     onClick={() => go(i)}
                                     aria-label={`Ir al banner ${i + 1}`}
                                     aria-current={i === active}
-                                    className={`h-2 rounded-full transition-all duration-300 ${
-                                        i === active ? 'w-6 bg-brand-cta' : 'w-2 bg-white/70 hover:bg-white'
-                                    }`}
-                                />
+                                    className="group flex h-8 w-8 items-center justify-center"
+                                >
+                                    <span className={`h-2 rounded-full transition-all duration-300 ${
+                                        i === active ? 'w-6 bg-brand-cta' : 'w-2 bg-white/70 group-hover:bg-white'
+                                    }`} />
+                                </button>
                             ))}
+                            <span className="mx-1 h-5 w-px bg-white/50" aria-hidden="true" />
+                            <button
+                                type="button"
+                                onClick={() => setPaused((value) => !value)}
+                                aria-label={paused ? 'Reanudar carrusel' : 'Pausar carrusel'}
+                                title={paused ? 'Reanudar carrusel' : 'Pausar carrusel'}
+                                aria-pressed={paused}
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20"
+                            >
+                                {paused ? (
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M8 5v14l11-7L8 5Z" />
+                                    </svg>
+                                ) : (
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </>

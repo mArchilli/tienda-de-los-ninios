@@ -15,7 +15,7 @@ class LandingSettingsTest extends TestCase
     {
         return array_merge([
             'combos_title'       => 'COMBOS DE ESTA SEMANA',
-            'price_range_title'  => 'COMBOS PARA EMPRENDEDORES',
+            'price_range_title'  => 'COMBOS PARA REGALO',
             'catalog_title'      => 'CATALOGO',
             'about_title'        => 'SOBRE NOSOTROS',
             'reviews_title'      => 'RESEÑAS DE CLIENTES',
@@ -41,7 +41,7 @@ class LandingSettingsTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Landing/Index')
                 ->where('titles.combos_title', 'COMBOS DE ESTA SEMANA')
-                ->where('titles.price_range_title', 'COMBOS PARA EMPRENDEDORES')
+                ->where('titles.price_range_title', 'COMBOS PARA REGALO')
                 ->where('titles.catalog_title', 'CATALOGO')
                 ->where('titles.about_title', 'SOBRE NOSOTROS')
                 ->where('titles.reviews_title', 'RESEÑAS DE CLIENTES')
@@ -86,7 +86,7 @@ class LandingSettingsTest extends TestCase
     {
         $this->get('/')->assertInertia(fn ($page) => $page
             ->where('combosTitle', 'COMBOS DE ESTA SEMANA')
-            ->where('priceRangeTitle', 'COMBOS PARA EMPRENDEDORES')
+            ->where('priceRangeTitle', 'COMBOS PARA REGALO')
             ->where('catalogTitle', 'CATALOGO')
             ->where('aboutTitle', 'SOBRE NOSOTROS')
             ->where('reviewsTitle', 'RESEÑAS DE CLIENTES')

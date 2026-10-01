@@ -8,13 +8,17 @@ const CATEGORIES = [
     { label: 'COMBOS', href: '/catalogo?tipo=combos',                   image: '/images/filtro-combos.png' },
 ];
 
-function CircleSlot({ label, image }) {
+function CircleSlot({ label, image, large = false }) {
     return (
-        <div className="flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28 lg:h-32 lg:w-32">
+        <div className={large
+            ? 'relative aspect-[5/6] w-full overflow-hidden rounded-[1.3rem] sm:aspect-auto sm:flex sm:h-28 sm:w-28 sm:items-center sm:justify-center sm:overflow-visible sm:rounded-none lg:h-32 lg:w-32'
+            : 'flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28 lg:h-32 lg:w-32'}>
             <img
                 src={image}
                 alt={`Filtro ${label.toLowerCase()}`}
-                className="h-16 w-16 object-contain sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+                className={`object-contain ${large
+                    ? 'absolute inset-0 h-full w-full object-cover sm:static sm:h-28 sm:w-28 sm:object-contain lg:h-32 lg:w-32'
+                    : 'h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24'}`}
             />
         </div>
     );
@@ -37,15 +41,17 @@ export default function CategoryShortcuts({ title = 'CATALOGO' }) {
                                 <Link
                                     key={category.label}
                                     href={category.href}
-                                    className={`group relative flex flex-col items-center rounded-[1.3rem] px-3 py-4 transition duration-300 hover:-translate-y-1 hover:border-brand-cta ${
+                                    className={`group relative flex flex-col items-center transition duration-300 hover:-translate-y-1 hover:border-brand-cta ${
                                         category.label === 'COMBOS'
-                                            ? 'col-span-2 mx-auto w-full sm:col-span-1 sm:mx-0'
-                                            : ''
+                                            ? 'col-span-2 mx-auto w-full rounded-[1.3rem] px-3 py-4 sm:col-span-1 sm:mx-0'
+                                            : 'sm:rounded-[1.3rem] sm:px-3 sm:py-4'
                                     }`}
                                 >
-                                    <div className="relative">
-                                        <CircleSlot label={category.label} image={category.image} />
-                                    </div>
+                                    <CircleSlot
+                                        label={category.label}
+                                        image={category.image}
+                                        large={category.label !== 'COMBOS'}
+                                    />
                                     <span className="relative mt-3 text-center text-[11px] font-bold leading-tight tracking-[0.14em] text-brand-text transition-colors group-hover:text-brand-primary sm:text-xs sm:tracking-[0.18em]">
                                         {category.label}
                                     </span>
