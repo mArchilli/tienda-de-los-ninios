@@ -22,10 +22,12 @@ class ComboEmprendedorController extends Controller
     {
         $search   = $request->input('search', '');
         $genderId = $request->input('gender') ? (int) $request->input('gender') : null;
+        $categoryId = $request->input('category') ? (int) $request->input('category') : null;
 
         $combos = ComboEmprendedor::with(['genders', 'categoryLimits', 'items.product.categories', 'items.product.sizes'])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($genderId, fn($q) => $q->whereHas('genders', fn($sq) => $sq->where('genders.id', $genderId)))
+            ->when($categoryId, fn($q) => $q->whereHas('categoryLimits', fn($sq) => $sq->where('category_id', $categoryId)))
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -37,6 +39,7 @@ class ComboEmprendedorController extends Controller
             'filters'    => [
                 'search' => $search,
                 'gender' => $genderId ? (string) $genderId : '',
+                'category' => $categoryId ? (string) $categoryId : '',
             ],
         ]);
     }

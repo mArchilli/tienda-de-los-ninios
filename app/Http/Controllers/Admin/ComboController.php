@@ -23,6 +23,7 @@ class ComboController extends Controller
     {
         $search      = $request->input('search', '');
         $categoryId  = $request->input('category') ? (int) $request->input('category') : null;
+        $genderId    = $request->input('gender') ? (int) $request->input('gender') : null;
         $needsReview = $request->boolean('needs_review');
 
         // Combos cuyo armado incluye prendas de un género distinto al del combo.
@@ -45,6 +46,7 @@ class ComboController extends Controller
             ])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($categoryId, fn($q) => $q->whereHas('items', fn($sq) => $sq->where('category_id', $categoryId)))
+            ->when($genderId, fn($q) => $q->where('gender_id', $genderId))
             ->when($needsReview, fn($q) => $q->whereIn('id', $reviewIds))
             ->latest()
             ->paginate(12)
@@ -61,6 +63,7 @@ class ComboController extends Controller
             'filters'          => [
                 'search'       => $search,
                 'category'     => $categoryId ? (string) $categoryId : '',
+                'gender'       => $genderId ? (string) $genderId : '',
                 'needs_review' => $needsReview,
             ],
             'needsReviewCount' => $reviewIds->count(),

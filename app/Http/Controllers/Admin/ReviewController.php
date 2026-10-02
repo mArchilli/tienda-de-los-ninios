@@ -38,6 +38,7 @@ class ReviewController extends Controller
         return Inertia::render('Admin/Reviews/Index', [
             'reviews' => $reviews,
             'filters' => ['visibility' => $filter, 'search' => $search],
+            'reviewUrl' => route('reviews.create'),
             'counts'  => [
                 'all'     => Review::count(),
                 'visible' => Review::where('is_visible', true)->count(),

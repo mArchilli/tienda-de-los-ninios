@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ComboFilters from '@/Components/Admin/ComboFilters';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1289,6 +1290,7 @@ export default function Index({ combos, sizes, categories, genders = [], filters
 
     const [search, setSearch]                 = useState(filters?.search ?? '');
     const [activeCategory, setActiveCategory] = useState(filters?.category ?? '');
+    const [activeGender, setActiveGender]     = useState(filters?.gender ?? '');
     const [onlyReview, setOnlyReview]         = useState(Boolean(filters?.needs_review));
     const searchTimeout = useRef(null);
 
@@ -1313,11 +1315,12 @@ export default function Index({ combos, sizes, categories, genders = [], filters
         if (flash?.success) setFlashMsg(flash.success);
     }, [flash]);
 
-    const applyFilters = useCallback((newSearch, newCategory, newOnlyReview) => {
+    const applyFilters = useCallback((next) => {
         const params = {};
-        if (newSearch)     params.search       = newSearch;
-        if (newCategory)   params.category     = newCategory;
-        if (newOnlyReview) params.needs_review = 1;
+        if (next.search)     params.search       = next.search;
+        if (next.category)   params.category     = next.category;
+        if (next.gender)     params.gender       = next.gender;
+        if (next.onlyReview) params.needs_review = 1;
         router.get(route('admin.combos.index'), params, {
             preserveState: true,
             preserveScroll: true,
@@ -1325,34 +1328,45 @@ export default function Index({ combos, sizes, categories, genders = [], filters
         });
     }, []);
 
+    const current = (overrides = {}) => ({
+        search, category: activeCategory, gender: activeGender, onlyReview, ...overrides,
+    });
+
     const handleSearchChange = (value) => {
         setSearch(value);
         clearTimeout(searchTimeout.current);
-        const currentCategory = activeCategory;
-        const currentOnlyReview = onlyReview;
-        searchTimeout.current = setTimeout(() => applyFilters(value, currentCategory, currentOnlyReview), 400);
+        const snapshot = current({ search: value });
+        searchTimeout.current = setTimeout(() => applyFilters(snapshot), 400);
     };
 
     const handleCategoryToggle = (id) => {
         const next = activeCategory === String(id) ? '' : String(id);
         setActiveCategory(next);
-        applyFilters(search, next, onlyReview);
+        applyFilters(current({ category: next }));
+    };
+
+    const handleGenderToggle = (id) => {
+        const next = activeGender === String(id) ? '' : String(id);
+        setActiveGender(next);
+        applyFilters(current({ gender: next }));
     };
 
     const handleReviewToggle = () => {
         const next = !onlyReview;
         setOnlyReview(next);
-        applyFilters(search, activeCategory, next);
+        applyFilters(current({ onlyReview: next }));
     };
 
     const resetFilters = () => {
+        clearTimeout(searchTimeout.current);
         setSearch('');
         setActiveCategory('');
+        setActiveGender('');
         setOnlyReview(false);
         router.get(route('admin.combos.index'), {}, { replace: true });
     };
 
-    const hasFilters = search || activeCategory || onlyReview;
+    const hasFilters = search || activeCategory || activeGender || onlyReview;
     const total = combos.total ?? combos.data?.length ?? 0;
 
     return (
@@ -1426,7 +1440,8 @@ export default function Index({ combos, sizes, categories, genders = [], filters
         >
             <Head title="Combos" />
 
-            <div className="p-6 space-y-5">
+            <div className="flex min-h-full">
+                <div className="min-w-0 flex-1 space-y-5 p-6">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
 
                 <ReviewBanner
@@ -1434,76 +1449,6 @@ export default function Index({ combos, sizes, categories, genders = [], filters
                     onlyReview={onlyReview}
                     onToggleOnlyReview={handleReviewToggle}
                 />
-
-                {/* Search + filters */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
-                    <div className="relative">
-                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {Icons.search}
-                        </svg>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            placeholder="Buscar combo por nombre..."
-                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-                        />
-                        {search && (
-                            <button
-                                type="button"
-                                onClick={() => handleSearchChange('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text transition-colors"
-                            >
-                                <Icon name="close" />
-                            </button>
-                        )}
-                    </div>
-
-                    {categories?.length > 0 && (
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-brand-text-muted">Filtrar por categoría</p>
-                            <div className="flex flex-wrap gap-2">
-                                {categories.map((cat) => {
-                                    const active = activeCategory === String(cat.id);
-                                    return (
-                                        <button
-                                            key={cat.id}
-                                            type="button"
-                                            onClick={() => handleCategoryToggle(cat.id)}
-                                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                                                active
-                                                    ? 'border-brand-primary bg-brand-primary text-white shadow-sm'
-                                                    : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
-                                            }`}
-                                        >
-                                            {active && (
-                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    {Icons.check}
-                                                </svg>
-                                            )}
-                                            {cat.name}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {hasFilters && (
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <p className="text-xs text-brand-text-muted">
-                                {total} resultado{total !== 1 ? 's' : ''}
-                            </p>
-                            <button
-                                type="button"
-                                onClick={resetFilters}
-                                className="text-xs font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
-                            >
-                                Limpiar filtros
-                            </button>
-                        </div>
-                    )}
-                </div>
 
                 {/* Empty state */}
                 {(combos.data?.length ?? 0) === 0 && (
@@ -1589,6 +1534,22 @@ export default function Index({ combos, sizes, categories, genders = [], filters
                         )}
                     </div>
                 )}
+                </div>
+
+                <ComboFilters
+                    search={search}
+                    onSearch={handleSearchChange}
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    onCategory={handleCategoryToggle}
+                    genders={genders}
+                    activeGender={activeGender}
+                    onGender={handleGenderToggle}
+                    hasFilters={Boolean(hasFilters)}
+                    total={total}
+                    onReset={resetFilters}
+                    hideFloating={selectionMode}
+                />
             </div>
 
             <ComboFormModal

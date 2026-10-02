@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ComboFilters from '@/Components/Admin/ComboFilters';
 import { Head, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1185,6 +1186,7 @@ export default function Index({ combos, genders = [], categories = [], filters }
 
     const [search, setSearch]             = useState(filters?.search ?? '');
     const [activeGender, setActiveGender] = useState(filters?.gender ?? '');
+    const [activeCategory, setActiveCategory] = useState(filters?.category ?? '');
     const searchTimeout = useRef(null);
 
     const comboList = combos.data ?? [];
@@ -1208,10 +1210,11 @@ export default function Index({ combos, genders = [], categories = [], filters }
         if (flash?.success) setFlashMsg(flash.success);
     }, [flash]);
 
-    const applyFilters = useCallback((newSearch, newGender) => {
+    const applyFilters = useCallback((next) => {
         const params = {};
-        if (newSearch) params.search = newSearch;
-        if (newGender) params.gender = newGender;
+        if (next.search)   params.search   = next.search;
+        if (next.gender)   params.gender   = next.gender;
+        if (next.category) params.category = next.category;
         router.get(route('admin.combos-emprendedor.index'), params, {
             preserveState: true,
             preserveScroll: true,
@@ -1219,26 +1222,38 @@ export default function Index({ combos, genders = [], categories = [], filters }
         });
     }, []);
 
+    const current = (overrides = {}) => ({
+        search, gender: activeGender, category: activeCategory, ...overrides,
+    });
+
     const handleSearchChange = (value) => {
         setSearch(value);
         clearTimeout(searchTimeout.current);
-        const currentGender = activeGender;
-        searchTimeout.current = setTimeout(() => applyFilters(value, currentGender), 400);
+        const snapshot = current({ search: value });
+        searchTimeout.current = setTimeout(() => applyFilters(snapshot), 400);
     };
 
     const handleGenderToggle = (id) => {
         const next = activeGender === String(id) ? '' : String(id);
         setActiveGender(next);
-        applyFilters(search, next);
+        applyFilters(current({ gender: next }));
+    };
+
+    const handleCategoryToggle = (id) => {
+        const next = activeCategory === String(id) ? '' : String(id);
+        setActiveCategory(next);
+        applyFilters(current({ category: next }));
     };
 
     const resetFilters = () => {
+        clearTimeout(searchTimeout.current);
         setSearch('');
         setActiveGender('');
+        setActiveCategory('');
         router.get(route('admin.combos-emprendedor.index'), {}, { replace: true });
     };
 
-    const hasFilters = search || activeGender;
+    const hasFilters = search || activeGender || activeCategory;
     const total = combos.total ?? combos.data?.length ?? 0;
 
     // Combo data preparation for edit modal
@@ -1309,77 +1324,9 @@ export default function Index({ combos, genders = [], categories = [], filters }
         >
             <Head title="Combos Emprendedor" />
 
-            <div className="p-6 space-y-5">
+            <div className="flex min-h-full">
+                <div className="min-w-0 flex-1 space-y-5 p-6">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
-
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
-                    <div className="relative">
-                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-light pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {Icons.search}
-                        </svg>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            placeholder="Buscar combo por nombre..."
-                            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-sm text-brand-text placeholder-brand-text-light outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-                        />
-                        {search && (
-                            <button
-                                type="button"
-                                onClick={() => handleSearchChange('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-light hover:text-brand-text transition-colors"
-                            >
-                                <Icon name="close" />
-                            </button>
-                        )}
-                    </div>
-
-                    {genders?.length > 0 && (
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-brand-text-muted">Filtrar por género</p>
-                            <div className="flex flex-wrap gap-2">
-                                {genders.map((g) => {
-                                    const active = activeGender === String(g.id);
-                                    return (
-                                        <button
-                                            key={g.id}
-                                            type="button"
-                                            onClick={() => handleGenderToggle(g.id)}
-                                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                                                active
-                                                    ? 'border-brand-primary bg-brand-primary text-white shadow-sm'
-                                                    : 'border-gray-200 bg-white text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
-                                            }`}
-                                        >
-                                            {active && (
-                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    {Icons.check}
-                                                </svg>
-                                            )}
-                                            {g.name}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {hasFilters && (
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <p className="text-xs text-brand-text-muted">
-                                {total} resultado{total !== 1 ? 's' : ''}
-                            </p>
-                            <button
-                                type="button"
-                                onClick={resetFilters}
-                                className="text-xs font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
-                            >
-                                Limpiar filtros
-                            </button>
-                        </div>
-                    )}
-                </div>
 
                 {(combos.data?.length ?? 0) === 0 && (
                     <div className="flex flex-col items-center justify-center py-24 text-brand-text-muted">
@@ -1463,6 +1410,22 @@ export default function Index({ combos, genders = [], categories = [], filters }
                         )}
                     </div>
                 )}
+                </div>
+
+                <ComboFilters
+                    search={search}
+                    onSearch={handleSearchChange}
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    onCategory={handleCategoryToggle}
+                    genders={genders}
+                    activeGender={activeGender}
+                    onGender={handleGenderToggle}
+                    hasFilters={Boolean(hasFilters)}
+                    total={total}
+                    onReset={resetFilters}
+                    hideFloating={selectionMode}
+                />
             </div>
 
             <ComboEmprendedorFormModal

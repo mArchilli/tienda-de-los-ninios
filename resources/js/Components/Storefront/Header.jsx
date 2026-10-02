@@ -133,6 +133,18 @@ export default function Header({ cartCount, onMobileMenuChange }) {
                     </Link>
 
                     <div className="flex items-center justify-end gap-2">
+                        {props?.auth?.user && (
+                            <Link
+                                href="/dashboard"
+                                aria-label="Volver al panel de administración"
+                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-orange-500 px-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:px-4"
+                            >
+                                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z" />
+                                </svg>
+                                <span className="hidden sm:inline">Panel</span>
+                            </Link>
+                        )}
                         <CartIconButton as={Link} href="/carrito" label="Carrito" badge={count}>
                             <CartIcon className="h-[18px] w-[18px]" />
                         </CartIconButton>

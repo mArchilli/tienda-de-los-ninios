@@ -201,6 +201,57 @@ function ReviewRow({ review, onDelete }) {
     );
 }
 
+// ─── Share link ───────────────────────────────────────────────────────────────
+
+function ShareLink({ url }) {
+    const [copied, setCopied] = useState(false);
+
+    const copy = async () => {
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch {
+            const input = document.getElementById('review-share-url');
+            input?.select();
+            document.execCommand('copy');
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    let display = url;
+    try {
+        display = decodeURI(url);
+    } catch {
+        // se muestra tal cual
+    }
+
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-bold text-brand-text">Link para recibir reseñas</p>
+            <p className="mt-0.5 text-xs text-brand-text-muted">
+                Compartí este link con tus clientes para que puedan dejar su reseña.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                    id="review-share-url"
+                    type="text"
+                    readOnly
+                    value={display}
+                    onFocus={(e) => e.target.select()}
+                    className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-brand-text outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                />
+                <button
+                    type="button"
+                    onClick={copy}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-primary-dark"
+                >
+                    {copied ? 'Copiado ✓' : 'Copiar link'}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const TABS = [
@@ -209,7 +260,7 @@ const TABS = [
     { key: 'hidden', label: 'Ocultas' },
 ];
 
-export default function Index({ reviews, filters, counts }) {
+export default function Index({ reviews, filters, counts, reviewUrl }) {
     const { flash } = usePage().props;
     const [flashMsg, setFlashMsg] = useState(flash?.success ?? null);
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -257,6 +308,8 @@ export default function Index({ reviews, filters, counts }) {
 
             <div className="space-y-5 p-6">
                 <FlashBanner message={flashMsg} onDismiss={() => setFlashMsg(null)} />
+
+                {reviewUrl && <ShareLink url={reviewUrl} />}
 
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
