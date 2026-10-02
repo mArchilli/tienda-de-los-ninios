@@ -98,7 +98,7 @@ export default function Reviews({ reviews = [], stats, title = 'RESEÑAS DE CLIE
             <div className="store-shell store-section">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h2 className="home-section-title">{title}</h2>
+                        <h2 className="landing-section-title">{title}</h2>
                         {hasReviews && stats?.count > 0 && (
                             <div className="mt-3 flex flex-wrap items-center gap-2.5">
                                 <StarRating value={stats.average} size="md" />

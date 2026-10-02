@@ -68,7 +68,7 @@ export default function FeaturedProducts({ products }) {
 
                     {/* Header */}
                     <div className="relative z-10 flex items-center justify-between gap-4">
-                        <h2 className="home-section-title">
+                        <h2 className="landing-section-title">
                             PRODUCTOS DESTACADOS
                         </h2>
 

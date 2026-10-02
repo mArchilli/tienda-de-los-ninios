@@ -146,4 +146,9 @@
     .home-section-title {
         @apply text-xl font-extrabold uppercase tracking-[0.08em] text-brand-text sm:text-2xl lg:text-[1.9rem];
     }
+
+    /* Títulos de sección de la landing (mismo estilo que el título de combos de regalo) */
+    .landing-section-title {
+        @apply text-[clamp(3rem,5.4vw,5.8rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-[#202020];
+    }
 }

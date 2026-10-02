@@ -64,7 +64,7 @@ export default function FeaturedCombos({ combos, title = 'COMBOS DE ESTA SEMANA'
 
                     {/* Header */}
                     <div className="relative z-10 flex items-end justify-between gap-4">
-                        <h2 className="home-section-title">
+                        <h2 className="landing-section-title">
                             {title}
                         </h2>
 

@@ -98,7 +98,7 @@ export default function About({ title = 'SOBRE NOSOTROS' }) {
 
 
                     <div className="relative z-10">
-                        <h2 className="home-section-title">
+                        <h2 className="landing-section-title">
                             {title}
                         </h2>
                     </div>

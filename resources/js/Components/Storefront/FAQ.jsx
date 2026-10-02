@@ -118,7 +118,7 @@ export default function FAQ({ title = 'PREGUNTAS FRECUENTES' }) {
 
                     <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-2xl">
-                            <h2 className="home-section-title">
+                            <h2 className="landing-section-title">
                                 {title}
                             </h2>
                         </div>
