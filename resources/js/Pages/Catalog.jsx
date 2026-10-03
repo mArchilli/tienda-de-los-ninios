@@ -757,8 +757,8 @@ export default function Catalog({ combos = [], combosEmprendedor = [], combosReg
 
             <section className="bg-brand-cta text-white">
                 <div className="w-full px-3 py-2.5 text-center text-[11px] font-light uppercase tracking-[0.18em] sm:px-5 sm:text-sm lg:px-8">
-                    {'Nueva colección'} <span className="mx-2 text-white/40">|</span>
-                    <span className="font-semibold">{'otoño / invierno 2026'}</span>
+                    {'Temporada'} <span className="mx-2 text-white/40">|</span>
+                    <span className="font-semibold">{'primavera / verano 2027'}</span>
                 </div>
             </section>
 

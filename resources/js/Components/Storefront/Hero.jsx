@@ -79,7 +79,7 @@ function BuildSlideContent() {
                         </span>
                     </h1>
                     <p className="mt-2 text-[clamp(0.875rem,4vw,1rem)] leading-tight text-brand-text-muted md:mt-6 md:text-lg md:leading-relaxed lg:text-xl xl:text-2xl">
-                        <span className="block">Hace tu pedido y te mostramos por video como quedó, y coordinamos el envío con vos.</span>
+                        <span className="block">Hacé tu pedido, te mostramos por video cómo quedó y coordinamos el envío con vos.</span>
                     </p>
                     <BannerButtons largeMobile className="mt-2 sm:mt-4 md:mt-7 md:gap-3" />
                 </div>
