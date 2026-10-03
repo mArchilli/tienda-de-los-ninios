@@ -30,8 +30,7 @@ const BANNER_CTAS = [
     { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
 ];
 const GIFT_CTAS = [
-    { label: 'Ver combos', href: '/catalogo?tipo=combos' },
-    { label: 'Ver catálogo', href: '/catalogo?tipo=productos', variant: 'outline' },
+    { label: 'Ver combos de regalo', href: '/catalogo?tipo=regalo' },
 ];
 const GIFT_LETTER_COLORS = ['#E63954', '#D97916', '#B88900', '#46A343', '#148CC4', '#72B829', '#E56638'];
 
